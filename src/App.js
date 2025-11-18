@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import ProtectedRoute from './pages/ProtectedRoute';
 import ProtectedLayout from './pages/ProtectedLayout';
+import Billinginformation from './pages/Billinginformation';
 
 function App() {
   return (
@@ -21,10 +22,11 @@ function App() {
         {/* Main content area where Routes render */}
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Routes>
-             {/* <Route path="/" element={<Login />} /> */}
+             <Route path="/" element={<Login />} />
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Registration" element={<Registration />} />
             <Route path="/BillTest" element={<BillTest />} />
+            <Route path="/Billinginformation" element={<Billinginformation />} />
           </Routes>
         </Box>
       </Box>

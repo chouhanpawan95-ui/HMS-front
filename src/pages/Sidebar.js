@@ -6,9 +6,7 @@ import {
   ListItemIcon,
   ListItemText,
   Collapse,
-  Avatar,
   Box,
-  Typography,
   Divider,
   IconButton,
   useMediaQuery,
@@ -23,7 +21,7 @@ import {
   FormatListBulleted as FormIcon,
   Dashboard as DashboardIcon,
   Widgets as UiIcon,
-  ArrowRight as ArrowRightIcon, // 👉 added arrow icon
+  ArrowRight as ArrowRightIcon,
   Menu as MenuIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
@@ -44,17 +42,29 @@ const Sidebar = ({ drawerWidth = 260 }) => {
     setOpenMenu((prev) => ({ ...prev, [menu]: !prev[menu] }));
   };
 
+  const handleMenuClick = () => {
+    if (isMobile) setMobileOpen(false); // Close sidebar on mobile
+  };
+
   const drawerContent = (
-    <Box sx={{ display: "flex", flexDirection: "column", height: "100%",backgroundColor:"#578ee5",color:"#fff" }}>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+        backgroundColor: "#578ee5",
+        color: "#fff",
+      }}
+    >
       <Divider />
 
       {/* Menu Section */}
       <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
         <List component="nav" sx={{ px: 1, mt: 8 }}>
           {/* Dashboard */}
-          <ListItemButton component={Link} to="/Dashboard">
+          <ListItemButton component={Link} to="/Dashboard" onClick={handleMenuClick}>
             <ListItemIcon>
-              <HomeIcon sx={{color:"#fff"}}/>
+              <HomeIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Dashboard" />
           </ListItemButton>
@@ -62,10 +72,9 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           {/* Registration */}
           <ListItemButton>
             <ListItemIcon>
-              <UiIcon sx={{color:"#fff"}}/>               
+              <UiIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Registration" />
-            {/* Chevron: stopPropagation so clicking it only toggles submenu */}
             <IconButton
               edge="end"
               size="small"
@@ -74,46 +83,40 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                 e.preventDefault();
                 handleToggle("ui");
               }}
-              sx={{ ml: 1,color:"#fff" }}
+              sx={{ ml: 1, color: "#fff" }}
             >
               {openMenu.ui ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
           </ListItemButton>
+
           <Collapse in={openMenu.ui} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>            
-               <ListItemButton  sx={{ pl: 6 }}  component={Link} to="/Registration">
-                  <ListItemIcon sx={{ minWidth: 30, color:"#fff" }}>
-                    <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="New Patient"
-                    primaryTypographyProps={{
-                      fontSize: "0.9rem",
-                       color: "#fff",
-                    }}
-                  />
-                </ListItemButton>
-            </List>
-              <List component="div" disablePadding>            
-               <ListItemButton  sx={{ pl: 6 }}  component={Link} to="/oldpatient">
-                  <ListItemIcon sx={{ minWidth: 30, color:"#fff" }}>
-                    <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary="OLD Patient"
-                    primaryTypographyProps={{
-                      fontSize: "0.9rem",
-                       color: "#fff",
-                    }}
-                  />
-                </ListItemButton>
+            <List component="div" disablePadding>
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/Registration" onClick={handleMenuClick}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
+                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="New Patient"
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                />
+              </ListItemButton>
+
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/Billinginformation" onClick={handleMenuClick}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
+                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Old Patient"
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                />
+              </ListItemButton>
             </List>
           </Collapse>
 
           {/* Billing */}
-          <ListItemButton component={Link} to="/Billing">
+          <ListItemButton component={Link} to="/Billing" onClick={handleMenuClick}>
             <ListItemIcon>
-              <DashboardIcon sx={{color:"#fff"}}/>
+              <DashboardIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Billing" />
             <IconButton
@@ -124,23 +127,21 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                 e.preventDefault();
                 handleToggle("icons");
               }}
-              sx={{ ml: 1,color:"#fff" }}
+              sx={{ ml: 1, color: "#fff" }}
             >
               {openMenu.icons ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
           </ListItemButton>
+
           <Collapse in={openMenu.icons} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }}>
-                <ListItemIcon sx={{ minWidth: 30,color:"#fff" }}>
+               <ListItemButton sx={{ pl: 6 }} component={Link} to="/" onClick={handleMenuClick}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Font Awesome"
-                  primaryTypographyProps={{
-                    fontSize: "0.9rem",
-                     color: "#fff",
-                  }}
+                  primary="Billing"
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
             </List>
@@ -149,23 +150,20 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           {/* User Master */}
           <ListItemButton onClick={() => handleToggle("forms")}>
             <ListItemIcon>
-              <FormIcon sx={{color:"#fff"}}/>
+              <FormIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="User Master" />
             {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={openMenu.forms} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }}>
+              <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
                 <ListItemText
                   primary="Form Elements"
-                  primaryTypographyProps={{
-                    fontSize: "0.9rem",
-                     color: "#fff",
-                  }}
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
             </List>
@@ -174,23 +172,20 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           {/* Appointment */}
           <ListItemButton onClick={() => handleToggle("charts")}>
             <ListItemIcon>
-              <ChartIcon sx={{color:"#fff"}}/>
+              <ChartIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Appointment" />
             {openMenu.charts ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={openMenu.charts} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }}>
+              <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
                 <ListItemText
                   primary="ChartJs"
-                  primaryTypographyProps={{
-                    fontSize: "0.9rem",
-                      color: "#fff",
-                  }}
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
             </List>
@@ -199,23 +194,20 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           {/* Report */}
           <ListItemButton onClick={() => handleToggle("tables")}>
             <ListItemIcon>
-              <TableIcon sx={{color:"#fff"}}/>
+              <TableIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Report" />
             {openMenu.tables ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
           <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }}>
+              <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
                 <ListItemText
                   primary="Basic Table"
-                  primaryTypographyProps={{
-                    fontSize: "0.9rem",
-                    color: "#fff",
-                  }}
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
             </List>

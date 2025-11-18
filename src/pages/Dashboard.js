@@ -109,7 +109,7 @@ export default function Dashboard() {
   const total = patientsResp && (patientsResp.total || patientsResp.totalCount || patientsResp.meta?.total);
   const totalPages = total ? Math.ceil(total / limit) : null;
   const hasMore = totalPages ? page < totalPages : patients.length === limit;
-
+console.log("patients",patients);
   // Loading state: show a centered spinner
   if (isLoading) {
     return (
