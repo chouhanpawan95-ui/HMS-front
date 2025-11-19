@@ -37,7 +37,7 @@ export default function Main() {
             <Dashboard/>       
             <Registration/>
             <BillTest/>
-          </div>      
+          </div>    
        
         </div>
    

@@ -26,8 +26,7 @@ import {
 import { Radio, RadioGroup, FormControl, FormLabel } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
 
-const Billinginformation = () => {
-  
+const Billinginformation = () => {  
   const [firstName, setFirstName] = useState("");
   const [containsOption, setContainsOption] = useState("Contains");
   const [selectedPatient, setSelectedPatient] = useState(null);

@@ -41,7 +41,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
   const handleToggle = (menu) => {
     setOpenMenu((prev) => ({ ...prev, [menu]: !prev[menu] }));
   };
-
   const handleMenuClick = () => {
     if (isMobile) setMobileOpen(false); // Close sidebar on mobile
   };

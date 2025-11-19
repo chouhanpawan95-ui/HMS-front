@@ -2,7 +2,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 // Configure the base query with the API URL
 const baseQuery = fetchBaseQuery({
-  baseUrl: 'https://hms-api-ho1n.onrender.com/api',
+  baseUrl: process.env.REACT_APP_API_URL,
   credentials: 'include',
   prepareHeaders: (headers) => {
     headers.set('Content-Type', 'application/json');
