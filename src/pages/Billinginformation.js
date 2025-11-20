@@ -120,7 +120,7 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
             Search For FirstName
           </Typography>
 
-          <Grid container spacing={2} alignItems="center">
+          <Grid container spacing={2} alignItems="center" margin={2}>
              <Grid item>
               <TextField
                 size="small"

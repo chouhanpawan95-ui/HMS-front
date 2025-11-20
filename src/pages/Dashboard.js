@@ -185,46 +185,7 @@ console.log("patients",patients);
               </Button>
             </Box>
 
-            {/* Right side - Pagination */}
-            <Box display="flex" alignItems="center" gap={2}>
-              <TextField
-                select
-                size="small"
-                value={limit}
-                onChange={(e) => {
-                  const v = Number(e.target.value) || 10;
-                  setLimit(v);
-                  setPage(1);
-                }}
-                sx={{ width: 80 }}
-              >
-                <MenuItem value={5}>5</MenuItem>
-                <MenuItem value={10}>10</MenuItem>
-                <MenuItem value={20}>20</MenuItem>
-              </TextField>
-
-              <Box display="flex" alignItems="center" gap={1}>
-                <Button 
-                  size="small" 
-                  variant="outlined"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))} 
-                  disabled={page === 1}
-                >
-                  Prev
-                </Button>
-                <Typography variant="body2" sx={{ mx: 1 }}>
-                  Page {page}{totalPages ? ` / ${totalPages}` : ''}
-                </Typography>
-                <Button 
-                  size="small" 
-                  variant="outlined"
-                  onClick={() => setPage((p) => p + 1)} 
-                  disabled={!hasMore}
-                >
-                  Next
-                </Button>
-              </Box>
-            </Box>
+            
           </Box>          {/* Table */}
           <Table sx={{ minWidth: 800 }}>
             <TableHead>
@@ -274,6 +235,47 @@ console.log("patients",patients);
             </Typography>
           </Box>
         </CardContent>
+
+        {/* Right side - Pagination */}
+            <Box display="flex" alignItems="center" gap={2} justifyContent="flex-end" borderTop={1} borderColor={"divider"}>
+              <TextField
+                select
+                size="small"
+                value={limit}
+                onChange={(e) => {
+                  const v = Number(e.target.value) || 10;
+                  setLimit(v);
+                  setPage(1);
+                }}
+                sx={{ width: 80 }}
+              >
+                <MenuItem value={5}>5</MenuItem>
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+              </TextField>
+
+              <Box display="flex" alignItems="center" gap={1}>
+                <Button 
+                  size="small" 
+                  variant="outlined"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))} 
+                  disabled={page === 1}
+                >
+                  Prev
+                </Button>
+                <Typography variant="body2" sx={{ mx: 1 }}>
+                  Page {page}{totalPages ? ` / ${totalPages}` : ''}
+                </Typography>
+                <Button 
+                  size="small" 
+                  variant="outlined"
+                  onClick={() => setPage((p) => p + 1)} 
+                  disabled={!hasMore}
+                >
+                  Next
+                </Button>
+              </Box>
+            </Box>
       </Card>
     </Box>
   );
