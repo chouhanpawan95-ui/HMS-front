@@ -1,10 +1,9 @@
+import SearchBar from "../components/SearchBar";
 import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
   TextField,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -26,13 +25,13 @@ import {
 import { Radio, RadioGroup, FormControl, FormLabel } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
 
-const Billinginformation = () => {  
+const Billinginformation = () => {
   const [firstName, setFirstName] = useState("");
   const [containsOption, setContainsOption] = useState("Contains");
   const [selectedPatient, setSelectedPatient] = useState(null);
-const [openDialog, setOpenDialog] = useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
- const handleConfirmYes = () => {
+  const handleConfirmYes = () => {
     setOpenDialog(false);
     console.log("✅ Form submitted successfully!");
     // Your form submission logic here (API call etc.)
@@ -48,8 +47,8 @@ const [openDialog, setOpenDialog] = useState(false);
   const patients = Array.isArray(patientsResp)
     ? patientsResp
     : patientsResp && Array.isArray(patientsResp.data)
-    ? patientsResp.data
-    : [];
+      ? patientsResp.data
+      : [];
 
 
 
@@ -67,8 +66,8 @@ const [openDialog, setOpenDialog] = useState(false);
   };
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-    const [filteredPatients, setFilteredPatients] = useState([]);
-const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
   const paginatedPatients = filteredPatients.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
@@ -78,23 +77,23 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
     setFilteredPatients(patients);
   }, [patients]);
 
-  // 🧠 Auto-search on typing or option change
-  useEffect(() => {
-    let filtered = [...patients];
+  // // 🧠 Auto-search on typing or option change
+  // useEffect(() => {
+  //   let filtered = [...patients];
 
-    if (firstName.trim() !== "") {
-      filtered = filtered.filter((p) => {
-        const name = (p.firstName || "").toLowerCase();
-        const search = firstName.toLowerCase();
+  //   if (firstName.trim() !== "") {
+  //     filtered = filtered.filter((p) => {
+  //       const name = (p.firstName || "").toLowerCase();
+  //       const search = firstName.toLowerCase();
 
-        if (containsOption === "Equals") return name === search;
-        if (containsOption === "Starts With") return name.startsWith(search);
-        return name.includes(search);
-      });
-    }
+  //       if (containsOption === "Equals") return name === search;
+  //       if (containsOption === "Starts With") return name.startsWith(search);
+  //       return name.includes(search);
+  //     });
+  //   }
 
-    setFilteredPatients(filtered);
-  }, [firstName, containsOption, patients]);
+  //   setFilteredPatients(filtered);
+  // }, [firstName, containsOption, patients]);
 
   // 🩺 Handle patient row click
   const handleRowClick = (patient) => {
@@ -108,7 +107,7 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
 
   // 🧾 Submit handler
   const handleSubmit = () => {
-     setOpenDialog(true);
+    setOpenDialog(true);
   };
 
   return (
@@ -116,84 +115,76 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
       {/* =================== PATIENT SEARCH TABLE =================== */}
       {!selectedPatient ? (
         <>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Search For FirstName
-          </Typography>
-
-          <Grid container spacing={2} alignItems="center" margin={2}>
-             <Grid item>
-              <TextField
-                size="small"
-                placeholder="Type name to search..."
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                sx={{ backgroundColor: "#fff" }}
-              />
-            </Grid>
-          </Grid>
+          {/* search bar  */}
+          <div className="searchBar">
+            <SearchBar
+              patients={patients}
+              onFilter={setFilteredPatients}
+            />
+          </div>
 
           {/* Patient Table */}
           <TableContainer component={Paper}>
-        <Table size="small">
-          <TableHead>
-            <TableRow sx={{ backgroundColor: "#578EE5" }}>
-              {[
-                "PatientID",
-                "Date",
-                "FirstName",
-                "LastName",
-                "MobileNo",
-                "DOB",
-                "Address",
-                "PhoneNo",
-                "OLD MRNO",
-              ].map((col) => (
-                <TableCell
-                  key={col}
-                  sx={{ fontWeight: "bold", color: "#fff", whiteSpace: "nowrap" }}
-                >
-                  {col}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : paginatedPatients.length > 0 ? (
-              paginatedPatients.map((p, i) => (
-                <TableRow
-                  key={i}
-                  hover
-                  sx={{ cursor: "pointer" }}
-                  onClick={() => handleRowClick(p)}
-                >
-                  <TableCell>{p.patientId}</TableCell>
-                  <TableCell>{p.dateTime}</TableCell>
-                  <TableCell>{p.firstName}</TableCell>
-                  <TableCell>{p.lastName}</TableCell>
-                  <TableCell>{p.mobileNo}</TableCell>
-                  <TableCell>{p.dateOfBirth}</TableCell>
-                  <TableCell>{p.addressLine}</TableCell>
-                  <TableCell>{p.phoneNo}</TableCell>
-                  <TableCell>{p.oldNo}</TableCell>
+            <Table size="small">
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#578EE5" }}>
+                  {[
+                    "PatientID",
+                    "Date",
+                    "FirstName",
+                    "LastName",
+                    "MobileNo",
+                    "DOB",
+                    "Address",
+                    "PhoneNo",
+                    "OLD MRNO",
+                  ].map((col) => (
+                    <TableCell
+                      key={col}
+                      sx={{ fontWeight: "bold", color: "#fff", whiteSpace: "nowrap" }}
+                    >
+                      {col}
+                    </TableCell>
+                  ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={9} align="center">
-                  No records found
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </TableContainer>
+              </TableHead>
+
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center">
+                      Loading...
+                    </TableCell>
+                  </TableRow>
+                ) : paginatedPatients.length > 0 ? (
+                  paginatedPatients.map((p, i) => (
+                    <TableRow
+                      key={i}
+                      hover
+                      sx={{ cursor: "pointer" }}
+                      onClick={() => handleRowClick(p)}
+                    >
+                      <TableCell>{p.patientId}</TableCell>
+                      <TableCell>{p.dateTime}</TableCell>
+                      <TableCell>{p.firstName}</TableCell>
+                      <TableCell>{p.lastName}</TableCell>
+                      <TableCell>{p.mobileNo}</TableCell>
+                      <TableCell>{p.dateOfBirth}</TableCell>
+                      <TableCell>{p.addressLine}</TableCell>
+                      <TableCell>{p.phoneNo}</TableCell>
+                      <TableCell>{p.oldNo}</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} align="center">
+                      No records found
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </>
       ) : (
         /* =================== BILLING FORM SECTION =================== */
@@ -251,9 +242,8 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Patient Name"
-                  value={`${selectedPatient?.firstName || ""} ${
-                    selectedPatient?.lastName || ""
-                  }`}
+                  value={`${selectedPatient?.firstName || ""} ${selectedPatient?.lastName || ""
+                    }`}
                   size="small"
                   fullWidth
                 />
@@ -261,9 +251,8 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Age/Sex"
-                  value={`${selectedPatient?.ageYMD || ""} / ${
-                    selectedPatient?.sex || ""
-                  }`}
+                  value={`${selectedPatient?.ageYMD || ""} / ${selectedPatient?.sex || ""
+                    }`}
                   size="small"
                   fullWidth
                 />
@@ -277,33 +266,33 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
                 alignItems="center"
                 flexWrap="wrap"
               >
-              <FormControl component="fieldset">
-  <RadioGroup
-    row
-    value={
-      selectedPatient?.isWalkIn
-        ? "Walk-In"
-        : selectedPatient?.isAppointment
-        ? "With Appointment"
-        : ""
-    }
-    onChange={(e) => {
-      const value = e.target.value;
-      setSelectedPatient((prev) => ({
-        ...prev,
-        isWalkIn: value === "Walk-In",
-        isAppointment: value === "With Appointment",
-      }));
-    }}
-  >
-    <FormControlLabel value="Walk-In" control={<Radio />} label="Walk-In" />
-    <FormControlLabel
-      value="With Appointment"
-      control={<Radio />}
-      label="With Appointment"
-    />
-  </RadioGroup>
-</FormControl>
+                <FormControl component="fieldset">
+                  <RadioGroup
+                    row
+                    value={
+                      selectedPatient?.isWalkIn
+                        ? "Walk-In"
+                        : selectedPatient?.isAppointment
+                          ? "With Appointment"
+                          : ""
+                    }
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setSelectedPatient((prev) => ({
+                        ...prev,
+                        isWalkIn: value === "Walk-In",
+                        isAppointment: value === "With Appointment",
+                      }));
+                    }}
+                  >
+                    <FormControlLabel value="Walk-In" control={<Radio />} label="Walk-In" />
+                    <FormControlLabel
+                      value="With Appointment"
+                      control={<Radio />}
+                      label="With Appointment"
+                    />
+                  </RadioGroup>
+                </FormControl>
               </Grid>
             </Grid>
 
@@ -323,144 +312,144 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
               </Typography>
 
               <Grid container spacing={2} sx={{ mt: 2 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Invoice/Bill No"
-                  // value={selectedPatient?.patientId || ""}
-                  size="small"
-                  fullWidth
-                />
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Invoice/Bill No"
+                    // value={selectedPatient?.patientId || ""}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Bill Date/Time"
+                    // value={selectedPatient?.admissionId || ""}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Branch"
+                    // value={selectedPatient?.branch || ""}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Fin/Year"
+                    // value={`${selectedPatient?.ageYMD || ""}`}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={12}
+                  display="flex"
+                  alignItems="center"
+                  flexWrap="wrap"
+                >
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Bill Date/Time"
-                  // value={selectedPatient?.admissionId || ""}
-                  size="small"
-                  fullWidth
-                />
+              <Grid container spacing={2} sx={{ mt: 2 }}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Bill Series"
+                    // value={selectedPatient?.patientId || ""}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Bill Entry type"
+                    // value={selectedPatient?.admissionId || ""}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Category"
+                    // value={`${selectedPatient?.firstName || ""} ${
+                    //   selectedPatient?.lastName || ""
+                    // }`}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    label="Doctor Name"
+                    // value={`${selectedPatient?.ageYMD || ""} / ${
+                    //   selectedPatient?.sex || ""
+                    // }`}
+                    size="small"
+                    fullWidth
+                  />
+                </Grid>
+                <Grid
+                  item
+                  xs={12}
+                  sm={6}
+                  md={12}
+                  display="flex"
+                  alignItems="center"
+                  flexWrap="wrap"              >
+                </Grid>
+                <Grid container spacing={2} sx={{ mt: 2 }}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      label="Reffered By"
+                      // value={selectedPatient?.patientId || ""}
+                      size="small"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      label="Party"
+                      // value={selectedPatient?.admissionId || ""}
+                      size="small"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      label="Free discount Reason"
+                      // value={`${selectedPatient?.firstName || ""} ${
+                      //   selectedPatient?.lastName || ""
+                      // }`}
+                      size="small"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      label="Rate Type"
+                      // value={`${selectedPatient?.ageYMD || ""} / ${
+                      //   selectedPatient?.sex || ""
+                      // }`}
+                      size="small"
+                      fullWidth
+                    />
+                  </Grid>
+                  <Grid
+                    item
+                    xs={12}
+                    sm={6}
+                    md={12}
+                    display="flex"
+                    alignItems="center"
+                    flexWrap="wrap"
+                  >
+                  </Grid>
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Branch"
-                  // value={selectedPatient?.branch || ""}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Fin/Year"
-                  // value={`${selectedPatient?.ageYMD || ""}`}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={12}
-                display="flex"
-                alignItems="center"
-                flexWrap="wrap"
-              >               
-              </Grid>
-            </Grid>
-             <Grid container spacing={2} sx={{ mt: 2 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Bill Series"
-                  // value={selectedPatient?.patientId || ""}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Bill Entry type"
-                  // value={selectedPatient?.admissionId || ""}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Category"
-                  // value={`${selectedPatient?.firstName || ""} ${
-                  //   selectedPatient?.lastName || ""
-                  // }`}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Doctor Name"
-                  // value={`${selectedPatient?.ageYMD || ""} / ${
-                  //   selectedPatient?.sex || ""
-                  // }`}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={12}
-                display="flex"
-                alignItems="center"
-                flexWrap="wrap"              >               
-              </Grid>
-               <Grid container spacing={2} sx={{ mt: 2 }}>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Reffered By"
-                  // value={selectedPatient?.patientId || ""}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Party"
-                  // value={selectedPatient?.admissionId || ""}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Free discount Reason"
-                  // value={`${selectedPatient?.firstName || ""} ${
-                  //   selectedPatient?.lastName || ""
-                  // }`}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid item xs={12} sm={6} md={3}>
-                <TextField
-                  label="Rate Type"
-                  // value={`${selectedPatient?.ageYMD || ""} / ${
-                  //   selectedPatient?.sex || ""
-                  // }`}
-                  size="small"
-                  fullWidth
-                />
-              </Grid>
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={12}
-                display="flex"
-                alignItems="center"
-                flexWrap="wrap"
-              >              
-              </Grid>
-            </Grid>
-            </Grid>
             </Box>
 
             {/* ===== SERVICE TABLE ===== */}
@@ -588,7 +577,7 @@ const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
         </DialogActions>
       </Dialog>
     </Box>
-    
+
   );
 };
 

@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import SearchBar from "../components/SearchBar";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -94,6 +95,7 @@ export default function Dashboard() {
   const [limit, setLimit] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPatients, setFilteredPatients] = useState([]);
 
   // Call RTK Query with server-side params
   const { data: patientsResp, error, isLoading, isError, refetch } = useGetPatientsQuery({ page, limit, q: searchQuery });
@@ -151,7 +153,12 @@ console.log("patients",patients);
         <CardContent>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             {/* Left side - Search */}
-            <Box display="flex" alignItems="center" gap={2}>
+              <SearchBar
+                patients={patients}
+                onFilter={ setFilteredPatients}
+              />
+            
+            {/* <Box display="flex" alignItems="center" gap={2}>
               <TextField
                 placeholder="Search patients..."
                 size="small"
@@ -183,7 +190,7 @@ console.log("patients",patients);
               >
                 Search
               </Button>
-            </Box>
+            </Box> */}
 
             
           </Box>          {/* Table */}
@@ -199,7 +206,7 @@ console.log("patients",patients);
               </TableRow>
             </TableHead>
             <TableBody>
-              {patients.length > 0 && patients.map((row, i) => {
+              {filteredPatients.length > 0 && filteredPatients.map((row, i) => {
                 const name = `${row.title ? row.title + " " : ""}${row.firstName || row.name || ""} ${row.lastName || ""}`.trim();
                 const id = row.patientId || row.id || "";
                 const dateTime = row.dateTime ? new Date(row.dateTime).toLocaleString() : row.date || "";
