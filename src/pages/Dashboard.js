@@ -1,4 +1,5 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import SearchBar from "../components/SearchBar";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
@@ -94,6 +95,7 @@ export default function Dashboard() {
   const [limit, setLimit] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [filteredPatients, setFilteredPatients] = useState([]);
 
   // Call RTK Query with server-side params
   const { data: patientsResp, error, isLoading, isError, refetch } = useGetPatientsQuery({ page, limit, q: searchQuery });
@@ -109,7 +111,7 @@ export default function Dashboard() {
   const total = patientsResp && (patientsResp.total || patientsResp.totalCount || patientsResp.meta?.total);
   const totalPages = total ? Math.ceil(total / limit) : null;
   const hasMore = totalPages ? page < totalPages : patients.length === limit;
-
+console.log("patients",patients);
   // Loading state: show a centered spinner
   if (isLoading) {
     return (
@@ -151,7 +153,12 @@ export default function Dashboard() {
         <CardContent>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             {/* Left side - Search */}
-            <Box display="flex" alignItems="center" gap={2}>
+              <SearchBar
+                patients={patients}
+                onFilter={ setFilteredPatients}
+              />
+            
+            {/* <Box display="flex" alignItems="center" gap={2}>
               <TextField
                 placeholder="Search patients..."
                 size="small"
@@ -183,10 +190,61 @@ export default function Dashboard() {
               >
                 Search
               </Button>
-            </Box>
+            </Box> */}
 
-            {/* Right side - Pagination */}
-            <Box display="flex" alignItems="center" gap={2}>
+            
+          </Box>          {/* Table */}
+          <Table sx={{ minWidth: 800 }}>
+            <TableHead>
+              <TableRow>
+                <TableCell width="30%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Name</TableCell>
+                <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Patient ID</TableCell>
+                <TableCell width="20%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Date & Time</TableCell>
+                <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Branch</TableCell>
+                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Sex</TableCell>
+                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Status</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {filteredPatients.length > 0 && filteredPatients.map((row, i) => {
+                const name = `${row.title ? row.title + " " : ""}${row.firstName || row.name || ""} ${row.lastName || ""}`.trim();
+                const id = row.patientId || row.id || "";
+                const dateTime = row.dateTime ? new Date(row.dateTime).toLocaleString() : row.date || "";
+                const branch = row.branch || "";
+                const sex = row.sex || "";
+                const status = (row.otherInfo && row.otherInfo.maritalStatus) || row.status || "";
+
+                return (
+                  <TableRow key={i}>
+                    <TableCell>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar sx={{ width: 32, height: 32 }}>{((row.firstName || row.name || "").charAt(0) || "").toUpperCase()}</Avatar>
+                        {name}
+                      </Box>
+                    </TableCell>
+                    <TableCell>{id}</TableCell>
+                    <TableCell>{dateTime}</TableCell>
+                    <TableCell>{branch}</TableCell>
+                    <TableCell>{sex}</TableCell>
+                    <TableCell>
+                      <Chip label={status} color={status === "Confirmed" ? "success" : status === "Canceled" ? "error" : "default"} size="small" />
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+          
+          {/* Total Records Line */}
+          <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+            <Typography variant="body2" color="text.secondary">
+              Total Records: {total || patients.length}
+            </Typography>
+          </Box>
+        </CardContent>
+
+        {/* Right side - Pagination */}
+            <Box display="flex" alignItems="center" gap={2} justifyContent="flex-end" borderTop={1} borderColor={"divider"}>
               <TextField
                 select
                 size="small"
@@ -225,55 +283,6 @@ export default function Dashboard() {
                 </Button>
               </Box>
             </Box>
-          </Box>          {/* Table */}
-          <Table sx={{ minWidth: 800 }}>
-            <TableHead>
-              <TableRow>
-                <TableCell width="30%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Name</TableCell>
-                <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Patient ID</TableCell>
-                <TableCell width="20%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Date & Time</TableCell>
-                <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Branch</TableCell>
-                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Sex</TableCell>
-                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Status</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {patients.length > 0 && patients.map((row, i) => {
-                const name = `${row.title ? row.title + " " : ""}${row.firstName || row.name || ""} ${row.lastName || ""}`.trim();
-                const id = row.patientId || row.id || "";
-                const dateTime = row.dateTime ? new Date(row.dateTime).toLocaleString() : row.date || "";
-                const branch = row.branch || "";
-                const sex = row.sex || "";
-                const status = (row.otherInfo && row.otherInfo.maritalStatus) || row.status || "";
-
-                return (
-                  <TableRow key={i}>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar sx={{ width: 32, height: 32 }}>{((row.firstName || row.name || "").charAt(0) || "").toUpperCase()}</Avatar>
-                        {name}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{id}</TableCell>
-                    <TableCell>{dateTime}</TableCell>
-                    <TableCell>{branch}</TableCell>
-                    <TableCell>{sex}</TableCell>
-                    <TableCell>
-                      <Chip label={status} color={status === "Confirmed" ? "success" : status === "Canceled" ? "error" : "default"} size="small" />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-          
-          {/* Total Records Line */}
-          <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="body2" color="text.secondary">
-              Total Records: {total || patients.length}
-            </Typography>
-          </Box>
-        </CardContent>
       </Card>
     </Box>
   );

@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { setToken } from '../auth/authSlice';
 
-const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const baseUrl = process.env.REACT_APP_API_URL || 'https://hms-api-ho1n.onrender.com/api';
 
 const baseQuery = fetchBaseQuery({
   baseUrl,

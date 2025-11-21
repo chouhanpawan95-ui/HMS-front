@@ -7,9 +7,10 @@ import Main from './pages/Main';
 import Registration from './pages/Registration';
 import BillTest from './pages/BillTest';
 import Dashboard from './pages/Dashboard';
-import Login from './pages/Login';
+// import Login from './pages/Login';
 import ProtectedRoute from './pages/ProtectedRoute';
 import ProtectedLayout from './pages/ProtectedLayout';
+import Billinginformation from './pages/Billinginformation';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Registration" element={<Registration />} />
             <Route path="/BillTest" element={<BillTest />} />
+            <Route path="/Billinginformation" element={<Billinginformation />} />
           </Routes>
         </Box>
       </Box>
