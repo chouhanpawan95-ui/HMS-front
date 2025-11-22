@@ -1,10 +1,9 @@
+import SearchBar from "../components/SearchBar";
 import React, { useState, useEffect } from "react";
 import {
   Box,
   Grid,
   TextField,
-  Select,
-  MenuItem,
   Table,
   TableBody,
   TableCell,
@@ -93,6 +92,7 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
   };
   // 🧾 Submit handler
   const handleSubmit = () => {
+    setOpenDialog(true);
     setOpenDialog(true);
   };
   const billDetails = {

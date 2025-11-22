@@ -17,11 +17,14 @@ import {
 import { useCreatePatientMutation } from "../features/api/patientsApi";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
+const now = new Date();
+const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+
 const defaultPatient = {
   patientId: "",
   branch: "",
   branchSelect: "",
-  dateTime: new Date().toISOString().slice(0, 16),
+  dateTime: ist.toISOString().slice(0, 16),
   oldNo: "",
   title: "",
   firstName: "",
@@ -38,7 +41,7 @@ const defaultPatient = {
     district: "",
     cityName: "",
     email: "",
-    phoneR: "",
+    phone: "",
     mobileNo: "",
     emergencyNo: "",
     personName: "",
@@ -72,20 +75,32 @@ const defaultPatient = {
 
 export default function PatientRegistrationForm() {
   const [patient, setPatient] = useState(defaultPatient);
+  const [errors, setErrors] = useState({});
   const [createPatient, { isLoading, isSuccess, isError, error }] =
     useCreatePatientMutation();
 
+  // required fields config (edit this array to change which fields are required)
+  const requiredFields = [
+    "patientId",
+    "branch",
+    "title",
+    "firstName",
+    "lastName",
+    "dateOfBirth",
+  ];
+
   // Function to calculate age (years) from DOB
   const calculateAge = (dob) => {
-    if (!dob) return '';
+    if (!dob) return "";
     const birthDate = new Date(dob);
     const today = new Date();
-    if (isNaN(birthDate.getTime())) return '';
-    if (birthDate > today) return '';
+    if (isNaN(birthDate.getTime())) return "";
+    if (birthDate > today) return "";
     let years = today.getFullYear() - birthDate.getFullYear();
     if (
       today.getMonth() < birthDate.getMonth() ||
-      (today.getMonth() === birthDate.getMonth() && today.getDate() < birthDate.getDate())
+      (today.getMonth() === birthDate.getMonth() &&
+        today.getDate() < birthDate.getDate())
     ) {
       years--;
     }
@@ -95,33 +110,43 @@ export default function PatientRegistrationForm() {
   // Function to calculate DOB (YYYY-MM-DD) from years
   const calculateDOBFromYears = (years) => {
     const y = parseInt(years, 10);
-    if (isNaN(y) || y < 0 || y > 150) return '';
+    if (isNaN(y) || y < 0 || y > 150) return "";
     const today = new Date();
     const dob = new Date(today);
     dob.setFullYear(today.getFullYear() - y);
-    return dob.toISOString().split('T')[0];
+    return dob.toISOString().split("T")[0];
   };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
+    // Clear error for the field being edited
+    // If nested (permanentAddress.cityName) clear parent key's error (if any)
+    const errorKey = name.includes(".") ? name.split(".")[0] : name;
+    setErrors((prev) => {
+      if (!prev[errorKey]) return prev;
+      const copy = { ...prev };
+      delete copy[errorKey];
+      return copy;
+    });
+
     // Nested fields like 'permanentAddress.cityName'
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
+    if (name.includes(".")) {
+      const [parent, child] = name.split(".");
       setPatient((prev) => ({
         ...prev,
         [parent]: {
           ...prev[parent],
-          [child]: type === 'checkbox' ? checked : value,
+          [child]: type === "checkbox" ? checked : value,
         },
       }));
       return;
     }
 
     // Date of birth changed -> update age (years)
-    if (name === 'dateOfBirth') {
+    if (name === "dateOfBirth") {
       if (!value) {
-        setPatient((prev) => ({ ...prev, dateOfBirth: '', ageYMD: '' }));
+        setPatient((prev) => ({ ...prev, dateOfBirth: "", ageYMD: "" }));
         return;
       }
       const dt = new Date(value);
@@ -135,11 +160,11 @@ export default function PatientRegistrationForm() {
     }
 
     // Age (years) changed -> update DOB
-    if (name === 'ageYMD') {
+    if (name === "ageYMD") {
       // accept only numbers
-      const numeric = value.toString().replace(/\D/g, '');
-      if (numeric === '') {
-        setPatient((prev) => ({ ...prev, ageYMD: '', dateOfBirth: '' }));
+      const numeric = value.toString().replace(/\D/g, "");
+      if (numeric === "") {
+        setPatient((prev) => ({ ...prev, ageYMD: "", dateOfBirth: "" }));
         return;
       }
       let years = parseInt(numeric, 10);
@@ -154,21 +179,62 @@ export default function PatientRegistrationForm() {
     // Regular fields
     setPatient((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const validate = () => {
+    let temp = {};
+
+    if (requiredFields.includes("patientId") && !patient.patientId)
+      temp.patientId = "Patient ID is required";
+    if (requiredFields.includes("branch") && !patient.branch)
+      temp.branch = "Branch is required";
+    if (requiredFields.includes("title") && !patient.title)
+      temp.title = "Title is required";
+    if (requiredFields.includes("firstName") && !patient.firstName)
+      temp.firstName = "First Name is required";
+    if (requiredFields.includes("lastName") && !patient.lastName)
+      temp.lastName = "Last Name is required";
+    if (requiredFields.includes("dateOfBirth") && !patient.dateOfBirth)
+      temp.dateOfBirth = "Date of Birth is required";
+    if (!patient.permanentAddress.addressLine) temp["permanentAddress.addressLine"] = "Address is requiered";
+    if (!patient.permanentAddress.mobileNo) { temp["permanentAddress.mobileNo"] = "Mobile No is requiered"; }
+    if (!patient.permanentAddress.district) { temp["permanentAddress.district"] = "District is requiered"; }
+    if (!patient.permanentAddress.cityName) { temp["permanentAddress.cityName"] = "City Name is requiered"; }
+    if (!patient.permanentAddress.stateName) { temp["permanentAddress.stateName"] = "State Name is requiered"; }
+    if (!patient.permanentAddress.country) { temp["permanentAddress.country"] = "Country is requiered"; }
+
+
+    setErrors(temp);
+    return Object.keys(temp).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validate()) {
+      // keep the accordion open and focus is optional — here we simply stop submit
+      return;
+    }
+
     try {
       await createPatient(patient).unwrap();
       setPatient(defaultPatient);
+      setErrors({});
     } catch (err) {
       console.error("Failed to create patient:", err);
     }
   };
 
-  const handleReset = () => setPatient(defaultPatient);
+  const handleReset = () => {
+    setPatient(defaultPatient);
+    setErrors({});
+  };
+
+  const isFutureDOB = patient.dateOfBirth
+    ? new Date(patient.dateOfBirth) > new Date()
+    : false;
 
   return (
     <Box
@@ -189,7 +255,7 @@ export default function PatientRegistrationForm() {
           mt: { xs: 6, sm: 8 },
         }}
       >
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           {/* HEADER */}
           <Typography
             variant="h4"
@@ -229,21 +295,10 @@ export default function PatientRegistrationForm() {
                     type: "datetime-local",
                     shrink: true,
                     disabled: true,
-
                   },
                   { label: "Old No", name: "oldNo" },
                 ].map((field) => (
                   <Grid item xs={12} sm={6} md={3} key={field.name}>
-                    {/* <TextField
-                      fullWidth
-                      label={field.label}
-                      name={field.name}
-                      type={field.type || "text"}
-                      InputLabelProps={field.shrink ? { shrink: true } : {}}
-                      value={patient[field.name]}
-                      onChange={handleChange}
-                      size="small"
-                    /> */}
                     <TextField
                       fullWidth
                       label={field.label}
@@ -253,9 +308,12 @@ export default function PatientRegistrationForm() {
                       value={patient[field.name]}
                       onChange={handleChange}
                       size="small"
-                      disabled={field.disabled || false}           // ✅ visually disabled
-                      inputProps={{ readOnly: field.disabled }}    // ✅ prevents opening calendar
-                      onClick={(e) => field.disabled && e.preventDefault()} // ✅ block popup click
+                      required={requiredFields.includes(field.name)}
+                      error={Boolean(errors[field.name])}
+                      helperText={errors[field.name]}
+                      disabled={field.disabled || false}
+                      inputProps={{ readOnly: field.disabled }}
+                      onClick={(e) => field.disabled && e.preventDefault()}
                     />
                   </Grid>
                 ))}
@@ -266,10 +324,13 @@ export default function PatientRegistrationForm() {
                     label="Title"
                     name="title"
                     fullWidth
+                    required={requiredFields.includes("title")}
                     value={patient.title}
                     onChange={handleChange}
                     size="small"
                     sx={{ width: 70 }}
+                    error={Boolean(errors.title)}
+                    helperText={errors.title}
                   >
                     <MenuItem value="Mr">Mr</MenuItem>
                     <MenuItem value="Mrs">Mrs</MenuItem>
@@ -285,10 +346,13 @@ export default function PatientRegistrationForm() {
                   <Grid item xs={12} sm={6} md={3} key={field.name}>
                     <TextField
                       fullWidth
+                      required={requiredFields.includes(field.name)}
                       label={field.label}
                       name={field.name}
                       value={patient[field.name]}
                       onChange={handleChange}
+                      error={Boolean(errors[field.name])}
+                      helperText={errors[field.name]}
                       size="small"
                     />
                   </Grid>
@@ -314,6 +378,7 @@ export default function PatientRegistrationForm() {
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
+                    required={requiredFields.includes("dateOfBirth")}
                     label="Date of Birth"
                     name="dateOfBirth"
                     type="date"
@@ -322,14 +387,16 @@ export default function PatientRegistrationForm() {
                     onChange={handleChange}
                     size="small"
                     inputProps={{
-                      max: new Date().toISOString().split('T')[0] // Prevents future dates
+                      max: new Date().toISOString().split("T")[0], // Prevents future dates
                     }}
+                    error={Boolean(errors.dateOfBirth) || isFutureDOB}
                     helperText={
-                      patient.dateOfBirth > new Date().toISOString().split('T')[0]
-                        ? "Future dates not allowed"
-                        : "Select date to auto-calculate age"
+                      errors.dateOfBirth
+                        ? errors.dateOfBirth
+                        : isFutureDOB
+                          ? "Future dates not allowed"
+                          : "Select date to auto-calculate age"
                     }
-                    error={patient.dateOfBirth > new Date().toISOString().split('T')[0]}
                   />
                 </Grid>
 
@@ -343,9 +410,9 @@ export default function PatientRegistrationForm() {
                     size="small"
                     type="text"
                     inputProps={{
-                      inputMode: 'numeric',
-                      pattern: '[0-9]*',
-                      maxLength: 3
+                      inputMode: "numeric",
+                      pattern: "[0-9]*",
+                      maxLength: 3,
                     }}
                     helperText="Enter age in years (0-150)"
                   />
@@ -365,7 +432,7 @@ export default function PatientRegistrationForm() {
             </AccordionDetails>
           </Accordion>
 
-          {/* ADDRESS */}
+          {/*  ADDRESS */ }
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="h6" fontWeight="bold" color="primary">
@@ -384,9 +451,12 @@ export default function PatientRegistrationForm() {
                   <TextField
                     fullWidth
                     multiline
+                    required
                     rows={3}
                     label="Address Line"
                     name="permanentAddress.addressLine"
+                    error={Boolean(errors["permanentAddress.addressLine"])}
+                    helperText={errors["permanentAddress.addressLine"]}
                     value={patient.permanentAddress.addressLine}
                     onChange={handleChange}
                     size="small"
@@ -414,6 +484,8 @@ export default function PatientRegistrationForm() {
                       value={patient.permanentAddress[field]}
                       onChange={handleChange}
                       size="small"
+                      error={Boolean(errors[`permanentAddress.${field}`])}
+                      helperText={errors[`permanentAddress.${field}`]}
                     />
                   </Grid>
                 ))}
@@ -424,7 +496,7 @@ export default function PatientRegistrationForm() {
                     <Typography
                       variant="subtitle1"
                       color="primary"
-                      sx={{ mr: 2 }} // small space between text and checkbox
+                      sx={{ mr: 2 }}
                     >
                       Current Address
                     </Typography>
@@ -438,11 +510,10 @@ export default function PatientRegistrationForm() {
                         />
                       }
                       label="Same as Permanent Address"
-                      sx={{ m: 0 }} // remove extra margin
+                      sx={{ m: 0 }}
                     />
                   </Box>
                 </Grid>
-
 
                 {!patient.currentAddress.sameAsPermanent && (
                   <>
@@ -545,13 +616,7 @@ export default function PatientRegistrationForm() {
           </Accordion>
 
           {/* BUTTONS */}
-          <Box
-            display="flex"
-            justifyContent="flex-end"
-            flexWrap="wrap"
-            gap={2}
-            mt={3}
-          >
+          <Box display="flex" justifyContent="flex-end" flexWrap="wrap" gap={2} mt={3}>
             <Button
               variant="outlined"
               color="secondary"
