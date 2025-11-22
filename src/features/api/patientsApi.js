@@ -41,8 +41,16 @@ export const patientsApi = createApi({
         body: patient,
       }),
     }),
+      // Mutation to create a new patient
+    createBill: builder.mutation({
+      query: (patient) => ({
+        url: '/billmasters',
+        method: 'POST',
+        body: patient,
+      }),
+    }),
   }),
 });
 
 // Export the auto-generated hooks
-export const { useGetPatientsQuery, useCreatePatientMutation } = patientsApi;
+export const { useGetPatientsQuery, useCreatePatientMutation,useCreateBillMutation } = patientsApi;

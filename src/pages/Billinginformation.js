@@ -23,21 +23,32 @@ import {
   DialogTitle,
 } from "@mui/material";
 import { Radio, RadioGroup, FormControl, FormLabel } from "@mui/material";
-import { useGetPatientsQuery } from "../features/api/patientsApi";
+import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
+const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] }) => {
 
-const Billinginformation = () => {
+  console.log("CategoryList:", categoryList);
   const [firstName, setFirstName] = useState("");
   const [containsOption, setContainsOption] = useState("Contains");
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
+  const [createbill, { isSuccess, isError, error }] =useCreateBillMutation();
+  const [billDate, setBillDate] = useState("");
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [filteredPatients, setFilteredPatients] = useState([]);
   const handleConfirmYes = () => {
     setOpenDialog(false);
     console.log("✅ Form submitted successfully!");
     // Your form submission logic here (API call etc.)
     setSelectedPatient(null); // Go back to table list after submission
   };
-
+  useEffect(() => {
+    const now = new Date();
+    // Format: 2025-01-20T15:30
+    const formatted = now.toISOString().slice(0, 16);
+    setBillDate(formatted);
+  }, []);
   // If user cancels (No)
   const handleConfirmNo = () => {
     setOpenDialog(false);
@@ -49,25 +60,6 @@ const Billinginformation = () => {
     : patientsResp && Array.isArray(patientsResp.data)
       ? patientsResp.data
       : [];
-
-
-
-  const handlePrev = () => {
-    if (page > 1) setPage(page - 1);
-  };
-
-  const handleNext = () => {
-    if (page < totalPages) setPage(page + 1);
-  };
-
-  const handleRowsChange = (e) => {
-    setRowsPerPage(parseInt(e.target.value, 10));
-    setPage(1);
-  };
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [filteredPatients, setFilteredPatients] = useState([]);
-  const totalPages = Math.ceil(filteredPatients.length / rowsPerPage);
   const paginatedPatients = filteredPatients.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
@@ -76,52 +68,102 @@ const Billinginformation = () => {
   useEffect(() => {
     setFilteredPatients(patients);
   }, [patients]);
-
-  // // 🧠 Auto-search on typing or option change
-  // useEffect(() => {
-  //   let filtered = [...patients];
-
-  //   if (firstName.trim() !== "") {
-  //     filtered = filtered.filter((p) => {
-  //       const name = (p.firstName || "").toLowerCase();
-  //       const search = firstName.toLowerCase();
-
-  //       if (containsOption === "Equals") return name === search;
-  //       if (containsOption === "Starts With") return name.startsWith(search);
-  //       return name.includes(search);
-  //     });
-  //   }
-
-  //   setFilteredPatients(filtered);
-  // }, [firstName, containsOption, patients]);
-
+  // 🧠 Auto-search on typing or option change
+  useEffect(() => {
+    let filtered = [...patients];
+    if (firstName.trim() !== "") {
+      filtered = filtered.filter((p) => {
+        const name = (p.firstName || "").toLowerCase();
+        const search = firstName.toLowerCase();
+        if (containsOption === "Equals") return name === search;
+        if (containsOption === "Starts With") return name.startsWith(search);
+        return name.includes(search);
+      });
+    }
+    setFilteredPatients(filtered);
+  }, [firstName, containsOption, patients]);
   // 🩺 Handle patient row click
   const handleRowClick = (patient) => {
     setSelectedPatient(patient);
   };
-
   // 🧾 Go back to patient table
   const handleBack = () => {
     setSelectedPatient(null);
   };
-
   // 🧾 Submit handler
   const handleSubmit = () => {
     setOpenDialog(true);
+    setOpenDialog(true);
   };
-
+  const billDetails = {
+  PK_BillId: "",
+  FK_BillingCompanyId: "",
+  FK_FinYearId: "",
+  FK_BranchId: "",
+  FK_BillTypeId: "",
+  FK_CategoryId: "",
+  FK_BillSerieseId: "",
+  BillNo: "",
+  BillDate: "",
+  BillTime: "",
+  FK_RegId: "",
+  FK_IPDId: "",
+    FK_DoctorId: "",
+    FK_DrDeptID: "",
+    FK_ReferredById: "",
+    FK_PartyId: "",
+    IsMLC: "",
+    IsAcademic: "",
+    AgeYear: "",
+    AgeMonth: "",
+    AgeDays: "",
+    TotalAmt: "",
+    ServiceChargeAmt: "",  
+    DiscountAmt: false,
+    NetBillAmt: "",
+    RateType: "",
+    Remarks: "",
+    Iscancel: "",
+    FK_CreatedById: "",
+    FK_CancelledById: "",
+    CancelledDateTime: "",
+    PrintCount: "",
+    FreeReason: "",
+    IsActive: "",
+    PK_SynchId: "",
+    OLDBillID: "",
+    OLDBillNo: "",
+    OLDRegID: "",
+    ReportDeliveryDateTime:"",
+    FK_OrganizerId: "",
+    Tokenno: "",
+    Cancelreason: "",
+    HospitalDiscount: "",
+    MOUDiscount: "",
+    FK_PaytypeID: "",
+    BillRefID: "",
+    Diagnosis: "",
+};
   return (
     <Box sx={{ background: "#fff", color: "#000", p: 2, mt: 8, minHeight: "100vh" }}>
       {/* =================== PATIENT SEARCH TABLE =================== */}
       {!selectedPatient ? (
         <>
-          {/* search bar  */}
-          <div className="searchBar">
-            <SearchBar
-              patients={patients}
-              onFilter={setFilteredPatients}
-            />
-          </div>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Search For FirstName
+          </Typography>
+
+          <Grid container spacing={2} alignItems="center">
+            <Grid item>
+              <TextField
+                size="small"
+                placeholder="Type name to search..."
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                sx={{ backgroundColor: "#fff" }}
+              />
+            </Grid>
+          </Grid>
 
           {/* Patient Table */}
           <TableContainer component={Paper}>
@@ -323,9 +365,12 @@ const Billinginformation = () => {
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     label="Bill Date/Time"
-                    // value={selectedPatient?.admissionId || ""}
+                    type="datetime-local"
                     size="small"
                     fullWidth
+                    value={billDate}
+                    onChange={(e) => setBillDate(e.target.value)}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
@@ -365,32 +410,55 @@ const Billinginformation = () => {
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                    label="Bill Entry type"
-                    // value={selectedPatient?.admissionId || ""}
-                    size="small"
+                    <TextField
+                    select
                     fullWidth
-                  />
+                    label="Bill Type entry"
+                    defaultValue=""
+                    sx={{ width: "230px", height: "10px" }}
+                  >
+                    <MenuItem value="">Bill Type entry</MenuItem>
+
+                    {billTypeList.map((bill) => (
+                      <MenuItem key={bill.id} value={bill.id}>
+                        {bill.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
-                    label="Category"
-                    // value={`${selectedPatient?.firstName || ""} ${
-                    //   selectedPatient?.lastName || ""
-                    // }`}
-                    size="small"
+                    select
                     fullWidth
-                  />
+                    label="Select Category"
+                    defaultValue=""
+                    sx={{ width: "230px", height: "10px" }}
+                  >
+                    <MenuItem value="">-- Select Category --</MenuItem>
+
+                    {categoryList.map((cat) => (
+                      <MenuItem key={cat.id} value={cat.id}>
+                        {cat.CategoryName}  {cat.CategoryCode}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
-                    label="Doctor Name"
-                    // value={`${selectedPatient?.ageYMD || ""} / ${
-                    //   selectedPatient?.sex || ""
-                    // }`}
-                    size="small"
+                    select
                     fullWidth
-                  />
+                    label="Select Doctor"
+                    defaultValue=""
+                    sx={{ width: "230px", height: "10px" }}
+                  >
+                    <MenuItem value="">-- Select Doctor --</MenuItem>
+
+                    {doctorList.map((doc) => (
+                      <MenuItem key={doc.id} value={doc.id}>
+                        {doc.name}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 </Grid>
                 <Grid
                   item
@@ -581,4 +649,4 @@ const Billinginformation = () => {
   );
 };
 
-export default Billinginformation;
+export default BillingInformation;
