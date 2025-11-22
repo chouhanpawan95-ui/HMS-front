@@ -1,4 +1,4 @@
-import SearchBar from "../components/SearchBar";
+
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -13,7 +13,6 @@ import {
   Paper,
   Typography,
   Button,
-  Checkbox,
   FormControlLabel,
   Divider,
   Dialog,
@@ -22,9 +21,10 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { Radio, RadioGroup, FormControl, FormLabel } from "@mui/material";
+import MenuItem from "@mui/material/MenuItem"
+import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
-const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] }) => {
+const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
 
   console.log("CategoryList:", categoryList);
   const [firstName, setFirstName] = useState("");
@@ -32,7 +32,7 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
-  const [createbill, { isSuccess, isError, error }] =useCreateBillMutation();
+  const [createbill, { isSuccess, isError, error }] = useCreateBillMutation();
   const [billDate, setBillDate] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -96,18 +96,18 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
     setOpenDialog(true);
   };
   const billDetails = {
-  PK_BillId: "",
-  FK_BillingCompanyId: "",
-  FK_FinYearId: "",
-  FK_BranchId: "",
-  FK_BillTypeId: "",
-  FK_CategoryId: "",
-  FK_BillSerieseId: "",
-  BillNo: "",
-  BillDate: "",
-  BillTime: "",
-  FK_RegId: "",
-  FK_IPDId: "",
+    PK_BillId: "",
+    FK_BillingCompanyId: "",
+    FK_FinYearId: "",
+    FK_BranchId: "",
+    FK_BillTypeId: "",
+    FK_CategoryId: "",
+    FK_BillSerieseId: "",
+    BillNo: "",
+    BillDate: "",
+    BillTime: "",
+    FK_RegId: "",
+    FK_IPDId: "",
     FK_DoctorId: "",
     FK_DrDeptID: "",
     FK_ReferredById: "",
@@ -118,7 +118,7 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
     AgeMonth: "",
     AgeDays: "",
     TotalAmt: "",
-    ServiceChargeAmt: "",  
+    ServiceChargeAmt: "",
     DiscountAmt: false,
     NetBillAmt: "",
     RateType: "",
@@ -134,7 +134,7 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
     OLDBillID: "",
     OLDBillNo: "",
     OLDRegID: "",
-    ReportDeliveryDateTime:"",
+    ReportDeliveryDateTime: "",
     FK_OrganizerId: "",
     Tokenno: "",
     Cancelreason: "",
@@ -143,7 +143,7 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
     FK_PaytypeID: "",
     BillRefID: "",
     Diagnosis: "",
-};
+  };
   return (
     <Box sx={{ background: "#fff", color: "#000", p: 2, mt: 8, minHeight: "100vh" }}>
       {/* =================== PATIENT SEARCH TABLE =================== */}
@@ -410,7 +410,7 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
-                    <TextField
+                  <TextField
                     select
                     fullWidth
                     label="Bill Type entry"

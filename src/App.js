@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import DoctorList from './Comman/DoctorList';
 import BillType from './Comman/BillType';
 import CategoryList from './Comman/CategoryList';
+import BillingInformation from './pages/Billinginformation'
 
 function App() {
   return (
