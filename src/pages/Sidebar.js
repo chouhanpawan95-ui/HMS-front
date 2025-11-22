@@ -7,7 +7,6 @@ import {
   ListItemText,
   Collapse,
   Box,
-  Divider,
   IconButton,
   useMediaQuery,
 } from "@mui/material";
@@ -16,15 +15,16 @@ import {
   Home as HomeIcon,
   ExpandLess,
   ExpandMore,
-  TableChart as TableIcon,
-  BarChart as ChartIcon,
-  FormatListBulleted as FormIcon,
-  Dashboard as DashboardIcon,
-  Widgets as UiIcon,
+  AppRegistration,
   ArrowRight as ArrowRightIcon,
   Menu as MenuIcon,
+  Payments,
+  EventAvailable,
+  Report,
+  PersonAddAlt
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+
 
 const Sidebar = ({ drawerWidth = 260 }) => {
   const [openMenu, setOpenMenu] = useState({
@@ -47,30 +47,57 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
   const drawerContent = (
     <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        backgroundColor: "#578ee5",
-        color: "#fff",
-      }}
+    // sx={{
+    //   display: "flex",
+    //   flexDirection: "column",
+    //   height: "100%",
+    //   backgroundColor: "#578ee5",
+    //   color: "#fff",
+    // }} id="sidebar-box"
     >
-      <Divider />
+      {/* <Divider /> */}
 
       {/* Menu Section */}
-      <Box sx={{ flexGrow: 1, overflowY: "auto" }}>
-        <List component="nav" sx={{ px: 1, mt: 8 }}>
+      <Box sx={{ flexGrow: 1, overflowY: "auto" }} >
+        <List component="nav" sx={{ px: 1, mt: 8 }} className="sidebar">
+
           {/* Dashboard */}
-          <ListItemButton component={Link} to="/Dashboard" onClick={handleMenuClick}>
-            <ListItemIcon>
-              <HomeIcon sx={{ color: "#fff" }} />
+          <div className="menu-item">
+            <ListItemIcon className="menu-icon">
+              <HomeIcon className="mt-icon-1" sx={{ color: "#fff" }} />
             </ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItemButton>
+            <ListItemButton className="menu-text" component={Link} to="/Dashboard" onClick={handleMenuClick}>
+              <ListItemText primary="Dashboard" />
+            </ListItemButton>
+          </div>
 
           {/* Registration */}
-          <ListItemButton>
-            <ListItemIcon>
+          <div className="menu-item">
+            <ListItemIcon className="menu-icon">
+              <AppRegistration className="mt-icon-1" sx={{ color: "#fff" }} />
+            </ListItemIcon>
+            <ListItemButton className="menu-text" onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleToggle("ui");
+            }}>
+              <ListItemText primary="Registration" />
+              <IconButton
+                edge="end"
+                size="small"
+                // onClick={(e) => {
+                //   e.stopPropagation();
+                //   e.preventDefault();
+                //   handleToggle("ui");
+                // }}
+                sx={{ ml: 1, color: "#fff" }}
+              >
+                {openMenu.ui ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </ListItemButton>
+          </div>
+          {/* <ListItemButton id="mt-toogle">
+            <ListItemIcon id="mt-icon">
               <UiIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Registration" />
@@ -86,7 +113,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             >
               {openMenu.ui ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
-          </ListItemButton>
+          </ListItemButton> */}
 
           <Collapse in={openMenu.ui} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -113,8 +140,28 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           </Collapse>
 
           {/* Billing */}
-          <ListItemButton component={Link} to="/Billing" onClick={handleMenuClick}>
-            <ListItemIcon>
+          <div className="menu-item">
+            <ListItemIcon className="menu-icon">
+              <Payments className="mt-icon-1" sx={{ color: "#fff" }} />
+            </ListItemIcon>
+            <ListItemButton className="menu-text" component={Link} to="/Billing" onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleToggle("icons");
+                }}>
+              <ListItemText primary="Billing" />
+              <IconButton
+                edge="end"
+                size="small"
+                
+                sx={{ ml: 1, color: "#fff" }}
+              >
+                {openMenu.icons ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </ListItemButton>
+          </div>
+          {/* <ListItemButton id="mt-toogle" component={Link} to="/Billing" onClick={handleMenuClick}>
+            <ListItemIcon id="mt-icon">
               <DashboardIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Billing" />
@@ -130,11 +177,11 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             >
               {openMenu.icons ? <ExpandLess /> : <ExpandMore />}
             </IconButton>
-          </ListItemButton>
+          </ListItemButton> */}
 
           <Collapse in={openMenu.icons} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-               <ListItemButton sx={{ pl: 6 }} component={Link} to="/" onClick={handleMenuClick}>
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/" onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
@@ -147,13 +194,22 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           </Collapse>
 
           {/* User Master */}
-          <ListItemButton onClick={() => handleToggle("forms")}>
-            <ListItemIcon>
+          <div className="menu-item">
+            <ListItemIcon className="menu-icon">
+              <PersonAddAlt className="mt-icon-1" sx={{ color: "#fff" }} />
+            </ListItemIcon>
+            <ListItemButton className="menu-text" onClick={() => handleToggle("forms")}>
+              <ListItemText primary="User Master" />
+              {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </div>
+          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("forms")}>
+            <ListItemIcon id="mt-icon">
               <FormIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="User Master" />
             {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
+          </ListItemButton> */}
           <Collapse in={openMenu.forms} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
@@ -169,13 +225,23 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           </Collapse>
 
           {/* Appointment */}
-          <ListItemButton onClick={() => handleToggle("charts")}>
-            <ListItemIcon>
+          <div className="menu-item">
+            <ListItemIcon className="menu-icon">
+              <EventAvailable className="mt-icon-1" sx={{ color: "#fff" }} />
+            </ListItemIcon>
+            <ListItemButton className="menu-text" onClick={() => handleToggle("charts")}>
+              <ListItemText primary="Appointment" />
+              {openMenu.charts ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </div>
+
+          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("charts")}>
+            <ListItemIcon id="mt-icon">
               <ChartIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Appointment" />
             {openMenu.charts ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
+          </ListItemButton> */}
           <Collapse in={openMenu.charts} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
@@ -191,13 +257,23 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           </Collapse>
 
           {/* Report */}
-          <ListItemButton onClick={() => handleToggle("tables")}>
-            <ListItemIcon>
+          <div className="menu-item">
+            <ListItemIcon className="menu-icon">
+              <Report className="mt-icon-1" sx={{ color: "#fff" }} />
+            </ListItemIcon>
+            <ListItemButton className="menu-text" onClick={() => handleToggle("tables")}>
+              <ListItemText primary="Report" />
+              {openMenu.tables ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+          </div>
+
+          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("tables")}>
+            <ListItemIcon id="mt-icon">
               <TableIcon sx={{ color: "#fff" }} />
             </ListItemIcon>
             <ListItemText primary="Report" />
             {openMenu.tables ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
+          </ListItemButton> */}
           <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
@@ -240,11 +316,12 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           ModalProps={{ keepMounted: true }}
           sx={{
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
+              width: 'auto',
               backgroundColor: "#fff",
               boxSizing: "border-box",
             },
           }}
+          PaperProps={{ sx: { boxShadow: 'none' } }}
         >
           {drawerContent}
         </Drawer>
@@ -252,10 +329,9 @@ const Sidebar = ({ drawerWidth = 260 }) => {
         <Drawer
           variant="permanent"
           sx={{
-            width: drawerWidth,
             flexShrink: 0,
             [`& .MuiDrawer-paper`]: {
-              width: drawerWidth,
+              width: 'auto',
               boxSizing: "border-box",
               backgroundColor: "#fff",
               borderRight: "1px solid #e0e0e0",
@@ -263,6 +339,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               height: "100vh",
             },
           }}
+          PaperProps={{ sx: { boxShadow: 'none', minWidth: 0 } }}
           open
         >
           {drawerContent}

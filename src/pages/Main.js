@@ -1,24 +1,23 @@
 import React from "react";
-import {
-  Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Avatar,
-  Divider,
-  useTheme,
-  useMediaQuery,
-} from "@mui/material";
-import Footer from "./Footer";
+// import {
+//   Grid,
+//   Card,
+//   CardContent,
+//   Typography,
+//   Avatar,
+//   Divider,
+//   useTheme,
+//   useMediaQuery,
+// } from "@mui/material";
+// import Footer from "./Footer";
 import Sidebar from "./Sidebar";
 import Registration from "./Registration";
 import BillTest from "./BillTest";
 import Dashboard from "./Dashboard";
 
 export default function Main() {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  // const theme = useTheme();
+  // const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
   return (
     <div class="container-fluid page-body-wrapper">    

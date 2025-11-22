@@ -12,23 +12,19 @@ import {
   Badge,
   Divider,
   Tooltip,
-  Drawer,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
+  Drawer
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
   MailOutline as MailIcon,
   NotificationsNone as NotificationsIcon,
-  PowerSettingsNew as PowerIcon,
+  // PowerSettingsNew as PowerIcon,
   Settings as SettingsIcon,
   Fullscreen as FullscreenIcon,
   Cached as CachedIcon,
   Logout as LogoutIcon,
-  Dashboard as DashboardIcon,
+  // Dashboard as DashboardIcon,
 } from "@mui/icons-material";
 
 export default function Navbar() {
@@ -48,13 +44,13 @@ export default function Navbar() {
   // Sidebar Drawer for Mobile
   const drawer = (
     <Box sx={{ width: 240 }} role="presentation" onClick={handleDrawerToggle}>
-      
-       
-       
-      </Box>
-     
-         
-   
+
+
+
+    </Box>
+
+
+
   );
 
   return (
@@ -65,13 +61,13 @@ export default function Navbar() {
         elevation={1}
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-        backgroundColor:"#578ee5" ,color:"#fff"
+          backgroundColor: "#578ee5", color: "#fff"
         }}
       >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between",ml:4,mt:1 }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between", ml: 4, mt: 1 }}>
           {/* LEFT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
-            {/* Mobile menu icon */}           
+            {/* Mobile menu icon */}
 
             {/* Logo */}
             {/* <Box
@@ -117,7 +113,7 @@ export default function Navbar() {
           </Box>
 
           {/* RIGHT SECTION */}
-          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1,color:"#fff" }}>
+          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1, color: "#fff" }}>
             <IconButton
               color="inherit"
               onClick={(e) => setAnchorElMessages(e.currentTarget)}
@@ -158,14 +154,33 @@ export default function Navbar() {
       </AppBar>
 
       {/* MOBILE DRAWER */}
+      {/* <Drawer
+        anchor="left"
+        open={mobileOpen}
+        onClose={handleDrawerToggle}
+        ModalProps={{ keepMounted: true }}
+        sx={{
+          display: { xs: "block", md: "none" },
+          // "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240 },
+          '& .MuiDrawer-paper': {
+            width: 'auto',     // or any value you want
+          },
+        }}
+      >
+        {drawer}
+      </Drawer> */}
       <Drawer
         anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
         ModalProps={{ keepMounted: true }}
         sx={{
-          display: { xs: "block", md: "none"},
-          "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240},
+          display: { xs: "block", md: "none" },
+          "& .MuiDrawer-paper": {
+            boxSizing: "border-box",
+            width: "auto !important",   // FORCE override
+            maxWidth: "none",
+          },
         }}
       >
         {drawer}
