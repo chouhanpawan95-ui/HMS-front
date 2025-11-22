@@ -89,7 +89,7 @@ h6 {
 }
 
 .documentation .left-sidebar {
-  width: 260px;
+  width: auto;
   padding: 20px 30px;
   background-color: #f7f7f7;
   position: fixed;
@@ -118,8 +118,8 @@ h6 {
 }
 
 @media (max-width: 767px) {
-  .left-sidebar{
-    display:none;
+  .left-sidebar {
+    display: none;
   }
 }
 
@@ -224,118 +224,118 @@ h6 {
 /* Pws-tabs */
 
 .pws_tabs_container ul.pws_tabs_controll {
-	border-bottom: 1px solid #b66dff;
+  border-bottom: 1px solid #b66dff;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li:first-child a {
-	border-radius: 5px 0px 0px 0px;
+  border-radius: 5px 0px 0px 0px;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li:last-child a {
-	border-right: 1px solid #b66dff;
-	border-radius: 0px 5px 0px 0px;
+  border-right: 1px solid #b66dff;
+  border-radius: 0px 5px 0px 0px;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li a {
-	border: 1px solid #b66dff;
-	border-bottom: none;
-	border-right: none;
-	background: #fff;
-	color: #b66dff;
-	padding: 0.6em 1.3em;
-	margin-right: 0;
+  border: 1px solid #b66dff;
+  border-bottom: none;
+  border-right: none;
+  background: #fff;
+  color: #b66dff;
+  padding: 0.6em 1.3em;
+  margin-right: 0;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li a:hover {
-	background: #fff;
-	color: #b66dff;
+  background: #fff;
+  color: #b66dff;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li a.pws_tab_active {
-	background: -webkit-gradient(linear, left top, right top, from(#da8cff), to(#9a55ff));
-	background: linear-gradient(to right, #da8cff, #9a55ff);
-	color: #fff;
+  background: -webkit-gradient(linear, left top, right top, from(#da8cff), to(#9a55ff));
+  background: linear-gradient(to right, #da8cff, #9a55ff);
+  color: #fff;
 }
 
 .pws_tabs_container .demo-tabs {
-	border: 1px solid #b66dff;
-	border-radius: 0px 5px 5px 5px;
-	overflow: hidden;
-	margin-bottom: 45px;
-	padding-top: 2rem;
+  border: 1px solid #b66dff;
+  border-radius: 0px 5px 5px 5px;
+  overflow: hidden;
+  margin-bottom: 45px;
+  padding-top: 2rem;
 }
 
 .pws_tabs_container .demo-tabs .CodeMirror {
-	margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll {
-	border-right: none;
-	border-bottom: none;
+  border-right: none;
+  border-bottom: none;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll li:first-child a {
-	border-radius: 5px 0px 0px 0px;
+  border-radius: 5px 0px 0px 0px;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll li:last-child a {
-	border-bottom: 1px solid #b66dff;
-	border-radius: 0px 0px 0px 5px;
-	border-right: 0px;
+  border-bottom: 1px solid #b66dff;
+  border-radius: 0px 0px 0px 5px;
+  border-right: 0px;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll li a {
-	border-radius: 0px;
-	border: 1px solid #b66dff;
-	border-right: none;
-	border-bottom: none;
-	margin-bottom: 0;
+  border-radius: 0px;
+  border: 1px solid #b66dff;
+  border-right: none;
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_list {
-	margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll {
-	border-top: 1px solid #b66dff;
-	border-right: none;
-	border-bottom: none;
+  border-top: 1px solid #b66dff;
+  border-right: none;
+  border-bottom: none;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll li:first-child a {
-	border-radius: 0px 0px 0px 5px;
+  border-radius: 0px 0px 0px 5px;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll li:last-child a {
-	border-radius: 0px 0px 5px 0px;
-	border-right: 1px solid #b66dff;
+  border-radius: 0px 0px 5px 0px;
+  border-right: 1px solid #b66dff;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll li a {
-	border-radius: 0px;
-	border: 1px solid #b66dff;
-	border-top: none;
-	border-right: none;
-	margin-right: 0;
-	margin-bottom: 0;
+  border-radius: 0px;
+  border: 1px solid #b66dff;
+  border-top: none;
+  border-right: none;
+  margin-right: 0;
+  margin-bottom: 0;
 }
 
 .pws_tabs_container.pws_tabs_rtl .pws_tabs_controll li:first-child a {
-	border-radius: 0px 5px 0px 0px;
-	border-right: 1px solid #b66dff;
+  border-radius: 0px 5px 0px 0px;
+  border-right: 1px solid #b66dff;
 }
 
 .pws_tabs_container.pws_tabs_rtl .pws_tabs_controll li:last-child a {
-	border-right: none;
-	border-radius: 5px 0px 0px 0px;
+  border-right: none;
+  border-radius: 5px 0px 0px 0px;
 }
 
 .pws_tabs_container.pws_tabs_rtl .pws_tabs_controll li a {
-	border: 1px solid #b66dff;
-	border-bottom: none;
-	border-right: none;
-	margin-right: 0;
-	margin-left: 0;
+  border: 1px solid #b66dff;
+  border-bottom: none;
+  border-right: none;
+  margin-right: 0;
+  margin-left: 0;
 }
 
 li {
@@ -343,9 +343,44 @@ li {
 }
 
 @media (max-width: 767px) {
-  .left-sidebar{
-    display:none;
+  .left-sidebar {
+    display: none;
   }
 }
 
 /* Pws-tabs end */
+
+/* Override MUI Drawer width and shadow so the sidebar doesn't force 260px or show unwanted shadow */
+.MuiDrawer-docked .MuiDrawer-paper,
+.css-1rr0cle-MuiDrawer-docked .MuiDrawer-paper {
+  width: auto !important;
+  box-shadow: none !important;
+  --Paper-shadow: none !important;
+}
+
+/* When the drawer is programmatically hidden (aria-hidden), ensure it doesn't leave a visible strip */
+.MuiDrawer-root[aria-hidden="true"] .MuiDrawer-paper {
+  width: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Stronger overrides: target generated class prefixes and ensure no min/max width constraints
+   These rules increase specificity and add min/max rules to defeat MUI-injected stylesheet
+   or inline width styles that are not using !important. */
+[class*="MuiDrawer"] .MuiDrawer-paper,
+[class*="MuiDrawer-docked"] .MuiDrawer-paper,
+[class^="css-"] .MuiDrawer-paper,
+.MuiDrawer-root .MuiDrawer-paper {
+  width: auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  box-shadow: none !important;
+  border-right: none !important;
+}
+
+/* If your drawer element has an inline style applying width at runtime, the following
+   rule will override it (unless that inline style uses !important). */
+.MuiDrawer-paper[style] {
+  width: auto !important;
+}

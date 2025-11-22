@@ -118,8 +118,8 @@ h6 {
 }
 
 @media (max-width: 767px) {
-  .left-sidebar{
-    display:none;
+  .left-sidebar {
+    display: none;
   }
 }
 
@@ -224,118 +224,118 @@ h6 {
 /* Pws-tabs */
 
 .pws_tabs_container ul.pws_tabs_controll {
-	border-bottom: 1px solid #b66dff;
+  border-bottom: 1px solid #b66dff;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li:first-child a {
-	border-radius: 5px 0px 0px 0px;
+  border-radius: 5px 0px 0px 0px;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li:last-child a {
-	border-right: 1px solid #b66dff;
-	border-radius: 0px 5px 0px 0px;
+  border-right: 1px solid #b66dff;
+  border-radius: 0px 5px 0px 0px;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li a {
-	border: 1px solid #b66dff;
-	border-bottom: none;
-	border-right: none;
-	background: #fff;
-	color: #b66dff;
-	padding: 0.6em 1.3em;
-	margin-right: 0;
+  border: 1px solid #b66dff;
+  border-bottom: none;
+  border-right: none;
+  background: #fff;
+  color: #b66dff;
+  padding: 0.6em 1.3em;
+  margin-right: 0;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li a:hover {
-	background: #fff;
-	color: #b66dff;
+  background: #fff;
+  color: #b66dff;
 }
 
 .pws_tabs_container ul.pws_tabs_controll li a.pws_tab_active {
-	background: -webkit-gradient(linear, left top, right top, from(#da8cff), to(#9a55ff));
-	background: linear-gradient(to right, #da8cff, #9a55ff);
-	color: #fff;
+  background: -webkit-gradient(linear, left top, right top, from(#da8cff), to(#9a55ff));
+  background: linear-gradient(to right, #da8cff, #9a55ff);
+  color: #fff;
 }
 
 .pws_tabs_container .demo-tabs {
-	border: 1px solid #b66dff;
-	border-radius: 0px 5px 5px 5px;
-	overflow: hidden;
-	margin-bottom: 45px;
-	padding-top: 2rem;
+  border: 1px solid #b66dff;
+  border-radius: 0px 5px 5px 5px;
+  overflow: hidden;
+  margin-bottom: 45px;
+  padding-top: 2rem;
 }
 
 .pws_tabs_container .demo-tabs .CodeMirror {
-	margin-bottom: 20px;
+  margin-bottom: 20px;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll {
-	border-right: none;
-	border-bottom: none;
+  border-right: none;
+  border-bottom: none;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll li:first-child a {
-	border-radius: 5px 0px 0px 0px;
+  border-radius: 5px 0px 0px 0px;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll li:last-child a {
-	border-bottom: 1px solid #b66dff;
-	border-radius: 0px 0px 0px 5px;
-	border-right: 0px;
+  border-bottom: 1px solid #b66dff;
+  border-radius: 0px 0px 0px 5px;
+  border-right: 0px;
 }
 
 .pws_tabs_container.pws_tabs_vertical .pws_tabs_controll li a {
-	border-radius: 0px;
-	border: 1px solid #b66dff;
-	border-right: none;
-	border-bottom: none;
-	margin-bottom: 0;
+  border-radius: 0px;
+  border: 1px solid #b66dff;
+  border-right: none;
+  border-bottom: none;
+  margin-bottom: 0;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_list {
-	margin-bottom: 0;
+  margin-bottom: 0;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll {
-	border-top: 1px solid #b66dff;
-	border-right: none;
-	border-bottom: none;
+  border-top: 1px solid #b66dff;
+  border-right: none;
+  border-bottom: none;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll li:first-child a {
-	border-radius: 0px 0px 0px 5px;
+  border-radius: 0px 0px 0px 5px;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll li:last-child a {
-	border-radius: 0px 0px 5px 0px;
-	border-right: 1px solid #b66dff;
+  border-radius: 0px 0px 5px 0px;
+  border-right: 1px solid #b66dff;
 }
 
 .pws_tabs_container.pws_tabs_horizontal_bottom .pws_tabs_controll li a {
-	border-radius: 0px;
-	border: 1px solid #b66dff;
-	border-top: none;
-	border-right: none;
-	margin-right: 0;
-	margin-bottom: 0;
+  border-radius: 0px;
+  border: 1px solid #b66dff;
+  border-top: none;
+  border-right: none;
+  margin-right: 0;
+  margin-bottom: 0;
 }
 
 .pws_tabs_container.pws_tabs_rtl .pws_tabs_controll li:first-child a {
-	border-radius: 0px 5px 0px 0px;
-	border-right: 1px solid #b66dff;
+  border-radius: 0px 5px 0px 0px;
+  border-right: 1px solid #b66dff;
 }
 
 .pws_tabs_container.pws_tabs_rtl .pws_tabs_controll li:last-child a {
-	border-right: none;
-	border-radius: 5px 0px 0px 0px;
+  border-right: none;
+  border-radius: 5px 0px 0px 0px;
 }
 
 .pws_tabs_container.pws_tabs_rtl .pws_tabs_controll li a {
-	border: 1px solid #b66dff;
-	border-bottom: none;
-	border-right: none;
-	margin-right: 0;
-	margin-left: 0;
+  border: 1px solid #b66dff;
+  border-bottom: none;
+  border-right: none;
+  margin-right: 0;
+  margin-left: 0;
 }
 
 li {
@@ -343,8 +343,8 @@ li {
 }
 
 @media (max-width: 767px) {
-  .left-sidebar{
-    display:none;
+  .left-sidebar {
+    display: none;
   }
 }
 

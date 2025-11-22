@@ -11,6 +11,7 @@ import BillType from './Comman/BillType';
 import CategoryList from './Comman/CategoryList';
 import BillingInformation from './pages/BillingInformation';
 
+
 function App() {
   return (
     <BrowserRouter>
@@ -18,7 +19,8 @@ function App() {
         <Header />
         <Sidebar />
 
-        <Box component="main" sx={{ flexGrow: 1 }}>
+        {/* Main content area where Routes render */}
+        <Box component="main" sx={{ flexGrow: 1 }} className='css-1du1ywb'>   
           <Routes>
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Registration" element={<Registration />} />

@@ -1,14 +1,12 @@
 ﻿import SearchBar from "../components/SearchBar";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Box,
-  Grid,
   Typography,
   Card,
   CardContent,
   Button,
   TextField,
-  InputAdornment,
   Table,
   TableHead,
   TableBody,
@@ -21,10 +19,6 @@ import {
   Alert,
   MenuItem,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import FilterAltIcon from "@mui/icons-material/FilterAlt";
-import AddCircleIcon from "@mui/icons-material/AddCircle";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
 
@@ -44,48 +38,48 @@ const data = [
   { day: "Sun", medical: 70, appointed: 60 },
 ];
 
-const appointments = [
-  {
-    name: "Isa Isgenderov",
-    id: "47229037",
-    date: "Jan 25 - 13:00",
-    type: "Dermatology",
-    doctor: "Akhmadov S.",
-    status: "Changed",
-  },
-  {
-    name: "Murad Mamedli",
-    id: "15287533",
-    date: "Jan 25 - 13:30",
-    type: "Ophthalmology",
-    doctor: "Asgarov D.",
-    status: "Confirmed",
-  },
-  {
-    name: "Diana Huseynova",
-    id: "88770126",
-    date: "Jan 25 - 13:00",
-    type: "Radiology",
-    doctor: "Suleymanova A.",
-    status: "Confirmed",
-  },
-  {
-    name: "Akber Rzayev",
-    id: "92170213",
-    date: "Jan 25 - 14:00",
-    type: "Gastroenterology",
-    doctor: "Rzayeva S.",
-    status: "Canceled",
-  },
-  {
-    name: "Said Qasimov",
-    id: "85147324",
-    date: "Jan 25 - 14:30",
-    type: "Pediatrics",
-    doctor: "Mammadov S.",
-    status: "Confirmed",
-  },
-];
+// const appointments = [
+//   {
+//     name: "Isa Isgenderov",
+//     id: "47229037",
+//     date: "Jan 25 - 13:00",
+//     type: "Dermatology",
+//     doctor: "Akhmadov S.",
+//     status: "Changed",
+//   },
+//   {
+//     name: "Murad Mamedli",
+//     id: "15287533",
+//     date: "Jan 25 - 13:30",
+//     type: "Ophthalmology",
+//     doctor: "Asgarov D.",
+//     status: "Confirmed",
+//   },
+//   {
+//     name: "Diana Huseynova",
+//     id: "88770126",
+//     date: "Jan 25 - 13:00",
+//     type: "Radiology",
+//     doctor: "Suleymanova A.",
+//     status: "Confirmed",
+//   },
+//   {
+//     name: "Akber Rzayev",
+//     id: "92170213",
+//     date: "Jan 25 - 14:00",
+//     type: "Gastroenterology",
+//     doctor: "Rzayeva S.",
+//     status: "Canceled",
+//   },
+//   {
+//     name: "Said Qasimov",
+//     id: "85147324",
+//     date: "Jan 25 - 14:30",
+//     type: "Pediatrics",
+//     doctor: "Mammadov S.",
+//     status: "Confirmed",
+//   },
+// ];
 
 export default function Dashboard() {
   const theme = useTheme();
@@ -93,7 +87,7 @@ export default function Dashboard() {
   // Pagination / search state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const [searchTerm, setSearchTerm] = useState("");
+  // const [searchTerm, setSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
 
@@ -194,7 +188,7 @@ console.log("patients",patients);
 
             
           </Box>          {/* Table */}
-          <Table sx={{ minWidth: 800 }}>
+          <Table sx={{ minWidth: 800, overflowX: "auto" }} >
             <TableHead>
               <TableRow>
                 <TableCell width="30%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Name</TableCell>
