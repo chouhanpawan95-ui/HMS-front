@@ -1,4 +1,4 @@
-import BillingInformation from "../pages/BillingInformation";
+
 import DoctorList from "./DoctorList";
 import BillType from "./BillType";
 import CategoryList from "./CategoryList";
