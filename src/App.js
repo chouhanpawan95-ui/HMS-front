@@ -3,14 +3,13 @@ import { Box } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Header from './pages/Header';
 import Sidebar from './pages/Sidebar';
-import Main from './pages/Main';
 import Registration from './pages/Registration';
 import BillTest from './pages/BillTest';
 import Dashboard from './pages/Dashboard';
-// import Login from './pages/Login';
-import ProtectedRoute from './pages/ProtectedRoute';
-import ProtectedLayout from './pages/ProtectedLayout';
-import Billinginformation from './pages/Billinginformation';
+import DoctorList from './Comman/DoctorList';
+import BillType from './Comman/BillType';
+import CategoryList from './Comman/CategoryList';
+import BillingInformation from './pages/BillingInformation';
 
 function App() {
   return (
@@ -19,14 +18,23 @@ function App() {
         <Header />
         <Sidebar />
 
-        {/* Main content area where Routes render */}
         <Box component="main" sx={{ flexGrow: 1 }}>
           <Routes>
-             {/* <Route path="/" element={<Login />} /> */}
             <Route path="/Dashboard" element={<Dashboard />} />
             <Route path="/Registration" element={<Registration />} />
             <Route path="/BillTest" element={<BillTest />} />
-            <Route path="/Billinginformation" element={<Billinginformation />} />
+
+            {/* FIXED: Billinginformation route */}
+            <Route
+              path="/Billinginformation"
+              element={
+                <BillingInformation
+                  doctorList={DoctorList}
+                  billTypeList={BillType}
+                  categoryList={CategoryList}
+                />
+              }
+            />
           </Routes>
         </Box>
       </Box>

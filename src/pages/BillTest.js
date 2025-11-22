@@ -6,5 +6,4 @@ export default function BillTest() {
       <h2>BillTest</h2>
     </div>
   )
-  
 }
