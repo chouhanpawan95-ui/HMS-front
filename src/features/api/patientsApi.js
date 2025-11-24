@@ -41,7 +41,7 @@ export const patientsApi = createApi({
         body: patient,
       }),
     }),
-      // Mutation to create a new patient
+      // Mutation to create a new Bill
     createBill: builder.mutation({
       query: (patient) => ({
         url: '/billmasters',
@@ -49,8 +49,21 @@ export const patientsApi = createApi({
         body: patient,
       }),
     }),
+        // To get patient id wise bill
+     getPatientId: builder.query({
+      // args is an object with optional query params
+      query: (args = {}) => {
+        const { patientId } = args;
+        const params = {};
+        if (patientId !== undefined) params.patientId = patientId;
+        return {
+          url: 'patients/next-id',
+          method: 'GET',
+        };
+      }
+    }),
   }),
 });
 
 // Export the auto-generated hooks
-export const { useGetPatientsQuery, useCreatePatientMutation,useCreateBillMutation } = patientsApi;
+export const { useGetPatientsQuery,useGetPatientIdQuery, useCreatePatientMutation,useCreateBillMutation } = patientsApi;

@@ -16,10 +16,10 @@ import {
 } from "@mui/material";
 import { useCreatePatientMutation } from "../features/api/patientsApi";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import {useGetPatientIdQuery } from "../features/api/patientsApi";
 
 const now = new Date();
 const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-
 const defaultPatient = {
   patientId: "",
   branch: "",
@@ -78,7 +78,8 @@ export default function PatientRegistrationForm() {
   const [errors, setErrors] = useState({});
   const [createPatient, { isLoading, isSuccess, isError, error }] =
     useCreatePatientMutation();
-
+  const { data: PatientId } = useGetPatientIdQuery();
+  console.log("Next PatientId:", PatientId?.nextId ?? "");
   // required fields config (edit this array to change which fields are required)
   const requiredFields = [
     "patientId",
@@ -88,6 +89,14 @@ export default function PatientRegistrationForm() {
     "lastName",
     "dateOfBirth",
   ];
+React.useEffect(() => {
+  if (PatientId?.nextId) {
+    setPatient((prev) => ({
+      ...prev,
+      patientId: PatientId.nextId,
+    }));
+  }
+}, [PatientId]);
 
   // Function to calculate age (years) from DOB
   const calculateAge = (dob) => {
@@ -217,7 +226,6 @@ export default function PatientRegistrationForm() {
       // keep the accordion open and focus is optional — here we simply stop submit
       return;
     }
-
     try {
       await createPatient(patient).unwrap();
       setPatient(defaultPatient);
@@ -286,38 +294,50 @@ export default function PatientRegistrationForm() {
             </AccordionSummary>
             <AccordionDetails>
               <Grid container spacing={4}>
-                {[
-                  { label: "Patient ID", name: "patientId" },
-                  { label: "Branch", name: "branch" },
-                  {
-                    label: "Date & Time",
-                    name: "dateTime",
-                    type: "datetime-local",
-                    shrink: true,
-                    disabled: true,
-                  },
-                  { label: "Old No", name: "oldNo" },
-                ].map((field) => (
-                  <Grid item xs={12} sm={6} md={3} key={field.name}>
-                    <TextField
-                      fullWidth
-                      label={field.label}
-                      name={field.name}
-                      type={field.type || "text"}
-                      InputLabelProps={field.shrink ? { shrink: true } : {}}
-                      value={patient[field.name]}
-                      onChange={handleChange}
-                      size="small"
-                      required={requiredFields.includes(field.name)}
-                      error={Boolean(errors[field.name])}
-                      helperText={errors[field.name]}
-                      disabled={field.disabled || false}
-                      inputProps={{ readOnly: field.disabled }}
-                      onClick={(e) => field.disabled && e.preventDefault()}
-                    />
-                  </Grid>
-                ))}
-
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Patient ID"
+                    name="patientId"
+                    value={PatientId?.nextId ?? ""}
+                    onChange={handleChange}
+                    size="small"
+                    type="text"  
+                    disabled                
+                  />
+                </Grid>                
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Branch"
+                    name="branch"                   
+                    onChange={handleChange}
+                    size="small"
+                    type="text"                                    
+                  />                  
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Date & Time"
+                    name="dateTime" 
+                    value={patient.dateTime}                  
+                    onChange={handleChange}
+                    size="small"
+                    type="text"                                    
+                  />                  
+                </Grid>
+                 <Grid item xs={12} sm={6} md={3}>
+                  <TextField
+                    fullWidth
+                    label="Old No"
+                    name="oldNo" 
+                    value={patient.oldNo}                  
+                    onChange={handleChange}
+                    size="small"
+                    type="text"                                    
+                  />                  
+                </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     select
