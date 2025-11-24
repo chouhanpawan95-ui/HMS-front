@@ -6,10 +6,7 @@ import Sidebar from './pages/Sidebar';
 import Registration from './pages/Registration';
 import BillTest from './pages/BillTest';
 import Dashboard from './pages/Dashboard';
-import DoctorList from './Comman/DoctorList';
-import BillType from './Comman/BillType';
-import CategoryList from './Comman/CategoryList';
-import BillingInformation from './pages/BillingInformation';
+import BillingInformation from './pages/Billinginformation';
 
 
 function App() {
@@ -30,10 +27,7 @@ function App() {
             <Route
               path="/Billinginformation"
               element={
-                <BillingInformation
-                  doctorList={DoctorList}
-                  billTypeList={BillType}
-                  categoryList={CategoryList}
+                <BillingInformation               
                 />
               }
             />
