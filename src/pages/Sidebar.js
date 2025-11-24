@@ -24,9 +24,24 @@ import {
   PersonAddAlt
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
+
 
 
 const Sidebar = ({ drawerWidth = 260 }) => {
+  const location = useLocation();
+
+  useEffect(() => {
+    setOpenMenu({
+      ui:false,
+      icons:false,
+      froms:false,
+      charts:false,
+      tables:false,
+    });
+  }, [location]);
+
   const [openMenu, setOpenMenu] = useState({
     ui: false,
     icons: false,
@@ -97,24 +112,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               </IconButton>
             </ListItemButton>
           </div>
-          {/* <ListItemButton id="mt-toogle">
-            <ListItemIcon id="mt-icon">
-              <UiIcon sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText primary="Registration" />
-            <IconButton
-              edge="end"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                handleToggle("ui");
-              }}
-              sx={{ ml: 1, color: "#fff" }}
-            >
-              {openMenu.ui ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          </ListItemButton> */}
+        
 
           <Collapse in={openMenu.ui} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -161,24 +159,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               </IconButton>
             </ListItemButton>
           </div>
-          {/* <ListItemButton id="mt-toogle" component={Link} to="/Billing" onClick={handleMenuClick}>
-            <ListItemIcon id="mt-icon">
-              <DashboardIcon sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText primary="Billing" />
-            <IconButton
-              edge="end"
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                handleToggle("icons");
-              }}
-              sx={{ ml: 1, color: "#fff" }}
-            >
-              {openMenu.icons ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          </ListItemButton> */}
 
           <Collapse in={openMenu.icons} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -204,13 +184,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
           </div>
-          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("forms")}>
-            <ListItemIcon id="mt-icon">
-              <FormIcon sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText primary="User Master" />
-            {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton> */}
           <Collapse in={openMenu.forms} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
@@ -236,13 +209,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             </ListItemButton>
           </div>
 
-          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("charts")}>
-            <ListItemIcon id="mt-icon">
-              <ChartIcon sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText primary="Appointment" />
-            {openMenu.charts ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton> */}
           <Collapse in={openMenu.charts} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
@@ -268,13 +234,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             </ListItemButton>
           </div>
 
-          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("tables")}>
-            <ListItemIcon id="mt-icon">
-              <TableIcon sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText primary="Report" />
-            {openMenu.tables ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton> */}
+          
           <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>

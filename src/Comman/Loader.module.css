@@ -1,0 +1,14 @@
+.loader{
+  display: flex;
+  justify-content: center;
+  inset: 0px;
+  align-items: center;
+  height: 90vh;
+  margin: 0px auto;
+}
+
+.loader iframe {
+  width: 160px;
+  height: 160px;
+  border: 0;
+}

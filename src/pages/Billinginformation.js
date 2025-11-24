@@ -24,6 +24,11 @@ import {
 import MenuItem from "@mui/material/MenuItem"
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
+
+import SearchBar from "../Comman/SearchBar.jsx";
+import Loader from "../Comman/Loader.jsx";
+
+
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
 
   console.log("CategoryList:", categoryList);
@@ -153,7 +158,13 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             Search For FirstName
           </Typography>
 
-          <Grid container spacing={2} alignItems="center">
+          <SearchBar sx={{ mb: '5px' }}
+            patients={patients}
+            onFilter={setFilteredPatients}
+          />
+
+
+          {/* <Grid container spacing={2} alignItems="center">
             <Grid item>
               <TextField
                 size="small"
@@ -163,10 +174,10 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 sx={{ backgroundColor: "#fff" }}
               />
             </Grid>
-          </Grid>
+          </Grid> */}
 
           {/* Patient Table */}
-          <TableContainer component={Paper}>
+          <TableContainer component={Paper} sx={{ mt:5 }}>
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#578EE5" }}>
@@ -195,7 +206,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={9} align="center">
-                      Loading...
+                      <Loader/>
                     </TableCell>
                   </TableRow>
                 ) : paginatedPatients.length > 0 ? (

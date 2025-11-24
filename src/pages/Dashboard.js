@@ -1,4 +1,4 @@
-﻿import SearchBar from "../components/SearchBar";
+﻿import SearchBar from "../Comman/SearchBar";
 import React, { useState } from "react";
 import {
   Box,
@@ -21,6 +21,7 @@ import {
 } from "@mui/material";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
+import Loader from "../Comman/Loader";
 
 const statCards = [
   { title: "Total Visitors", value: 178, change: "+14.8%", color: "success.main" },
@@ -109,9 +110,7 @@ console.log("patients",patients);
   // Loading state: show a centered spinner
   if (isLoading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" height="60vh">
-        <CircularProgress />
-      </Box>
+      <Loader/>
     );
   }
 
