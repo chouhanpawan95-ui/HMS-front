@@ -25,8 +25,8 @@ import MenuItem from "@mui/material/MenuItem"
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
 
-import SearchBar from "../Comman/SearchBar.jsx";
-import Loader from "../Comman/Loader.jsx";
+import SearchBar from "../component/SearchBar.jsx";
+import Loader from "../component/Loader.jsx";
 
 
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
@@ -177,7 +177,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
           </Grid> */}
 
           {/* Patient Table */}
-          <TableContainer component={Paper} sx={{ mt:5 }}>
+          <TableContainer component={Paper} sx={{ mt: 5 }}>
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#578EE5" }}>
@@ -186,10 +186,10 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     "Date",
                     "FirstName",
                     "LastName",
+                    "Age",
                     "MobileNo",
                     "DOB",
                     "Address",
-                    "PhoneNo",
                     "OLD MRNO",
                   ].map((col) => (
                     <TableCell
@@ -206,7 +206,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={9} align="center">
-                      <Loader/>
+                      <Loader />
                     </TableCell>
                   </TableRow>
                 ) : paginatedPatients.length > 0 ? (
@@ -221,10 +221,10 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       <TableCell>{p.dateTime}</TableCell>
                       <TableCell>{p.firstName}</TableCell>
                       <TableCell>{p.lastName}</TableCell>
-                      <TableCell>{p.mobileNo}</TableCell>
+                      <TableCell>{p.ageYMD}</TableCell>
+                      <TableCell>{p.permanentAddress?.mobileNo}</TableCell>
                       <TableCell>{p.dateOfBirth}</TableCell>
-                      <TableCell>{p.addressLine}</TableCell>
-                      <TableCell>{p.phoneNo}</TableCell>
+                      <TableCell>{p.permanentAddress?.addressLine}</TableCell>
                       <TableCell>{p.oldNo}</TableCell>
                     </TableRow>
                   ))
