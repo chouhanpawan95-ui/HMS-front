@@ -22,11 +22,10 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { Radio, RadioGroup, FormControl, FormLabel } from "@mui/material";
+import { Radio, RadioGroup, FormControl, FormLabel,MenuItem } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
-const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] }) => {
+const BillingInformation = () => {
 
-  console.log("CategoryList:", categoryList);
   const [firstName, setFirstName] = useState("");
   const [containsOption, setContainsOption] = useState("Contains");
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -37,6 +36,23 @@ const BillingInformation = ({ doctorList= [], billTypeList= [],categoryList= [] 
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const billTypeList = [
+  { id:1, name: "Consultation" },
+  { id: 2, name: "Investigation" },
+  { id: 3, name: "In-door" },
+];
+const categoryList = [
+  { id: 1, CategoryName: "General",CategoryCode:12615935 },
+  { id: 2, CategoryName: "Senior Citizens",CategoryCode :16777088},
+  { id: 3, CategoryName: "In-Camp",CategoryCode:12615935},
+  { id: 4, CategoryName: "School Camp",CategoryCode:8453888},
+{ id: 4, CategoryName: "Post OP",CategoryCode:12615935},
+];
+const doctorList = [
+  { id: 1, name: "Dr. Mehta Verma" },
+  { id: 2, name: "Dr. Sharma Sharma" },
+  { id: 3, name: "Dr. Singh Mehta" },
+];
   const handleConfirmYes = () => {
     setOpenDialog(false);
     console.log("✅ Form submitted successfully!");

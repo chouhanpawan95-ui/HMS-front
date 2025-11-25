@@ -204,21 +204,15 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
             </ListItemButton>
           </div>
-          {/* <ListItemButton id="mt-toogle" onClick={() => handleToggle("forms")}>
-            <ListItemIcon id="mt-icon">
-              <FormIcon sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText primary="User Master" />
-            {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton> */}
+       
           <Collapse in={openMenu.forms} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/CountryMaster" onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Form Elements"
+                  primary="CountryMaster"
                   primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
