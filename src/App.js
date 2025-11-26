@@ -14,7 +14,9 @@ import CategoryList from './Comman/CategoryList';
 import BillingInformation from './pages/Billinginformation'
 import Layout from './pages/Layout';
 import DistrictMaster from './Master/Location/DistrictMaster';
-
+import AddUsermaster from './Master/UserManagement/AddUsermaster';
+import UserMaster from './Master/UserManagement/UserMaster';
+import UpdateUser from './Master/UserManagement/UpdateUser';
 function App() {
   return (
     <BrowserRouter>
@@ -31,8 +33,10 @@ function App() {
               <Route path="/BillTest" element={<BillTest />} />
               <Route path="/CountryMaster" element={<CountryMaster />} />
               <Route path='/StateMaster' element={<StateMaster/>}/>
-              <Route path='/DistrictMaster' element={<DistrictMaster/>}/>
-
+              <Route path='DistrictMaster' element={<DistrictMaster/>}/>
+              <Route path='/AddUsermaster' element={<AddUsermaster/>}/>
+              <Route path='/UserMaster' element={<UserMaster/>}/>
+              <Route path="/UpdateUser/:id" element={<UpdateUser />} />
               {/* FIXED: Billinginformation route */}
               <Route
                 path="/Billinginformation"

@@ -60,7 +60,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
   const drawerContent = (
     <Box>
-      
+
       {/* Menu Section */}
       <Box sx={{ flexGrow: 1, overflowY: "auto" }} >
         <List component="nav" sx={{ px: 1, mt: 8 }} className="sidebar">
@@ -130,7 +130,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               e.preventDefault();
               handleToggle("um");
             }}>
-              <ListItemText primary="User Master" />
+              <ListItemText primary="Master" />
               <IconButton
                 edge="end"
                 size="small"
@@ -153,7 +153,40 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
 
-                <ListItemText primary='Location' />
+                <ListItemText primary='User Master' sx={{ fontSize: 18, color: "#fff" }} />
+                <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
+                  {openMenu.loc ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              </ListItemButton>
+
+              <Collapse in={openMenu.loc} timeout='auto' unmountOnExit>
+                <List component="div" disablePadding sx={{ fontSize: 18, color: "#fff" }}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/UserMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="User Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
+
+                </List>
+              </Collapse>
+            </List>
+          </Collapse>
+          <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
+            <List component='div' disablePadding>
+
+              <ListItemButton sx={{ pl: 6 }} onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleToggle('loc');
+              }}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
+                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                </ListItemIcon>
+
+                <ListItemText primary='Location' sx={{ fontSize: 18, color: "#fff" }} />
                 <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
                   {openMenu.loc ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
@@ -164,7 +197,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
                   <ListItemButton sx={{ pl: 6 }} component={Link} to="/CountryMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
-                      <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                     </ListItemIcon>
                     <ListItemText
                       primary="Country Master"
@@ -174,7 +206,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
                   <ListItemButton sx={{ pl: 6 }} component={Link} to="/StateMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
-                      <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                     </ListItemIcon>
                     <ListItemText
                       primary="State Master"
@@ -182,7 +213,14 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/DistrictMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="District Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
                 </List>
               </Collapse>
             </List>
@@ -191,8 +229,8 @@ const Sidebar = ({ drawerWidth = 260 }) => {
         </List>
 
 
-      {/* Appointment */}
-      {/* <div className="menu-item">
+        {/* Appointment */}
+        {/* <div className="menu-item">
         <ListItemIcon className="menu-icon">
           <EventAvailable className="mt-icon-1" sx={{ color: "#fff" }} />
         </ListItemIcon>
@@ -202,7 +240,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
         </ListItemButton>
       </div> */}
 
-      {/* <Collapse in={openMenu.charts} timeout="auto" unmountOnExit>
+        {/* <Collapse in={openMenu.charts} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
             <ListItemIcon sx={{ minWidth: 30 }}>
@@ -216,8 +254,8 @@ const Sidebar = ({ drawerWidth = 260 }) => {
         </List>
       </Collapse> */}
 
-      {/* Report */}
-      {/* <div className="menu-item">
+        {/* Report */}
+        {/* <div className="menu-item">
         <ListItemIcon className="menu-icon">
           <Report className="mt-icon-1" sx={{ color: "#fff" }} />
         </ListItemIcon>
@@ -228,7 +266,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
       </div> */}
 
 
-      {/* <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
+        {/* <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
         <List component="div" disablePadding>
           <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
             <ListItemIcon sx={{ minWidth: 30 }}>
@@ -241,66 +279,66 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           </ListItemButton>
         </List>
       </Collapse> */}
-    
+
       </Box >
     </Box >
   );
 
-return (
-  <>
-    {/* Mobile Toggle Button */}
-    {isMobile && (
-      <IconButton
-        color="inherit"
-        aria-label="open drawer"
-        edge="start"
-        onClick={() => setMobileOpen(!mobileOpen)}
-        sx={{ m: 1, position: "fixed", top: 10, left: 10, zIndex: 1300 }}
-      >
-        <MenuIcon />
-      </IconButton>
-    )}
+  return (
+    <>
+      {/* Mobile Toggle Button */}
+      {isMobile && (
+        <IconButton
+          color="inherit"
+          aria-label="open drawer"
+          edge="start"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          sx={{ m: 1, position: "fixed", top: 10, left: 10, zIndex: 1300 }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
 
-    {/* Drawer */}
-    {isMobile ? (
-      <Drawer
-        variant="temporary"
-        open={mobileOpen}
-        onClose={() => setMobileOpen(false)}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          "& .MuiDrawer-paper": {
-            width: 'auto',
-            backgroundColor: "#fff",
-            boxSizing: "border-box",
-          },
-        }}
-        PaperProps={{ sx: { boxShadow: 'none' } }}
-      >
-        {drawerContent}
-      </Drawer>
-    ) : (
-      <Drawer
-        variant="permanent"
-        sx={{
-          flexShrink: 0,
-          [`& .MuiDrawer-paper`]: {
-            width: 'auto',
-            boxSizing: "border-box",
-            backgroundColor: "#fff",
-            borderRight: "1px solid #e0e0e0",
-            position: "fixed",
-            height: "100vh",
-          },
-        }}
-        PaperProps={{ sx: { boxShadow: 'none', minWidth: 0 } }}
-        open
-      >
-        {drawerContent}
-      </Drawer>
-    )}
-  </>
-);
+      {/* Drawer */}
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={() => setMobileOpen(false)}
+          ModalProps={{ keepMounted: true }}
+          sx={{
+            "& .MuiDrawer-paper": {
+              width: 'auto',
+              backgroundColor: "#fff",
+              boxSizing: "border-box",
+            },
+          }}
+          PaperProps={{ sx: { boxShadow: 'none' } }}
+        >
+          {drawerContent}
+        </Drawer>
+      ) : (
+        <Drawer
+          variant="permanent"
+          sx={{
+            flexShrink: 0,
+            [`& .MuiDrawer-paper`]: {
+              width: 'auto',
+              boxSizing: "border-box",
+              backgroundColor: "#fff",
+              borderRight: "1px solid #e0e0e0",
+              position: "fixed",
+              height: "100vh",
+            },
+          }}
+          PaperProps={{ sx: { boxShadow: 'none', minWidth: 0 } }}
+          open
+        >
+          {drawerContent}
+        </Drawer>
+      )}
+    </>
+  );
 };
 
 export default Sidebar;
