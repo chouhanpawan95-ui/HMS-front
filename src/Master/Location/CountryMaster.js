@@ -1,7 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { Container, TextField, Button, Typography, Box } from "@mui/material";
-import styles from "../component/Container.module.css";
+import styles from "../../component/Container.module.css";
 
 const CountryMaster = () => {
   const [locationData, setLocationData] = useState({});
@@ -32,7 +32,7 @@ const CountryMaster = () => {
       <Typography variant="h4" className={styles.header}>Country Master</Typography>
 
       <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-        
+
         <TextField
           fullWidth
           label="Country Name"
@@ -52,7 +52,7 @@ const CountryMaster = () => {
         />
 
         <Button className={styles.button} variant="contained" fullWidth type="submit" sx={{ mt: 2 }}>
-          Save Country
+          Save 
         </Button>
       </form>
 

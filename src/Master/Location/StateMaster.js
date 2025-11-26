@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Container, TextField, Button, Typography, Box } from "@mui/material";
-import styles from "../component/Container.module.css";
+import styles from "../../component/Container.module.css";
+
 
 const StateMaster = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -64,7 +65,7 @@ const StateMaster = () => {
           />
 
           <Button className={styles.button} variant="contained" fullWidth type="submit" sx={{ mt: 2 }}>
-            Save State
+            Save 
           </Button>
         </form>
       </div>
