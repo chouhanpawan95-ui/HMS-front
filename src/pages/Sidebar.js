@@ -182,15 +182,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/DistrictMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                      <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="District Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
+                  
                 </List>
               </Collapse>
             </List>

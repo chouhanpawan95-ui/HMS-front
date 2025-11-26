@@ -31,7 +31,7 @@ function App() {
               <Route path="/BillTest" element={<BillTest />} />
               <Route path="/CountryMaster" element={<CountryMaster />} />
               <Route path='/StateMaster' element={<StateMaster/>}/>
-              <Route path='DistrictMaster' element={<DistrictMaster/>}/>
+              <Route path='/DistrictMaster' element={<DistrictMaster/>}/>
 
               {/* FIXED: Billinginformation route */}
               <Route
