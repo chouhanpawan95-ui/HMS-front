@@ -25,8 +25,8 @@ import MenuItem from "@mui/material/MenuItem"
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
 
-import SearchBar from "../component/SearchBar.jsx";
-import Loader from "../component/Loader.jsx";
+import SearchBar from "../component/SearchBar.js";
+import Loader from "../component/Loader.js";
 
 
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {

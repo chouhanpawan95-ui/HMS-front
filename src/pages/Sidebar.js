@@ -34,11 +34,11 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
   useEffect(() => {
     setOpenMenu({
-      ui:false,
-      icons:false,
-      froms:false,
-      charts:false,
-      tables:false,
+      ui: false,
+      icons: false,
+      froms: false,
+      charts: false,
+      tables: false,
     });
   }, [location]);
 
@@ -101,18 +101,12 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               <IconButton
                 edge="end"
                 size="small"
-                // onClick={(e) => {
-                //   e.stopPropagation();
-                //   e.preventDefault();
-                //   handleToggle("ui");
-                // }}
                 sx={{ ml: 1, color: "#fff" }}
               >
                 {openMenu.ui ? <ExpandLess /> : <ExpandMore />}
               </IconButton>
             </ListItemButton>
           </div>
-        
 
           <Collapse in={openMenu.ui} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
@@ -138,54 +132,56 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             </List>
           </Collapse>
 
-          {/* Billing */}
+          {/* User Master */}
           <div className="menu-item">
             <ListItemIcon className="menu-icon">
-              <Payments className="mt-icon-1" sx={{ color: "#fff" }} />
+              <PersonAddAlt className="mt-icon-1" sx={{ color: "#fff" }} />
             </ListItemIcon>
-            <ListItemButton className="menu-text" component={Link} to="/Billing" onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleToggle("icons");
-                }}>
-              <ListItemText primary="Billing" />
+            <ListItemButton className="menu-text" onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              handleToggle("um");
+            }}>
+              <ListItemText primary="User Master" />
               <IconButton
                 edge="end"
                 size="small"
-                
                 sx={{ ml: 1, color: "#fff" }}
               >
-                {openMenu.icons ? <ExpandLess /> : <ExpandMore />}
+                {openMenu.um ? <ExpandLess /> : <ExpandMore />}
               </IconButton>
             </ListItemButton>
           </div>
 
-          <Collapse in={openMenu.icons} timeout="auto" unmountOnExit>
+          <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }} component={Link} to="/" onClick={handleMenuClick}>
+
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/CountryMaster" onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
                 <ListItemText
-                  primary="Billing"
+                  primary="Country Master"
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                />
+              </ListItemButton>
+
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/StateMaster" onClick={handleMenuClick}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
+                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="State Master"
                   primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
             </List>
           </Collapse>
 
-          {/* User Master */}
-          <div className="menu-item">
-            <ListItemIcon className="menu-icon">
-              <PersonAddAlt className="mt-icon-1" sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemButton className="menu-text" onClick={() => handleToggle("forms")}>
-              <ListItemText primary="User Master" />
-              {openMenu.forms ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-          </div>
-          <Collapse in={openMenu.forms} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
+
+          {/* <Collapse in={openMenu.forms} timeout="auto" unmountOnExit>
+            <List component="div" disablePadding> 
+
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
@@ -195,8 +191,18 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                   primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                 />
               </ListItemButton>
+
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/CountryMaster" onClick={handleMenuClick}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
+                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Country Master"
+                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                />
+              </ListItemButton>
             </List>
-          </Collapse>
+          </Collapse> */}
 
           {/* Appointment */}
           <div className="menu-item">
@@ -234,7 +240,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             </ListItemButton>
           </div>
 
-          
+
           <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
               <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
