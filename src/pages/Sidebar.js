@@ -130,7 +130,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               e.preventDefault();
               handleToggle("um");
             }}>
-              <ListItemText primary="User Master" />
+              <ListItemText primary="Master" />
               <IconButton
                 edge="end"
                 size="small"
@@ -153,7 +153,40 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
 
-                <ListItemText primary='Location' />
+                <ListItemText primary='User Master' sx={{ fontSize: 18, color: "#fff" }}/>
+                <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
+                  {openMenu.loc ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              </ListItemButton>
+
+              <Collapse in={openMenu.loc} timeout='auto' unmountOnExit>
+                <List component="div" disablePadding sx={{ fontSize: 18, color: "#fff" }}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/UserMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>                      
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="User Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>             
+                 
+                </List>
+              </Collapse>
+            </List>
+          </Collapse>
+            <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
+            <List component='div' disablePadding>
+
+              <ListItemButton sx={{ pl: 6 }} onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleToggle('loc');
+              }}>
+                <ListItemIcon sx={{ minWidth: 30 }}>
+                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                </ListItemIcon>
+
+                <ListItemText primary='Location' sx={{ fontSize: 18, color: "#fff" }}/>
                 <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
                   {openMenu.loc ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
@@ -163,8 +196,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                 <List component="div" disablePadding>
 
                   <ListItemButton sx={{ pl: 6 }} component={Link} to="/CountryMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                      <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                    <ListItemIcon sx={{ minWidth: 30 }}>                    
                     </ListItemIcon>
                     <ListItemText
                       primary="Country Master"
@@ -173,8 +205,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                   </ListItemButton>
 
                   <ListItemButton sx={{ pl: 6 }} component={Link} to="/StateMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                      <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                    <ListItemIcon sx={{ minWidth: 30 }}>                   
                     </ListItemIcon>
                     <ListItemText
                       primary="State Master"
@@ -183,14 +214,13 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                   </ListItemButton>
 
                   <ListItemButton sx={{ pl: 6 }} component={Link} to="/DistrictMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                      <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
+                    <ListItemIcon sx={{ minWidth: 30 }}>                    
                     </ListItemIcon>
                     <ListItemText
                       primary="District Master"
                       primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                     />
-                  </ListItemButton>
+                  </ListItemButton>                 
                 </List>
               </Collapse>
             </List>
