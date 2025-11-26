@@ -1,4 +1,4 @@
-﻿import SearchBar from "../Comman/SearchBar";
+﻿import SearchBar from "../component/SearchBar";
 import React, { useState } from "react";
 import {
   Box,
@@ -21,7 +21,7 @@ import {
 } from "@mui/material";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import Loader from "../Comman/Loader";
+import Loader from "../component/Loader";
 
 const statCards = [
   { title: "Total Visitors", value: 178, change: "+14.8%", color: "success.main" },
@@ -91,7 +91,7 @@ export default function Dashboard() {
   // const [searchTerm, setSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
-
+  console.log("Filter patin: ", filteredPatients);
   // Call RTK Query with server-side params
   const { data: patientsResp, error, isLoading, isError, refetch } = useGetPatientsQuery({ page, limit, q: searchQuery });
 
@@ -99,18 +99,18 @@ export default function Dashboard() {
   const patients = Array.isArray(patientsResp)
     ? patientsResp
     : patientsResp && Array.isArray(patientsResp.data)
-    ? patientsResp.data
-    : [];
+      ? patientsResp.data
+      : [];
 
   // total count if provided by API
   const total = patientsResp && (patientsResp.total || patientsResp.totalCount || patientsResp.meta?.total);
   const totalPages = total ? Math.ceil(total / limit) : null;
   const hasMore = totalPages ? page < totalPages : patients.length === limit;
-console.log("patients",patients);
+  console.log("patients", patients);
   // Loading state: show a centered spinner
   if (isLoading) {
     return (
-      <Loader/>
+      <Loader />
     );
   }
 
@@ -146,11 +146,11 @@ console.log("patients",patients);
         <CardContent>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             {/* Left side - Search */}
-              <SearchBar
-                patients={patients}
-                onFilter={ setFilteredPatients}
-              />
-            
+            <SearchBar
+              patients={patients}
+              onFilter={setFilteredPatients}
+            />
+
             {/* <Box display="flex" alignItems="center" gap={2}>
               <TextField
                 placeholder="Search patients..."
@@ -185,17 +185,18 @@ console.log("patients",patients);
               </Button>
             </Box> */}
 
-            
+
           </Box>          {/* Table */}
           <Table sx={{ minWidth: 800, overflowX: "auto" }} >
             <TableHead>
               <TableRow>
-                <TableCell width="30%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Name</TableCell>
                 <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Patient ID</TableCell>
+                <TableCell width="30%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Name</TableCell>
                 <TableCell width="20%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Date & Time</TableCell>
-                <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Branch</TableCell>
+                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>DOB</TableCell>
                 <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Sex</TableCell>
-                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Status</TableCell>
+                <TableCell width="20%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>MobileNo</TableCell>
+                <TableCell width="25%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Address</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -206,28 +207,31 @@ console.log("patients",patients);
                 const branch = row.branch || "";
                 const sex = row.sex || "";
                 const status = (row.otherInfo && row.otherInfo.maritalStatus) || row.status || "";
+                const dob = row.dateOfBirth || "";
+                const address = row.permanentAddress?.addressLine || "";
+                const mobile = row.permanentAddress?.mobileNo || "";
 
                 return (
                   <TableRow key={i}>
+
+                    <TableCell>{id}</TableCell>
                     <TableCell>
                       <Box display="flex" alignItems="center" gap={1}>
                         <Avatar sx={{ width: 32, height: 32 }}>{((row.firstName || row.name || "").charAt(0) || "").toUpperCase()}</Avatar>
                         {name}
                       </Box>
                     </TableCell>
-                    <TableCell>{id}</TableCell>
                     <TableCell>{dateTime}</TableCell>
-                    <TableCell>{branch}</TableCell>
+                    <TableCell>{dob}</TableCell>
                     <TableCell>{sex}</TableCell>
-                    <TableCell>
-                      <Chip label={status} color={status === "Confirmed" ? "success" : status === "Canceled" ? "error" : "default"} size="small" />
-                    </TableCell>
+                    <TableCell>{mobile}</TableCell>
+                    <TableCell>{address}</TableCell>
                   </TableRow>
                 );
               })}
             </TableBody>
           </Table>
-          
+
           {/* Total Records Line */}
           <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
             <Typography variant="body2" color="text.secondary">
@@ -237,45 +241,45 @@ console.log("patients",patients);
         </CardContent>
 
         {/* Right side - Pagination */}
-            <Box display="flex" alignItems="center" gap={2} justifyContent="flex-end" borderTop={1} borderColor={"divider"}>
-              <TextField
-                select
-                size="small"
-                value={limit}
-                onChange={(e) => {
-                  const v = Number(e.target.value) || 10;
-                  setLimit(v);
-                  setPage(1);
-                }}
-                sx={{ width: 80 }}
-              >
-                <MenuItem value={5}>5</MenuItem>
-                <MenuItem value={10}>10</MenuItem>
-                <MenuItem value={20}>20</MenuItem>
-              </TextField>
+        <Box display="flex" alignItems="center" gap={2} justifyContent="flex-end" borderTop={1} borderColor={"divider"}>
+          <TextField
+            select
+            size="small"
+            value={limit}
+            onChange={(e) => {
+              const v = Number(e.target.value) || 10;
+              setLimit(v);
+              setPage(1);
+            }}
+            sx={{ width: 80 }}
+          >
+            <MenuItem value={5}>5</MenuItem>
+            <MenuItem value={10}>10</MenuItem>
+            <MenuItem value={20}>20</MenuItem>
+          </TextField>
 
-              <Box display="flex" alignItems="center" gap={1}>
-                <Button 
-                  size="small" 
-                  variant="outlined"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))} 
-                  disabled={page === 1}
-                >
-                  Prev
-                </Button>
-                <Typography variant="body2" sx={{ mx: 1 }}>
-                  Page {page}{totalPages ? ` / ${totalPages}` : ''}
-                </Typography>
-                <Button 
-                  size="small" 
-                  variant="outlined"
-                  onClick={() => setPage((p) => p + 1)} 
-                  disabled={!hasMore}
-                >
-                  Next
-                </Button>
-              </Box>
-            </Box>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={page === 1}
+            >
+              Prev
+            </Button>
+            <Typography variant="body2" sx={{ mx: 1 }}>
+              Page {page}{totalPages ? ` / ${totalPages}` : ''}
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => setPage((p) => p + 1)}
+              disabled={!hasMore}
+            >
+              Next
+            </Button>
+          </Box>
+        </Box>
       </Card>
     </Box>
   );
