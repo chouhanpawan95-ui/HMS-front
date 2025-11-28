@@ -26,7 +26,7 @@ export default function Footer() {
           mb: { xs: 1, sm: 0 },
         }}
       >
-        © 2023{" "}
+        © 2025{" "}
         <Link
           href="https://www.bootstrapdash.com/"
           target="_blank"

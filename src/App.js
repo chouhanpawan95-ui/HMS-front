@@ -37,6 +37,7 @@ function App() {
               <Route path='/AddUsermaster' element={<AddUsermaster/>}/>
               <Route path='/UserMaster' element={<UserMaster/>}/>
               <Route path="/UpdateUser/:id" element={<UpdateUser />} />
+              <Route path='/ServiceDepartmentMaster' element={<ServiceDepartmentMaster/>}/>
               {/* FIXED: Billinginformation route */}
               <Route
                 path="/Billinginformation"
