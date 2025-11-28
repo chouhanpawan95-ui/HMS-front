@@ -157,6 +157,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                 <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
                   {openMenu.ms ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
+
               </ListItemButton>
 
               <Collapse in={openMenu.ms} timeout='auto' unmountOnExit>
@@ -175,6 +176,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             </List>
           </Collapse>
 
+          {/* location */}
           <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
             <List component='div' disablePadding>
 
@@ -226,10 +228,39 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               </Collapse>
             </List>
           </Collapse>
-
+          
+          {/* Billing */}
           <Collapse in={openMenu.um} timeout='auto' unmountOnExit>
             <List component='div' disablePadding>
-              <ListItemButton></ListItemButton>
+              <ListItemButton sx={{pl:6}} onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleToggle('bm');
+              }}>
+                <ListItemIcon sx={{minWidth:30}}>
+                  <ArrowRightIcon sx={{fontSize:18, color:'#fff'}}/>
+                </ListItemIcon>
+
+                <ListItemText primary='Billing' sx={{ fontSize: 18, color: "#fff" }}/>
+                <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
+                  {openMenu.bm ? <ExpandLess /> : <ExpandMore />}
+                </IconButton>
+              </ListItemButton>
+
+              <Collapse in={openMenu.bm} timeout='auto' unmountOnExit >
+              <List component='div' disablePadding>
+
+                <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceDeptMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Service Dept. Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
+
+              </List>
+              </Collapse>
             </List>
           </Collapse>
 
