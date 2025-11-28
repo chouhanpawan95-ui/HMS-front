@@ -147,7 +147,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               <ListItemButton sx={{ pl: 6 }} onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                handleToggle('loc');
+                handleToggle('ms');
               }}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
@@ -155,11 +155,11 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
                 <ListItemText primary='User Master' sx={{ fontSize: 18, color: "#fff" }} />
                 <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
-                  {openMenu.loc ? <ExpandLess /> : <ExpandMore />}
+                  {openMenu.ms ? <ExpandLess /> : <ExpandMore />}
                 </IconButton>
               </ListItemButton>
 
-              <Collapse in={openMenu.loc} timeout='auto' unmountOnExit>
+              <Collapse in={openMenu.ms} timeout='auto' unmountOnExit>
                 <List component="div" disablePadding sx={{ fontSize: 18, color: "#fff" }}>
                   <ListItemButton sx={{ pl: 6 }} component={Link} to="/UserMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
@@ -174,6 +174,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               </Collapse>
             </List>
           </Collapse>
+
           <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
             <List component='div' disablePadding>
 
@@ -223,6 +224,12 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                   </ListItemButton>
                 </List>
               </Collapse>
+            </List>
+          </Collapse>
+
+          <Collapse in={openMenu.um} timeout='auto' unmountOnExit>
+            <List component='div' disablePadding>
+              <ListItemButton></ListItemButton>
             </List>
           </Collapse>
 
