@@ -1,86 +1,123 @@
 import { useEffect, useState } from "react";
-import styles from "../../component/Container.module.css"
 import { useForm } from "react-hook-form";
-import { Button, Container, TextField, Typography } from "@mui/material";
+import { Container, TextField, Button, Typography } from "@mui/material";
+import styles from "../../component/Container.module.css";
+import {useGetStatesQuery,useGetDistrictsQuery,useCreateDistrictMutation,useGetCountryQuery} from '../../features/api/locationApi';
+import Loader from "../../component/Loader";
 
-const DistrictMaster = () =>{
-  const[selectedCountry,setSelectedCountry] = useState('');
-  const[selectState,setSelectedState] = useState('');
-  const[countries,setCountries] = useState([]);
-  const[states,setStates] = useState([]);
-  const[locationData,setLocationData] = useState([]);
+const DistrictMaster = () => {
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const {data:countries=[]} = useGetCountryQuery();
+  console.log("Countries from API:", countries);
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem('locationData')) || {};
-    setLocationData(stored);
-    setCountries(Object.keys(stored));
+  const [selectedState, setSelectedState] = useState("");
+  const {data:states=[]} = useGetStatesQuery(selectedCountry);
+  console.log("States from API:", states);
 
-    const selCountry = JSON.parse(localStorage.getItem('selectedCountry'))?.country;
-    if(selCountry) setSelectedCountry(selCountry);
+  const{data:districts,isLoading,refetch} = useGetDistrictsQuery(selectedState);
+  const [createDistrict] = useCreateDistrictMutation();
 
-    const selState = JSON.parse(localStorage.getItem('loactionData'))?.state;
-    if(selState) setSelectedState(selState);
+  // const [countries, setCountries] = useState([]);
+  // const [states, setStates] = useState([]);
 
-  }, []);
+  // const [locationData, setLocationData] = useState({});
 
-  // Update states when selected country changes
-  useEffect(() => {
-    if(selectedCountry && locationData[selectedCountry]) {
-      setStates(locationData[selectedCountry]);
-    } else {
-      setStates([]);
+  // useEffect(() => {
+  //   const stored = JSON.parse(localStorage.getItem("locationData")) || {};
+  //   setLocationData(stored);
+  //   setCountries(Object.keys(stored));
+  // }, []);
+
+  // useEffect(() => {
+  //   if (selectedCountry) {
+  //     setStates(locationData[selectedCountry]?.states || []);
+  //   }
+  // }, [selectedCountry, locationData]);
+
+  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+
+  const onSubmit = async(data) => {
+    try{
+      await createDistrict({
+        FK_StateId:selectedState,
+        DistrictName:data.district
+      }).unwrap();
+      reset();
+      refetch();
+    }catch(err){
+      console.error("Failed to add district: ", err);
+      console.log('Api validation error message:', err.data);
+      alert("backend error"+JSON.stringify(err.data));
     }
-  }, [selectedCountry, locationData]);
+    // const country = locationData[selectedCountry];
+    // const oldDistricts = country?.districts || {};
 
-  const { register, handleSubmit, reset, formState:{ errors } } = useForm();
+    // const updated = {
+    //   ...locationData,
 
-  const onSubmit = (formData) =>{
-    const updated = {
-      ...locationData,
-      [selectedCountry]:[...(locationData[selectedCountry] || []),formData.district],
+    //   [selectedCountry]: {
+    //     ...country,
+    //     states: country.states || [],
+    //     districts: {
+    //       ...oldDistricts,
+    //       [selectedState]: [
+    //         ...(oldDistricts[selectedState] || []),
+    //         data.district
+    //       ]
+    //     },
+    //     cities: country.cities || {}
+    //   }
+    // };
 
-      [selectState]:[...(locationData[selectState] || []),formData.district]
-    };
-
-    localStorage.setItem("locationData",JSON.stringify(updated));
-    setLocationData(updated);
-
-    alert("District Added");
-    reset();
+    // localStorage.setItem("locationData", JSON.stringify(updated));
+    // alert("District Added!");
+    // reset();
   };
+  if(isLoading) return <Loader></Loader>
 
-  return(
+  return (
     <Container className={styles.container}>
-      <Typography variant="h4" className={styles.header}>Distric Master</Typography>
+      <Typography variant="h4" className={styles.header}>District Master</Typography>
 
-      <div className={styles.form}>
-        {/* Select Country Dropdown */}
-        <TextField select fullWidth label="Select Country" SelectProps={{native:true}} value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} sx={{ mb:2 }}>
-          <option value="" disabled>Select ..</option>
-          {countries.map((country,i) =>(
-            <option key={i} value={country}>{ country }</option>
-          ))}
+      <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+        <TextField
+          select
+          label="Select Country"
+          SelectProps={{ native: true }}
+          value={selectedCountry}
+          onChange={(e) => setSelectedCountry(e.target.value)}
+          sx={{ width: "100%" }}
+        >
+          <option value="" disabled></option>
+          {countries.map((c) => <option key={c._id} value={c._id}>{c.CountryName}</option>)}
         </TextField>
 
-        {/* Select State Dropdown */}
-        <TextField select fullWidth label="Select State" SelectProps={{ native:true }} value={selectState} onChange={(e) => setSelectedState(e.target.value)} sx={{ mb:2 }}>
-          <option value='' disabled>Select ...</option>
-          {states.map((state,i) =>(
-            <option key={i} value={state}>{state}</option>
-          ))}
+        <TextField
+          select
+          label="Select State"
+          SelectProps={{ native: true }}
+          value={selectedState}
+          onChange={(e) => setSelectedState(e.target.value)}
+          sx={{ width: "100%", mt: 2 }}
+        >
+          <option value="" disabled></option>
+          {Array.isArray(states) && states.map((s) => (<option key={s._id} value={s._id}>{s.StateName}</option>))}
         </TextField>
 
-        <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-          <TextField fullWidth label='District Name' {...register("district",{required:'District name is required'})} error={!!errors.district} helperText={errors.state?.message}/>
+        <TextField
+          sx={{ width: "100%", mt: 2 }}
+          label="District Name"
+          {...register("district", { required: "District is required" })}
+          error={!!errors.district}
+          helperText={errors.district?.message}
+        />
 
-          <Button className={styles.button} variant="contained" fullWidth type="submit" sx={{ mt:2 }}>Save</Button>
-        </form>
-      </div>     
-      
+        <Button variant="contained" type="submit" sx={{ width: "100%", mt: 2 }}>
+          Save
+        </Button>
+      </form>
     </Container>
-  )
+  );
+};
 
-  
-
-}
 export default DistrictMaster;
