@@ -18,6 +18,7 @@ import AddUsermaster from './Master/UserManagement/AddUsermaster';
 import UserMaster from './Master/UserManagement/UserMaster';
 import UpdateUser from './Master/UserManagement/UpdateUser';
 import ServiceDeptMaster from './Master/BillingMaster/ServiceDeptMaster';
+import CityMaster from './Master/Location/CityMaster';
 
 function App() {
   return (
@@ -35,11 +36,12 @@ function App() {
               <Route path="/BillTest" element={<BillTest />} />
               <Route path="/CountryMaster" element={<CountryMaster />} />
               <Route path='/StateMaster' element={<StateMaster/>}/>
-              <Route path='DistrictMaster' element={<DistrictMaster/>}/>
+              <Route path='/DistrictMaster' element={<DistrictMaster/>}/>
               <Route path='/AddUsermaster' element={<AddUsermaster/>}/>
               <Route path='/UserMaster' element={<UserMaster/>}/>
               <Route path="/UpdateUser/:id" element={<UpdateUser />} />
               <Route path='/ServiceDeptMaster' element={<ServiceDeptMaster/>}/>
+              <Route path='/CityMaster' element={<CityMaster/>}/>
               {/* FIXED: Billinginformation route */}
               <Route
                 path="/Billinginformation"

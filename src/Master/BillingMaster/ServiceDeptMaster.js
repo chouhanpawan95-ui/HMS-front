@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Container, TextField, Button, Typography, Box } from "@mui/material";
+import { Container, TextField, Button, Typography } from "@mui/material";
 import styles from "../../component/Container.module.css";
 
 const ServiceDepartmentMaster = () => {
@@ -21,27 +21,16 @@ const ServiceDepartmentMaster = () => {
 
   return (
     <Container className={styles.container}>
-      <Box sx={{ width: '100%', maxWidth: 700 }}>
-        <Typography variant="h4" className={styles.header} sx={{ mb: 2 }}>
+      {/* <Box sx={{ width: '100%', maxWidth: 700 }}> */}
+        <Typography variant="h4" className={styles.header}>
           Service Department Master
         </Typography>
 
         <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-          <TextField fullWidth label="Service Name" {...register('name', { required: true })} sx={{ mb: 2 }} />
-          <Button type="submit" variant="contained">Add Service</Button>
+          <TextField label="Service Name" {...register('name', { required: "Service Department Master" })} sx={{ width:'100%', mt:'2px'}} />
+          <Button className={styles.button} variant="contained"  type="submit" sx={{ mt: 2, width:'100%'}}>Add Service</Button>
         </form>
-
-        {services.length > 0 && (
-          <Box sx={{ mt: 3 }}>
-            <Typography variant="h6">Existing Services</Typography>
-            <ul>
-              {services.map((s, i) => (
-                <li key={i}>{s}</li>
-              ))}
-            </ul>
-          </Box>
-        )}
-      </Box>
+      {/* </Box> */}
     </Container>
   );
 };
