@@ -20,7 +20,7 @@ export const store = configureStore({
       registrationApi.middleware,
       authApi.middleware,
       patientsApi.middleware,
-      billingMasterApi.middleware
+      billingMasterApi.middleware,
       locationApi.middleware
     ),
 });
