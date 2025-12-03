@@ -17,7 +17,7 @@ import {
   Button
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import {useCreateServiceMutation} from '../../features/api/patientsApi'
+
 const userTypes = [
   "Reception",
   "History & Examination",
@@ -36,8 +36,6 @@ const userTypes = [
 export default function UserMasterForm() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const navigate = useNavigate();
-  const [createService, { isLoading, isSuccess, isError, error }] =
-    useCreateServiceMutation();
   const handleSelect = (event) => {
     setSelectedTypes(event.target.value);
   };
