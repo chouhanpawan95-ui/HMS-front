@@ -46,23 +46,19 @@ export default function CountryMaster() {
         Country Master
       </Typography>
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        <TextField
+        <TextField className={styles.text}
           label="Country Name"
           {...register("name", { required: "Country Name is required" })}
           error={!!errors.name}
           helperText={errors.name?.message}
-          fullWidth
-          sx={{ mt: 2 }}
         />
         <TextField
           label="Country Code"
           {...register("code", { required: "Country Code is required" })}
           error={!!errors.code}
           helperText={errors.code?.message}
-          fullWidth
-          sx={{ mt: 2 }}
         />
-        <Button type="submit" variant="contained" sx={{ mt: 2, width: "100%" }}>
+        <Button type="submit" variant="contained" className={styles.button}>
           Save
         </Button>
       </form>

@@ -27,15 +27,15 @@ import {
   // Dashboard as DashboardIcon,
 } from "@mui/icons-material";
 
-export default function Navbar() {
+export default function Header() {
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [anchorElMessages, setAnchorElMessages] = useState(null);
-  const [anchorElNotifications, setAnchorElNotifications] = useState(null);
+  // const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const openProfile = Boolean(anchorElProfile);
-  const openMessages = Boolean(anchorElMessages);
-  const openNotifications = Boolean(anchorElNotifications);
+  // const openProfile = Boolean(anchorElProfile);
+  // const openMessages = Boolean(anchorElMessages);
+  // const openNotifications = Boolean(anchorElNotifications);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -44,13 +44,7 @@ export default function Navbar() {
   // Sidebar Drawer for Mobile
   const drawer = (
     <Box sx={{ width: 240 }} role="presentation" onClick={handleDrawerToggle}>
-
-
-
-    </Box>
-
-
-
+     </Box>
   );
 
   return (
@@ -64,22 +58,14 @@ export default function Navbar() {
           backgroundColor: "#578ee5", color: "#fff"
         }}
       >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", ml: 4, mt: 1 }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
           {/* LEFT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
-            {/* Mobile menu icon */}
+           {/* MENU ICON FOR MOBILE */}
+           {/* <IconButton color="inherit" edge='start' sx={{display:{xs:'flex', lg:'none'}}}>
+            <MenuIcon/>
+           </IconButton> */}
 
-            {/* Logo */}
-            {/* <Box
-              component="img"
-              //src="/dist/assets/images/logo.png"
-              alt="logo"
-              sx={{
-                height: 80,
-                width: 120,
-                display: "block",
-              }}
-            /> */}
             <Typography
               variant="h6"
               sx={{
@@ -102,7 +88,6 @@ export default function Navbar() {
               px: 1.5,
               width: "40%",
               maxWidth: 400,
-              mr: 30,
             }}
           >
             <SearchIcon color="action" />
@@ -113,10 +98,9 @@ export default function Navbar() {
           </Box>
 
           {/* RIGHT SECTION */}
-          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1, color: "#fff" }}>
+          <Box display="flex" alignItems="center" gap={1}>
             <IconButton
               color="inherit"
-              onClick={(e) => setAnchorElMessages(e.currentTarget)}
             >
               <Badge color="warning" variant="dot">
                 <MailIcon />
@@ -125,7 +109,6 @@ export default function Navbar() {
 
             <IconButton
               color="inherit"
-              onClick={(e) => setAnchorElNotifications(e.currentTarget)}
             >
               <Badge color="error" variant="dot">
                 <NotificationsIcon />
@@ -169,7 +152,7 @@ export default function Navbar() {
       >
         {drawer}
       </Drawer> */}
-      <Drawer
+       <Drawer
         anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
@@ -185,8 +168,9 @@ export default function Navbar() {
       >
         {drawer}
       </Drawer>
+      {/*}
 
-      {/* PROFILE MENU */}
+     
       <Menu
         anchorEl={anchorElProfile}
         open={openProfile}
@@ -205,7 +189,7 @@ export default function Navbar() {
         </MenuItem>
       </Menu>
 
-      {/* MESSAGES MENU */}
+      
       <Menu
         anchorEl={anchorElMessages}
         open={openMessages}
@@ -232,7 +216,7 @@ export default function Navbar() {
         ))}
       </Menu>
 
-      {/* NOTIFICATIONS MENU */}
+      
       <Menu
         anchorEl={anchorElNotifications}
         open={openNotifications}
@@ -255,7 +239,7 @@ export default function Navbar() {
           <MenuIcon color="info" sx={{ mr: 2 }} />
           Launch Admin
         </MenuItem>
-      </Menu>
+      </Menu> */}
     </>
   );
 }

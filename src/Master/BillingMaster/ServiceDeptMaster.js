@@ -22,7 +22,7 @@ const ServiceDepartmentMaster = () => {
   return (
     <Container className={styles.container}>
       {/* <Box sx={{ width: '100%', maxWidth: 700 }}> */}
-        <Typography variant="h4" className={styles.header}>
+        <Typography variant="h4" className={styles.header} sx={{mb:2}}>
           Service Department Master
         </Typography>
 
