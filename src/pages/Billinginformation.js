@@ -24,7 +24,7 @@ import {
 import MenuItem from "@mui/material/MenuItem"
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
-
+import {useCreateRatelistMutation,useCreateServiceMutation} from '../features/api/billingMasterApi.js'
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 
@@ -38,6 +38,12 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
   const [createbill, { isSuccess, isError, error }] = useCreateBillMutation();
+  const [createRatelist, { data: createRatelistResponse }] =
+  useCreateRatelistMutation();
+   const [createService, { data: createServiceResponse }] =
+  useCreateServiceMutation();
+  console.log("createServiceResponse",createServiceResponse)
+  const [rate, setRate] = useState("");
   const [billDate, setBillDate] = useState("");
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
@@ -48,6 +54,12 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     // Your form submission logic here (API call etc.)
     setSelectedPatient(null); // Go back to table list after submission
   };
+  useEffect(() => {
+  createRatelist();   // 🔥 API will run here
+}, []);
+ useEffect(() => {
+  createService();   // 🔥 API will run here
+}, []);
   useEffect(() => {
     const now = new Date();
     // Format: 2025-01-20T15:30
@@ -162,19 +174,6 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             patients={patients}
             onFilter={setFilteredPatients}
           />
-
-
-          {/* <Grid container spacing={2} alignItems="center">
-            <Grid item>
-              <TextField
-                size="small"
-                placeholder="Type name to search..."
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                sx={{ backgroundColor: "#fff" }}
-              />
-            </Grid>
-          </Grid> */}
 
           {/* Patient Table */}
           <TableContainer component={Paper} sx={{ mt: 5 }}>
@@ -508,15 +507,24 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      label="Rate Type"
-                      // value={`${selectedPatient?.ageYMD || ""} / ${
-                      //   selectedPatient?.sex || ""
-                      // }`}
-                      size="small"
-                      fullWidth
-                    />
-                  </Grid>
+                <TextField
+                select
+                fullWidth
+                label="Rate Type"
+                value={rate}                 // <-- controlled
+                onChange={(e) => setRate(e.target.value)}
+                  sx={{ width: "230px", height: "10px" }}
+              >
+                <MenuItem value="">-- Select Rate Type --</MenuItem>
+
+                {createRatelistResponse?.data?.map((rateObj, i) => (
+                  <MenuItem key={rateObj.rateListId} value={rateObj.rateListId}>   {/* YOU FORGOT VALUE */}
+                    {rateObj.RateListName}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+                </Grid>
                   <Grid
                     item
                     xs={12}
@@ -537,34 +545,22 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 <Table size="small">
                   <TableHead sx={{ backgroundColor: "#578EE5" }}>
                     <TableRow>
-                      {[
-                        "Service Name",
-                        "Rate",
-                        "Qty",
-                        "Dis(%)",
-                        "Discount",
-                        "S.C.(%)",
-                        "S.Charge",
-                        "Net Amt",
-                        "Remarks",
-                      ].map((header, i) => (
-                        <TableCell key={i} sx={{ color: "#fff" }}>
-                          {header}
-                        </TableCell>
-                      ))}
-                    </TableRow>
+                    <TableCell sx={{ color: "#fff" }}>Service Name</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>Rate</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>Qty</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>Dis(%)</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>Discount</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>S.C.(%)</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>S.Charge</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>Net Amt</TableCell>
+                    <TableCell sx={{ color: "#fff" }}>Remarks</TableCell>
+                  </TableRow>
                   </TableHead>
                   <TableBody>
                     <TableRow>
-                      <TableCell>Consultation Charges</TableCell>
-                      <TableCell>100</TableCell>
-                      <TableCell>1</TableCell>
-                      <TableCell>0</TableCell>
-                      <TableCell>0</TableCell>
-                      <TableCell>0</TableCell>
-                      <TableCell>0</TableCell>
-                      <TableCell>100</TableCell>
-                      <TableCell></TableCell>
+                      {createServiceResponse?.data?.map((service)=>{
+                      return (<TableCell>{service.ServiceName}</TableCell> )
+                      })}                     
                     </TableRow>
                   </TableBody>
                 </Table>
