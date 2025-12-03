@@ -1,73 +1,71 @@
+// src/components/CountryMaster.js
+import {
+  Container,
+  TextField,
+  Button,
+  Typography,
+} from "@mui/material";
 import { useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { Container, TextField, Button, Typography, Box } from "@mui/material";
+import {useGetCountryQuery, useCreateCountryMutation} from '../../features/api/locationApi';
 import styles from "../../component/Container.module.css";
+import Loader from "../../component/Loader";
 
-const CountryMaster = () => {
-  const [locationData, setLocationData] = useState({});
+export default function CountryMaster() {
+  const {data:country, isLoading, refetch} = useGetCountryQuery();
+  const [createCountry] = useCreateCountryMutation();
 
-  useEffect(() => {
-    const storedData = JSON.parse(localStorage.getItem("locationData")) || {};
-    setLocationData(storedData);
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
-  const onSubmit = (data) => {
-    const updated = {
-      ...locationData,
-      [data.country]: locationData[data.country] || []
-    };
+  const onSubmit = async(formData) => {
+    try{
+      await createCountry({
+        CountryName:formData.name,
+        CountryCode:formData.code
+      }).unwrap();
 
-    localStorage.setItem("locationData", JSON.stringify(updated));
-    localStorage.setItem("selectedCountry", JSON.stringify(data));
-
-    setLocationData(updated);
-    alert("Country Saved!");
-    reset();
+      reset();
+      refetch();
+    }catch(err){
+      console.error("Failed to add country: ", err);
+      console.log('Api validation error message:', err.data);
+      alert("backend error"+JSON.stringify(err.data));
+    }
   };
+
+  if(isLoading) return <Loader></Loader>
 
   return (
     <Container className={styles.container}>
-      <Typography variant="h4" className={styles.header}>Country Master</Typography>
-
-      <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
-
+      <Typography variant="h4" className={styles.header} sx={{ mb: 2 }}>
+        Country Master
+      </Typography>
+      <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
         <TextField
-          fullWidth
           label="Country Name"
-          {...register("country", { required: "Country Name is required" })}
-          error={!!errors.country}
-          helperText={errors.country?.message}
-        />
-
-        <TextField
+          {...register("name", { required: "Country Name is required" })}
+          error={!!errors.name}
+          helperText={errors.name?.message}
           fullWidth
-          label="Country Code"
-          type="number"
-          {...register("countryCode", { required: "Country Code is required" })}
-          error={!!errors.countryCode}
-          helperText={errors.countryCode?.message}
           sx={{ mt: 2 }}
         />
-
-        <Button className={styles.button} variant="contained" fullWidth type="submit" sx={{ mt: 2 }}>
-          Save 
+        <TextField
+          label="Country Code"
+          {...register("code", { required: "Country Code is required" })}
+          error={!!errors.code}
+          helperText={errors.code?.message}
+          fullWidth
+          sx={{ mt: 2 }}
+        />
+        <Button type="submit" variant="contained" sx={{ mt: 2, width: "100%" }}>
+          Save
         </Button>
       </form>
-
-      <Box mt={4}>
-        <Typography variant="h6">Saved Countries:</Typography>
-        <ul>
-          {Object.keys(locationData).map((country, i) => (
-            <li key={i}><strong>{country}</strong></li>
-          ))}
-        </ul>
-      </Box>
     </Container>
   );
-};
-
-export default CountryMaster;
-
-
+}

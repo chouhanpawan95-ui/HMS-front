@@ -1,92 +1,85 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { Container, TextField, Button, Typography, Box } from "@mui/material";
+import { Container, TextField, Button, Typography } from "@mui/material";
 import styles from "../../component/Container.module.css";
-
+import {
+  useGetStatesQuery,
+  useCreateStateMutation,
+  useGetCountryQuery,
+} from "../../features/api/locationApi";
+import Loader from "../../component/Loader";
 
 const StateMaster = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
-  const [locationData, setLocationData] = useState({});
-  const [countries, setCountries] = useState([]);
+  const { data: countries = [] } = useGetCountryQuery();
 
-  useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("locationData")) || {};
-    setLocationData(stored);
-    setCountries(Object.keys(stored));
+  const { data: state, isLoading, refetch } = useGetStatesQuery(selectedCountry);
+  const [createState] = useCreateStateMutation();
 
-    const selCountry = JSON.parse(localStorage.getItem("selectedCountry"))?.country;
-    if (selCountry) setSelectedCountry(selCountry);
-  }, []);
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm();
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm();
+  const onSubmit = async (data) => {
+    try {
+      await createState({
+        FK_CountryId:selectedCountry,
+        StateName: data.state,
+      }).unwrap();
 
-  const onSubmit = (data) => {
-    const updated = {
-      ...locationData,
-      [selectedCountry]: [...(locationData[selectedCountry] || []), data.state]
-    };
-
-    localStorage.setItem("locationData", JSON.stringify(updated));
-    setLocationData(updated);
-
-    alert("State Added!");
-    reset();
+      reset();
+      refetch();
+    } catch (err) {
+      console.error("Failed to add state: ", err);
+      console.log("Api validation error message:", err.data);
+      alert("backend error" + JSON.stringify(err.data));
+    }
   };
+  if (isLoading) return <Loader></Loader>;
 
   return (
     <Container className={styles.container}>
-      <Typography variant="h4" className={styles.header}>State Master</Typography>
+      <Typography variant="h4" className={styles.header}>
+        State Master
+      </Typography>
 
-      <div className={styles.form}>
-        {/* Select Country Dropdown */}
+      <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
         <TextField
           select
-          fullWidth
           label="Select Country"
           SelectProps={{ native: true }}
           value={selectedCountry}
           onChange={(e) => setSelectedCountry(e.target.value)}
-          sx={{ mb: 2 }}
+          sx={{ width: "100%" }}
         >
-          <option value="" disabled>Select...</option>
-          {countries.map((country, i) => (
-            <option key={i} value={country}>{country}</option>
+          <option value="" disabled>
+            Select Country
+          </option>
+
+          {countries.map((c) => (
+            <option key={c._id} value={c._id}>
+              {c.CountryName}
+            </option>
           ))}
         </TextField>
 
-        <form className={styles.form} onSubmit={handleSubmit(onSubmit)}>
+        <TextField
+          label="State Name"
+          sx={{ width: "100%", mt: 2 }}
+          {...register("state", { required: "State is required" })}
+          error={!!errors.state}
+          helperText={errors.state?.message}
+        />
 
-          <TextField
-            fullWidth
-            label="State Name"
-            {...register("state", { required: "State Name is required" })}
-            error={!!errors.state}
-            helperText={errors.state?.message}
-          />
-
-          <Button className={styles.button} variant="contained" fullWidth type="submit" sx={{ mt: 2 }}>
-            Save 
-          </Button>
-        </form>
-      </div>
-
-      {selectedCountry && locationData[selectedCountry]?.length > 0 && (
-        <Box mt={3}>
-          <Typography variant="h6">
-            States in {selectedCountry}:
-          </Typography>
-          <ul>
-            {locationData[selectedCountry].map((st, i) => (
-              <li key={i}>{st}</li>
-            ))}
-          </ul>
-        </Box>
-      )}
+        <Button variant="contained" type="submit" sx={{ width: "100%", mt: 2 }}>
+          Save
+        </Button>
+      </form>
     </Container>
   );
 };
 
 export default StateMaster;
-
-
-
