@@ -23,8 +23,7 @@ import {
 import { useTheme } from "@mui/material/styles";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-
-
+import '../App.css';
 
 const Sidebar = ({ drawerWidth = 260 }) => {
   const location = useLocation();
@@ -62,7 +61,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
     <Box>
 
       {/* Menu Section */}
-      <Box sx={{ flexGrow: 1, overflowY: "auto" }} >
+      <Box sx={{ flexGrow: 1, overflowY: "auto"}} >
         <List component="nav" sx={{ px: 1, mt: 8 }} className="sidebar">
 
           {/* Dashboard */}
@@ -340,7 +339,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           aria-label="open drawer"
           edge="start"
           onClick={() => setMobileOpen(!mobileOpen)}
-          sx={{ m: 1, position: "fixed", top: 10, left: 10, zIndex: 1300 }}
+          sx={{ m: 1, position: "fixed", top: 10, left: 10, zIndex: 1300,display:{xs:'flex', lg:'none'} }}
         >
           <MenuIcon />
         </IconButton>

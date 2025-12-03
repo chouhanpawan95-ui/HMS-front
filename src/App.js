@@ -24,8 +24,8 @@ function App() {
   return (
     <BrowserRouter>
       <Box sx={{ display: 'flex' }}>
-        <Header />
-        <Sidebar />
+        {/* <Header />
+        <Sidebar /> */}
 
         {/* Main content area where Routes render */}
         <Box component="main" sx={{ flexGrow: 1 }} className='css-1du1ywb'>

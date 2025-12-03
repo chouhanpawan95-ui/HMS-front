@@ -1,5 +1,5 @@
-﻿import SearchBar from "../component/SearchBar";
-import React, { useState } from "react";
+﻿// Dashboard.jsx
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -13,23 +13,28 @@ import {
   TableRow,
   TableCell,
   Avatar,
-  Chip,
-  useTheme,
-  CircularProgress,
-  Alert,
   MenuItem,
+  TableContainer,
+  Paper,
+  useTheme,
+  Alert,
 } from "@mui/material";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
-import { useGetPatientsQuery } from "../features/api/patientsApi";
+
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+
+import SearchBar from "../component/SearchBar";
 import Loader from "../component/Loader";
+import { useGetPatientsQuery } from "../features/api/patientsApi";
 
-const statCards = [
-  { title: "Total Visitors", value: 178, change: "+14.8%", color: "success.main" },
-  { title: "Surgeries", value: 17, change: "+4.5%", color: "info.main" },
-  { title: "Revenue", value: "$7,548", change: "-7.5%", color: "error.main" },
-];
-
-const data = [
+// Chart data
+const chartData = [
   { day: "Mon", medical: 45, appointed: 25 },
   { day: "Tue", medical: 60, appointed: 40 },
   { day: "Wed", medical: 50, appointed: 35 },
@@ -39,248 +44,340 @@ const data = [
   { day: "Sun", medical: 70, appointed: 60 },
 ];
 
-// const appointments = [
-//   {
-//     name: "Isa Isgenderov",
-//     id: "47229037",
-//     date: "Jan 25 - 13:00",
-//     type: "Dermatology",
-//     doctor: "Akhmadov S.",
-//     status: "Changed",
-//   },
-//   {
-//     name: "Murad Mamedli",
-//     id: "15287533",
-//     date: "Jan 25 - 13:30",
-//     type: "Ophthalmology",
-//     doctor: "Asgarov D.",
-//     status: "Confirmed",
-//   },
-//   {
-//     name: "Diana Huseynova",
-//     id: "88770126",
-//     date: "Jan 25 - 13:00",
-//     type: "Radiology",
-//     doctor: "Suleymanova A.",
-//     status: "Confirmed",
-//   },
-//   {
-//     name: "Akber Rzayev",
-//     id: "92170213",
-//     date: "Jan 25 - 14:00",
-//     type: "Gastroenterology",
-//     doctor: "Rzayeva S.",
-//     status: "Canceled",
-//   },
-//   {
-//     name: "Said Qasimov",
-//     id: "85147324",
-//     date: "Jan 25 - 14:30",
-//     type: "Pediatrics",
-//     doctor: "Mammadov S.",
-//     status: "Confirmed",
-//   },
-// ];
-
 export default function Dashboard() {
   const theme = useTheme();
 
   // Pagination / search state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  // const [searchTerm, setSearchTerm] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
-  console.log("Filter patin: ", filteredPatients);
-  // Call RTK Query with server-side params
-  const { data: patientsResp, error, isLoading, isError, refetch } = useGetPatientsQuery({ page, limit, q: searchQuery });
 
-  // Support both API shapes: either an array directly or an object like { data: [...] }
+  // API call
+  const {
+    data: patientsResp,
+    error,
+    isLoading,
+    isError,
+  } = useGetPatientsQuery({ page, limit, q: searchQuery });
+
+  // Extract array from API response
   const patients = Array.isArray(patientsResp)
     ? patientsResp
-    : patientsResp && Array.isArray(patientsResp.data)
-      ? patientsResp.data
-      : [];
+    : patientsResp?.data && Array.isArray(patientsResp.data)
+    ? patientsResp.data
+    : [];
 
-  // total count if provided by API
-  const total = patientsResp && (patientsResp.total || patientsResp.totalCount || patientsResp.meta?.total);
+  // Extract total count if provided
+  const total =
+    patientsResp?.total ||
+    patientsResp?.totalCount ||
+    patientsResp?.meta?.total ||
+    null;
+
   const totalPages = total ? Math.ceil(total / limit) : null;
   const hasMore = totalPages ? page < totalPages : patients.length === limit;
-  console.log("patients", patients);
-  // Loading state: show a centered spinner
-  if (isLoading) {
-    return (
-      <Loader />
-    );
-  }
+
+  // Keep filtered data synced
+  // Initialize filtered data when API response arrives.
+  // Use patientsResp as dependency to avoid loops when `patients` is reconstructed
+  // as an empty array on every render before the API resolves.
+  useEffect(() => {
+    if (patientsResp) {
+      setFilteredPatients(patients);
+    }
+  }, [patientsResp]);
+
+  // Show loader
+  if (isLoading) return <Loader />;
 
   return (
-    <Box>
+    <Box className="dashboard-wrapper" sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+      {/* Error */}
       {isError && (
-        <Box mb={2}>
-          <Alert severity="error">
-            Failed to load patients: {error?.data?.message || error?.error || JSON.stringify(error)}
-          </Alert>
-        </Box>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          Failed to load patients:{" "}
+          {error?.data?.message || error?.error || JSON.stringify(error)}
+        </Alert>
       )}
-      {/* Daily Stats Chart */}
-      <Card elevation={2} sx={{ mb: 3 }}>
+
+      {/* Chart */}
+      <Card className="dashboard-card" elevation={2} sx={{ mb: 3 }}>
         <CardContent>
           <Typography variant="h6" gutterBottom>
             Daily Statistics
           </Typography>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={data}>
-              <XAxis dataKey="day" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="medical" fill={theme.palette.primary.main} radius={6} />
-              <Bar dataKey="appointed" fill={theme.palette.success.light} radius={6} />
-            </BarChart>
-          </ResponsiveContainer>
+
+          {/* responsive chart wrapper: allow horizontal scroll on very small screens */}
+          <Box className="chart-scroll" sx={{ width: "100%", overflowX: "auto" }}>
+            <Box
+              className="chart-container"
+              sx={{
+                minWidth: { xs: 600, sm: 700, md: 900 },
+                height: { xs: 180, sm: 220, md: 250 },
+                minHeight: 140,
+              }}
+            >
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData}>
+                  <XAxis dataKey="day" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar
+                    dataKey="medical"
+                    fill={theme.palette.primary.main}
+                    radius={6}
+                  />
+                  <Bar
+                    dataKey="appointed"
+                    fill={theme.palette.success.light}
+                    radius={6}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </Box>
+          </Box>
         </CardContent>
       </Card>
 
-      {/* Appointments Table */}
-      <Card elevation={2}>
-        <CardContent>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            {/* Left side - Search */}
-            <SearchBar
-              patients={patients}
-              onFilter={setFilteredPatients}
-            />
+      {/* Search Bar */}
+      <Box
+        className="search-section"
+        display="flex"
+        flexWrap="wrap"
+        justifyContent="space-between"
+        alignItems="center"
+        gap={2}
+        mb={2}
+      >
+        <SearchBar patients={patients} onFilter={setFilteredPatients} />
+      </Box>
 
-            {/* <Box display="flex" alignItems="center" gap={2}>
-              <TextField
-                placeholder="Search patients..."
-                size="small"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    setSearchQuery(searchTerm.trim());
-                    setPage(1);
-                  }
-                }}
-                sx={{ width: 260 }}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon />
-                    </InputAdornment>
-                  ),
-                }}
-              />
-              <Button
-                variant="outlined"
-                size="small"
-                onClick={() => {
-                  setSearchQuery(searchTerm.trim());
-                  setPage(1);
-                }}
-                startIcon={<SearchIcon />}
-              >
-                Search
-              </Button>
-            </Box> */}
-
-
-          </Box>          {/* Table */}
-          <Table sx={{ minWidth: 800, overflowX: "auto" }} >
+      {/* TABLE SECTION */}
+      <Box sx={{ width: "100%", overflowX: "auto" }}>
+        <TableContainer
+          className="table-container"
+          component={Paper}
+          sx={{
+            maxHeight: 450,
+            overflowX: "auto",
+            overflowY: "auto",
+            borderRadius: 8,
+            boxShadow: 1,
+            width: "100%",
+          }}
+        >
+          {/* minWidth ensures ALL columns show on mobile via horizontal scroll */}
+          <Table stickyHeader sx={{ minWidth: 1100 }}>
             <TableHead>
               <TableRow>
-                <TableCell width="15%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Patient ID</TableCell>
-                <TableCell width="30%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Name</TableCell>
-                <TableCell width="20%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Date & Time</TableCell>
-                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>DOB</TableCell>
-                <TableCell width="10%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Sex</TableCell>
-                <TableCell width="20%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>MobileNo</TableCell>
-                <TableCell width="25%" sx={{ color: 'primary.main', fontWeight: 'bold' }}>Address</TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Patient ID
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Name
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Date & Time
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  DOB
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Sex
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  MobileNo
+                </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Address
+                </TableCell>
               </TableRow>
             </TableHead>
+
             <TableBody>
-              {filteredPatients.length > 0 && filteredPatients.map((row, i) => {
-                const name = `${row.title ? row.title + " " : ""}${row.firstName || row.name || ""} ${row.lastName || ""}`.trim();
-                const id = row.patientId || row.id || "";
-                const dateTime = row.dateTime ? new Date(row.dateTime).toLocaleString() : row.date || "";
-                const branch = row.branch || "";
-                const sex = row.sex || "";
-                const status = (row.otherInfo && row.otherInfo.maritalStatus) || row.status || "";
-                const dob = row.dateOfBirth || "";
-                const address = row.permanentAddress?.addressLine || "";
-                const mobile = row.permanentAddress?.mobileNo || "";
+              {filteredPatients.length > 0 ? (
+                filteredPatients.map((row, i) => {
+                  const name = `${row.title ? row.title + " " : ""}${
+                    row.firstName || row.name || ""
+                  } ${row.lastName || ""}`.trim();
 
-                return (
-                  <TableRow key={i}>
+                  const dateTime = row.dateTime
+                    ? new Date(row.dateTime).toLocaleString()
+                    : row.date || "";
 
-                    <TableCell>{id}</TableCell>
-                    <TableCell>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar sx={{ width: 32, height: 32 }}>{((row.firstName || row.name || "").charAt(0) || "").toUpperCase()}</Avatar>
-                        {name}
-                      </Box>
-                    </TableCell>
-                    <TableCell>{dateTime}</TableCell>
-                    <TableCell>{dob}</TableCell>
-                    <TableCell>{sex}</TableCell>
-                    <TableCell>{mobile}</TableCell>
-                    <TableCell>{address}</TableCell>
-                  </TableRow>
-                );
-              })}
+                  return (
+                    <TableRow key={i}>
+                      <TableCell
+                        sx={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {row.patientId || row.id}
+                      </TableCell>
+
+                      <TableCell
+                        sx={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        <Box display="flex" alignItems="center" gap={1}>
+                          <Avatar className="avatar-responsive" sx={{ width: 32, height: 32 }}>
+                            {(row.firstName || row.name || "")
+                              .charAt(0)
+                              .toUpperCase()}
+                          </Avatar>
+                          <Box sx={{ minWidth: 0 }}>{name}</Box>
+                        </Box>
+                      </TableCell>
+
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {dateTime}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {row.dateOfBirth || ""}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {row.sex || ""}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {row.permanentAddress?.mobileNo || ""}
+                      </TableCell>
+                      <TableCell
+                        sx={{
+                          whiteSpace: "nowrap",
+                          maxWidth: 240,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {row.permanentAddress?.addressLine || ""}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} align="center" sx={{ py: 2 }}>
+                    No records found.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
+        </TableContainer>
 
-          {/* Total Records Line */}
-          <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
-            <Typography variant="body2" color="text.secondary">
-              Total Records: {total || patients.length}
-            </Typography>
-          </Box>
-        </CardContent>
+        {/* Pagination + Total */}
+        <Box
+          sx={{
+            mt: 2,
+            pt: 2,
+            borderTop: 1,
+            borderColor: "divider",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: 2,
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Total Records: {total ?? patients.length}
+          </Typography>
 
-        {/* Right side - Pagination */}
-        <Box display="flex" alignItems="center" gap={2} justifyContent="flex-end" borderTop={1} borderColor={"divider"}>
-          <TextField
-            select
-            size="small"
-            value={limit}
-            onChange={(e) => {
-              const v = Number(e.target.value) || 10;
-              setLimit(v);
-              setPage(1);
-            }}
-            sx={{ width: 80 }}
-          >
-            <MenuItem value={5}>5</MenuItem>
-            <MenuItem value={10}>10</MenuItem>
-            <MenuItem value={20}>20</MenuItem>
-          </TextField>
-
-          <Box display="flex" alignItems="center" gap={1}>
-            <Button
+          {/* Pagination Controls */}
+          <Box display="flex" alignItems="center" gap={2}>
+            {/* Limit selector */}
+            <TextField
+              select
               size="small"
-              variant="outlined"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
+              value={limit}
+              onChange={(e) => {
+                setLimit(Number(e.target.value));
+                setPage(1);
+              }}
+              sx={{ width: 90 }}
             >
-              Prev
-            </Button>
-            <Typography variant="body2" sx={{ mx: 1 }}>
-              Page {page}{totalPages ? ` / ${totalPages}` : ''}
-            </Typography>
-            <Button
-              size="small"
-              variant="outlined"
-              onClick={() => setPage((p) => p + 1)}
-              disabled={!hasMore}
-            >
-              Next
-            </Button>
+              <MenuItem value={5}>5</MenuItem>
+              <MenuItem value={10}>10</MenuItem>
+              <MenuItem value={20}>20</MenuItem>
+              <MenuItem value={50}>50</MenuItem>
+            </TextField>
+
+            {/* Page controls */}
+            <Box display="flex" alignItems="center" gap={1}>
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Prev
+              </Button>
+
+              <Typography variant="body2">
+                Page {page}
+                {totalPages ? ` / ${totalPages}` : ""}
+              </Typography>
+
+              <Button
+                size="small"
+                variant="outlined"
+                disabled={!hasMore}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </Box>
           </Box>
         </Box>
-      </Card>
+      </Box>
     </Box>
   );
 }
