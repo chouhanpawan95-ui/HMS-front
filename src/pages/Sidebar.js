@@ -267,6 +267,33 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceDepartmentMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Service Deptartment Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
+
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceCatMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Service Cat. Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
+
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/RateListMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Rate List Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
+
               </List>
               </Collapse>
             </List>

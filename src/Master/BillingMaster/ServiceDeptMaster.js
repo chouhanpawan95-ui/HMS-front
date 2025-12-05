@@ -12,6 +12,7 @@ import {
   Checkbox,
 } from "@mui/material";
 import { useCreateServiceMutation } from "../../features/api/patientsApi";
+import { jsx } from "react/jsx-runtime";
 
 export default function SampleForm() {
   const {
@@ -59,8 +60,8 @@ export default function SampleForm() {
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, maxWidth: 700, mx: "auto", mt: 10 }}>
-      <Typography variant="h6" mb={2}>
+    <Paper elevation={3} sx={{ p: 3, maxWidth: 700, mx: "auto", mt: 10}} >
+      <Typography variant="h4" mb={2}>
         Service Master
       </Typography>
 
