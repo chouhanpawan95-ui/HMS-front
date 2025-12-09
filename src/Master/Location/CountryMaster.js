@@ -41,7 +41,7 @@ export default function CountryMaster() {
   if(isLoading) return <Loader></Loader>
 
   return (
-    <Container className={styles.container}>
+    <Container className={styles.container} >
       <Typography variant="h4" className={styles.header} sx={{ mb: 2 }}>
         Country Master
       </Typography>
@@ -52,12 +52,16 @@ export default function CountryMaster() {
           {...register("name", { required: "Country Name is required" })}
           error={!!errors.name}
           helperText={errors.name?.message}
+          // sx={{color:"#578ee5"}}
+          focused 
         />
         <TextField
           label="Country Code"
           {...register("code", { required: "Country Code is required" })}
           error={!!errors.code}
           helperText={errors.code?.message}
+          sx={{color:"#578ee5"}}
+          focused 
         />
         <Button type="submit" variant="contained" className={styles.button}>
           Save

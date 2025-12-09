@@ -20,7 +20,7 @@ import {
 import {
   useGetRateListQuery,
   useGetServiceQuery,
-  useGetRateListDetailQuery,
+  useGetRateListDetailQuery,useDeleteRateListDetailMutation
 } from "../../features/api/billingMasterApi";
 
 import { useState } from "react";
@@ -34,6 +34,7 @@ const RateListInfo = () => {
   const { data: ratelist = [] } = useGetRateListQuery();
   const { data: service = [] } = useGetServiceQuery();
   const { data: ratelistdetail, isLoading } = useGetRateListDetailQuery();
+  const [deleteRateListDetail] = useDeleteRateListDetailMutation();
 
   // Search + Filters + Pagination
   const [search, setSearch] = useState("");
