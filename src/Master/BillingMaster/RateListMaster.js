@@ -12,8 +12,6 @@ import {
   Tab,
   TableContainer,
   Paper,
-  Typography,
-  TextField,
   FormControl,
   Select,
   MenuItem,
@@ -26,7 +24,8 @@ import {
   useCreateRateListDetailMutation,
   useGetRateListDetailQuery,
   useGetServiceQuery,
-  useUpdateRateListDetailMutation,useDeleteRateListDetailMutation
+  useUpdateRateListDetailMutation,
+  useDeleteRateListDetailMutation,
 } from "../../features/api/billingMasterApi";
 import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";
@@ -34,33 +33,7 @@ import { useEffect, useState } from "react";
 import style from "../BillingMaster/RateListMaster.module.css";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useParams } from "react-router-dom";
-import {
-  Table,
-  TableContainer,
-  
-  TableHead,
-  TableRow,
-  TableCell,
-  TableBody,
-  Button,
-  Paper,
-  TextField,
-  FormControl,
-  Select,
-  MenuItem,
-  InputLabel,
-  Pagination,
-} from "@mui/material";
-
-import {
-  useGetRateListQuery,
-  useGetServiceQuery,
-  useGetRateListDetailQuery,useDeleteRateListDetailMutation
-} from "../../features/api/billingMasterApi";
-
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import style from "../BillingMaster/RateListMaster.module.css";
 
 const RateListMaster = () => {
   const { id } = useParams();
@@ -73,27 +46,46 @@ const RateListMaster = () => {
     formState: { errors },
   } = useForm();
 
-  const [createRateList, { isLoading, isSuccess, isError, error }] =
-    useCreateRateListMutation();
+  const [
+    createRateList,
+    { isLoading: isCreateLoading, isSuccess, isError, error },
+  ] = useCreateRateListMutation();
 
   const [selectedRateList, setSelectedRateList] = useState("");
-  const { data: ratelist = [] } = useGetRateListQuery();
 
   const [selectdService, setSelectedService] = useState("");
-  const { data: service = [] } = useGetServiceQuery();
+  const { data: service = [], isLoading: isServiceLoading } =
+    useGetServiceQuery();
 
-  const { data: ratelistdetail, refetch } = useGetRateListDetailQuery(id);
+  // Normalize services into a consistent shape so we always use the DB identifier
+  // for option values (this handles cases where API returns fields like serviceId, ServiceId, service_code, _id, etc.)
+  const normalizedServices = Array.isArray(service)
+    ? service.map((s) => {
+        const idVal =
+          s?.serviceId ??
+          s?.ServiceId ??
+          s?.service_code ??
+          s?.serviceCode ??
+          s?._id ??
+          s?.id ??
+          "";
+        const label =
+          (s?.serviceName ?? s?.ServiceName ?? s?.name ?? s?.title ?? idVal) ||
+          "Unknown";
+        return { id: idVal, label, raw: s };
+      })
+    : [];
+  const { data: ratelist = [], isLoading: isRateListLoading } =
+    useGetRateListQuery();
+  const { data: ratelistdetail, isLoading: isRateListDetailLoading } =
+    useGetRateListDetailQuery();
+  const [deleteRateListDetail] = useDeleteRateListDetailMutation();
+
   const [createRateListDetail] = useCreateRateListDetailMutation();
 
   const [updateRateListDetail] = useUpdateRateListDetailMutation();
-  const [deleteRateListDetail] = useDeleteRateListDetailMutation();
 
   const navigate = useNavigate();
-
-  const { data: ratelist = [] } = useGetRateListQuery();
-  const { data: service = [] } = useGetServiceQuery();
-  const { data: ratelistdetail, isLoading } = useGetRateListDetailQuery();
-  const [deleteRateListDetail] = useDeleteRateListDetailMutation();
 
   // Search + Filters + Pagination
   const [search, setSearch] = useState("");
@@ -102,6 +94,50 @@ const RateListMaster = () => {
   const [filterRateList, setFilterRateList] = useState("");
 
   const [page, setPage] = useState(1);
+  const [rows, setRows] = useState([
+    {
+      FK_ServiceId: "",
+      RateGeneral: "",
+      RateSemiPrivate: "",
+      RatePrivate: "",
+      RateSemiDelux: "",
+      RateDelux: "",
+      ServiceCharge: "",
+      Discount: "",
+      MaxDiscountLimit: "",
+      IsActive: true,
+    },
+  ]);
+  const [activeTab, setActiveTab] = useState(0);
+  const [createRateListId, setCreatedRateListId] = useState("");
+
+  // Get details array from API response
+  const details = Array.isArray(ratelistdetail)
+    ? ratelistdetail
+    : ratelistdetail?.data ?? [];
+
+  // Load details into rows when in edit mode
+  useEffect(() => {
+    if (isEdit && details.length > 0) {
+      setRows(
+        details.map((item) => ({
+          _id: item._id,
+          FK_ServiceId: item.FK_ServiceId,
+          RateGeneral: item.RateGeneral,
+          RateSemiPrivate: item.RateSemiPrivate,
+          RatePrivate: item.RatePrivate,
+          RateSemiDelux: item.RateSemiDelux,
+          RateDelux: item.RateDelux,
+          ServiceCharge: item.ServiceCharge,
+          Discount: item.Discount,
+          MaxDiscountLimit: item.MaxDiscountLimit,
+        }))
+      );
+      setCreatedRateListId(id);
+      setActiveTab(2);
+    }
+  }, [id, isEdit, details]);
+
   const rowsPerPage = 10;
 
   // Normalize API data
@@ -131,14 +167,21 @@ const RateListMaster = () => {
 
   // Apply search + filters
   const filteredRows = mergedData.filter((row) => {
+    const fkServiceStr = (row.FK_ServiceId ?? "").toString().toLowerCase();
+    const rateListNameStr = (row.RateListName ?? "").toString().toLowerCase();
+    const branchIdStr = (row.BranchId ?? "").toString();
     const matchesSearch =
-      row.FK_ServiceId.toLowerCase().includes(search.toLowerCase()) ||
-      row.RateListName.toLowerCase().includes(search.toLowerCase()) ||
-      row.BranchId.toString().includes(search);
+      fkServiceStr.includes(search.toLowerCase()) ||
+      rateListNameStr.includes(search.toLowerCase()) ||
+      branchIdStr.includes(search);
 
     const matchesBranch = filterBranch ? row.BranchId === filterBranch : true;
-    const matchesService = filterService ? row.FK_ServiceId === filterService : true;
-    const matchesRateList = filterRateList ? row.RateListName === filterRateList : true;
+    const matchesService = filterService
+      ? row.FK_ServiceId === filterService
+      : true;
+    const matchesRateList = filterRateList
+      ? row.RateListName === filterRateList
+      : true;
 
     return matchesSearch && matchesBranch && matchesService && matchesRateList;
   });
@@ -148,23 +191,13 @@ const RateListMaster = () => {
     page * rowsPerPage
   );
 
+  // Combined loading state: show loader if any API is loading
+  const isLoading =
+    isCreateLoading ||
+    isServiceLoading ||
+    isRateListLoading ||
+    isRateListDetailLoading;
   if (isLoading) return <Loader />;
-  
-
-  const [rows, setRows] = useState([
-    {
-      FK_ServiceId: "",
-      RateGeneral: "",
-      RateSemiPrivate: "",
-      RatePrivate: "",
-      RateSemiDelux: "",
-      RateDelux: "",
-      ServiceCharge: "",
-      Discount: "",
-      MaxDiscountLimit: "",
-      IsActive: true,
-    },
-  ]);
 
   const addRow = () => {
     setRows((prev) => [
@@ -184,16 +217,13 @@ const RateListMaster = () => {
     ]);
   };
 
-  const deleteRow = async(index) => {
+  const deleteRow = async (index) => {
     const row = rows[index];
-    if(row._id){
+    if (row._id) {
       await deleteRateListDetail(row._id);
     }
-    setRows((prev) => prev.filter((_,i) => i !==index));
-  }
-
-  const [activeTab, setActiveTab] = useState(0);
-  const [createRateListId, setCreatedRateListId] = useState("");
+    setRows((prev) => prev.filter((_, i) => i !== index));
+  };
 
   // Handle row change in table
   const handleRowChange = (rowIdx, fieldName, value) => {
@@ -207,9 +237,19 @@ const RateListMaster = () => {
     );
   };
 
-  // Get service label from service object
+  // Get service label from service object (robust to various field names)
   const serviceLabel = (s) => {
-    return s?.serviceName || s?.ServiceName || s?.name || s?.id || "Unknown";
+    return (
+      s?.serviceName ||
+      s?.ServiceName ||
+      s?.name ||
+      s?.title ||
+      s?.serviceTitle ||
+      s?.displayName ||
+      s?.id ||
+      s?._id ||
+      "Unknown"
+    );
   };
 
   const onSubmitRateList = async (data) => {
@@ -234,58 +274,42 @@ const RateListMaster = () => {
     }
   };
 
-  const details = Array.isArray(ratelistdetail)
-    ? ratelistdetail
-    : ratelistdetail?.data ?? [];
-
-  useEffect(() => {
-    if (isEdit && details.length > 0) {
-      setRows(
-        details.map((item) => ({
-          _id: item._id,
-          FK_ServiceId: item.FK_ServiceId,
-          RateGeneral: item.RateGeneral,
-          RateSemiPrivate: item.RateSemiPrivate,
-          RatePrivate: item.RatePrivate,
-          RateSemiDelux: item.RateSemiDelux,
-          RateDelux: item.RateDelux,
-          ServiceCharge: item.ServiceCharge,
-          Discount: item.Discount,
-          MaxDiscountLimit: item.MaxDiscountLimit,
-        }))
-      );
-      setCreatedRateListId(id);
-      setActiveTab(1);
-    }
-  }, [id, isEdit, details]);
-
   const submitDetails = async () => {
     if (!createRateList && !isEdit) {
       return alert("RateList id missing");
     }
     if (isEdit) {
-      for (let formData of rows) {
-        await updateRateListDetail({
-          id: formData._id,
-          body: {
-            FK_RateListId: id,
-            FK_ServiceId: formData.FK_ServiceId,
-            RateGeneral: formData.RateGeneral,
-            RateSemiPrivate: formData.RateSemiPrivate,
-            RatePrivate: formData.RatePrivate,
-            RateSemiDelux: formData.RateSemiDelux,
-            RateDelux: formData.RateDelux,
-            Discount: formData.Discount,
-            MaxDiscountLimit: formData.MaxDiscountLimit,
-            ServiceCharge: formData.ServiceCharge,
-            IsActive: formData.IsActive,
-          },
-        });
+      try {
+        console.log("Updating rows:", rows);
+        for (let formData of rows) {
+          await updateRateListDetail({
+            id: formData._id,
+            body: {
+              FK_RateListId: id,
+              FK_ServiceId: formData.FK_ServiceId,
+              RateGeneral: formData.RateGeneral,
+              RateSemiPrivate: formData.RateSemiPrivate,
+              RatePrivate: formData.RatePrivate,
+              RateSemiDelux: formData.RateSemiDelux,
+              RateDelux: formData.RateDelux,
+              Discount: formData.Discount,
+              MaxDiscountLimit: formData.MaxDiscountLimit,
+              ServiceCharge: formData.ServiceCharge,
+              IsActive: formData.IsActive,
+            },
+          }).unwrap();
+        }
+      } catch (err) {
+        console.error("Update error:", err);
+        alert("Update failed: " + JSON.stringify(err));
+        return;
       }
       alert("RateListDetail updated");
+      setActiveTab(0);
       return;
     }
     try {
+      console.log("Creating rows for RateListId:", createRateListId, rows);
       for (let formData of rows) {
         await createRateListDetail({
           FK_RateListId: createRateListId,
@@ -299,17 +323,15 @@ const RateListMaster = () => {
           MaxDiscountLimit: formData.MaxDiscountLimit,
           ServiceCharge: formData.ServiceCharge,
           IsActive: formData.IsActive,
-        });
+        }).unwrap();
       }
       alert("RateListDetail created");
-      // setActiveTab(1);
+      setActiveTab(0);
       setRows([]);
     } catch (err) {
       alert("Details error: " + JSON.stringify(err.data));
     }
   };
-
-  if (isLoading) return <Loader />;
 
   return (
     <Box sx={{ p: 3, mt: 10 }}>
@@ -319,164 +341,182 @@ const RateListMaster = () => {
         centered
         sx={{ mb: 3 }}
       >
-        <Tab label="Rate List Info"/>
+        <Tab label="Rate List Info" />
         <Tab label="Rate List" disabled={isEdit} />
         <Tab label="Rate List Detail" disabled={!createRateListId} />
       </Tabs>
 
       {activeTab === 0 && (
-        <Paper elevation={3} sx={{ p: 3, maxWidth: 700, mx: "auto", mt: 10 }}>
-          <Box sx={{ p: 3, mt: 10 }}>
-                {/* Page Title */}
-                <Typography variant="h4" sx={{ mb: 3, fontWeight: 600 }}>
-                  RateList Info
-                </Typography>
-          
-                {/* Filters Section */}
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexWrap: "wrap",
-                    gap: 2,
-                    mb: 3,
-                    alignItems: "center",
-                  }}
-                >
-                  {/* Search */}
-                  <TextField
-                    label="Search"
-                    placeholder="Search Service, RateList, Branch..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    sx={{ width: { xs: "100%", md: "30%" } }}
-                  />
-          
-                  {/* Branch Filter */}
-                  <FormControl sx={{ width: { xs: "100%", md: "20%" } }}>
-                    <InputLabel>Branch</InputLabel>
-                    <Select
-                      value={filterBranch}
-                      label="Branch"
-                      onChange={(e) => setFilterBranch(e.target.value)}
-                    >
-                      <MenuItem value="">All</MenuItem>
-                      {[...new Set(mergedData.map((row) => row.BranchId))].map((b) => (
-                        <MenuItem key={b} value={b}>
-                          {b}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-          
-                  {/* Service Filter */}
-                  <FormControl sx={{ width: { xs: "100%", md: "20%" } }}>
-                    <InputLabel>Service</InputLabel>
-                    <Select
-                      value={filterService}
-                      label="Service"
-                      onChange={(e) => setFilterService(e.target.value)}
-                    >
-                      <MenuItem value="">All</MenuItem>
-                      {[...new Set(mergedData.map((row) => row.FK_ServiceId))].map((s) => (
-                        <MenuItem key={s} value={s}>
-                          {s}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-          
-                  {/* RateList Filter */}
-                  <FormControl sx={{ width: { xs: "100%", md: "20%" } }}>
-                    <InputLabel>RateList</InputLabel>
-                    <Select
-                      value={filterRateList}
-                      label="RateList"
-                      onChange={(e) => setFilterRateList(e.target.value)}
-                    >
-                      <MenuItem value="">All</MenuItem>
-                      {[...new Set(mergedData.map((row) => row.RateListName))].map((r) => (
-                        <MenuItem key={r} value={r}>
-                          {r}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Box>
-          
-                {/* Table */}
-                <TableContainer component={Paper} sx={{ maxHeight: 500, borderRadius: 2 }}>
-                  <Table stickyHeader size="small">
-                    <TableHead>
-                      <TableRow>
-                        {[
-                          "ServiceId",
-                          "BranchId",
-                          "RateList Name",
-                          "StartDate",
-                          "Validupto",
-                          "General",
-                          "SemiPrivate",
-                          "Private",
-                          "SemiDelux",
-                          "Delux",
-                          "Discount",
-                          "MaxLimit",
-                          "ServiceCharge",
-                          "Action",
-                        ].map((title) => (
-                          <TableCell
-                            key={title}
-                            sx={{ fontWeight: "bold", backgroundColor: "#1976d2" }}
-                          >
-                            {title}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    </TableHead>
-          
-                    <TableBody>
-                      {paginatedRows.map((row, index) => (
-                        <TableRow key={index} hover>
-                          <TableCell>{row.FK_ServiceId}</TableCell>
-                          <TableCell>{row.BranchId}</TableCell>
-                          <TableCell>{row.RateListName}</TableCell>
-                          <TableCell>{row.StartDate}</TableCell>
-                          <TableCell>{row.Validupto}</TableCell>
-                          <TableCell>{row.RateGeneral}</TableCell>
-                          <TableCell>{row.RateSemiPrivate}</TableCell>
-                          <TableCell>{row.RatePrivate}</TableCell>
-                          <TableCell>{row.RateSemiDelux}</TableCell>
-                          <TableCell>{row.RateDelux}</TableCell>
-                          <TableCell>{row.Discount}</TableCell>
-                          <TableCell>{row.MaxDiscountLimit}</TableCell>
-                          <TableCell>{row.ServiceCharge}</TableCell>
-          
-                          <TableCell>
-                            <Button
-                              variant="outlined"
-                              size="small"
-                              onClick={() => navigate(`/RateListMaster/${row.FK_RateListId}`)}
-                            >
-                              Edit
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-          
-                {/* Pagination */}
-                <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
-                  <Pagination
-                    count={Math.ceil(filteredRows.length / rowsPerPage)}
-                    page={page}
-                    onChange={(e, value) => setPage(value)}
-                    color="primary"
-                  />
-                </Box>
-              </Box>
+        <Paper>
+          <Box sx={{}}>
+            {/* Page Title */}
+            <Typography
+              variant="h4"
+              sx={{ mb: 3, fontWeight: 600 }}
+              className={style.header}
+            >
+              RateList Info
+            </Typography>
 
+            {/* Filters Section */}
+            <Box
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 2,
+                mb: 3,
+                alignItems: "center",
+              }}
+            >
+              {/* Search */}
+              <TextField
+                label="Search"
+                placeholder="Search Service, RateList, Branch..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                sx={{ width: { xs: "100%", md: "30%" } }}
+              />
+
+              {/* Branch Filter */}
+              <FormControl sx={{ width: { xs: "100%", md: "20%" } }}>
+                <InputLabel>Branch</InputLabel>
+                <Select
+                  value={filterBranch}
+                  label="Branch"
+                  onChange={(e) => setFilterBranch(e.target.value)}
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {[...new Set(mergedData.map((row) => row.BranchId))].map(
+                    (b) => (
+                      <MenuItem key={b} value={b}>
+                        {b}
+                      </MenuItem>
+                    )
+                  )}
+                </Select>
+              </FormControl>
+
+              {/* Service Filter */}
+              <FormControl sx={{ width: { xs: "100%", md: "20%" } }}>
+                <InputLabel>Service</InputLabel>
+                <Select
+                  value={filterService}
+                  label="Service"
+                  onChange={(e) => setFilterService(e.target.value)}
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {[...new Set(mergedData.map((row) => row.FK_ServiceId))].map(
+                    (s) => (
+                      <MenuItem key={s} value={s}>
+                        {s}
+                      </MenuItem>
+                    )
+                  )}
+                </Select>
+              </FormControl>
+
+              {/* RateList Filter */}
+              <FormControl sx={{ width: { xs: "100%", md: "20%" } }}>
+                <InputLabel>RateList</InputLabel>
+                <Select
+                  value={filterRateList}
+                  label="RateList"
+                  onChange={(e) => setFilterRateList(e.target.value)}
+                >
+                  <MenuItem value="">All</MenuItem>
+                  {[...new Set(mergedData.map((row) => row.RateListName))].map(
+                    (r) => (
+                      <MenuItem key={r} value={r}>
+                        {r}
+                      </MenuItem>
+                    )
+                  )}
+                </Select>
+              </FormControl>
+            </Box>
+
+            {/* Table */}
+            <TableContainer
+              component={Paper}
+              sx={{ maxHeight: 500, borderRadius: 2 }}
+            >
+              <Table stickyHeader size="small">
+                <TableHead>
+                  <TableRow>
+                    {[
+                      "ServiceId",
+                      "BranchId",
+                      "RateList Name",
+                      "StartDate",
+                      "Validupto",
+                      "General",
+                      "SemiPrivate",
+                      "Private",
+                      "SemiDelux",
+                      "Delux",
+                      "Discount",
+                      "MaxLimit",
+                      "ServiceCharge",
+                      "Action",
+                    ].map((title) => (
+                      <TableCell
+                        key={title}
+                        sx={{
+                          fontWeight: "bold",
+                          backgroundColor: "#1976d2",
+                          color: "#fff",
+                        }}
+                      >
+                        {title}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {paginatedRows.map((row, index) => (
+                    <TableRow key={index} hover>
+                      <TableCell>{row.FK_ServiceId}</TableCell>
+                      <TableCell>{row.BranchId}</TableCell>
+                      <TableCell>{row.RateListName}</TableCell>
+                      <TableCell>{row.StartDate}</TableCell>
+                      <TableCell>{row.Validupto}</TableCell>
+                      <TableCell>{row.RateGeneral}</TableCell>
+                      <TableCell>{row.RateSemiPrivate}</TableCell>
+                      <TableCell>{row.RatePrivate}</TableCell>
+                      <TableCell>{row.RateSemiDelux}</TableCell>
+                      <TableCell>{row.RateDelux}</TableCell>
+                      <TableCell>{row.Discount}</TableCell>
+                      <TableCell>{row.MaxDiscountLimit}</TableCell>
+                      <TableCell>{row.ServiceCharge}</TableCell>
+
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          onClick={() =>
+                            navigate(`/RateListMaster/${row.FK_RateListId}`)
+                          }
+                        >
+                          Edit
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {/* Pagination */}
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+              <Pagination
+                count={Math.ceil(filteredRows.length / rowsPerPage)}
+                page={page}
+                onChange={(e, value) => setPage(value)}
+                color="primary"
+              />
+            </Box>
+          </Box>
         </Paper>
       )}
 
@@ -585,16 +625,15 @@ const RateListMaster = () => {
                           }
                         >
                           <option value="">select service</option>
-                          {Array.isArray(service) &&
-                            service.map((s) => {
-                              const idVal =
-                                s?.serviceId ?? s?.serviceId ?? s?._id ?? s?.id;
-                              return (
-                                <option key={idVal} value={idVal}>
-                                  {serviceLabel(s)}
-                                </option>
-                              );
-                            })}
+                          {Array.isArray(normalizedServices) &&
+                            normalizedServices.map((s) => (
+                              <option
+                                key={s.id || `${s.label}-${Math.random()}`}
+                                value={s.id}
+                              >
+                                {s.label}
+                              </option>
+                            ))}
                         </TextField>
                       </TableCell>
 
