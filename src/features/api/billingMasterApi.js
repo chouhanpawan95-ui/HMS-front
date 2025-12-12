@@ -115,65 +115,26 @@ export const billingMasterApi = createApi({
         method: "PUT",
         body: payload,
       }),
-      invalidatesTags: ["ServiceCategoryMaster"],
-    }),
-
-    deleteServiceCategoryMaster: builder.mutation({
-      query: (id) => ({
-        url: `servicecategorymaster/${id}`,
-        method: "DELETE",
+    }),  
+    createRatelistDetails: builder.query({
+    query: () => ({
+    url: '/ratelistdetail',
+    method: 'GET',
       }),
-      invalidatesTags: ["ServiceCategoryMaster"],
     }),
-
-    // rate list Detail
-
-    getRateListDetail: builder.query({
-      query: () => "ratelistdetail",
-      providesTags: ["RateListDetail"],
-      transformErrorResponse: (res) => res.data || [],
-    }),
-
-    createRateListDetail: builder.mutation({
-      query: (ratelistdetail) => ({
-        url: "/ratelistdetail",
-        method: "POST",
-        body: ratelistdetail,
-      }),
-      invalidatesTags: ["RateListDetail"],
-    }),
-
-    updateRateListDetail: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `ratelistdetail/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
-      invalidatesTags: ["RateListDetail"],
-    }),
-
-    deleteRateListDetail: builder.mutation({
-      query: (id) => ({
-        url: `ratelistdetail/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["RateListDetail"],
+    getPartyName: builder.query({
+      // args is an object with optional query params
+      query: (args = {}) => {
+        const { patientId } = args;
+        const params = {};
+        if (patientId !== undefined) params.patientId = patientId;
+        return {
+          url: 'patients/next-id',
+          method: 'GET',
+        };
+      }
     }),
   }),
 });
 // Export the auto-generated hooks
-export const {
-  useGetRateListQuery,
-  useCreateRateListMutation,
-  useUpdateRateListMutation,
-  useGetServiceQuery,
-  useCreateServiceMutation,
-  useGetServiceDepartmentMasterQuery,
-  useCreateServiceDepartmentMasterMutation,
-  useGetServiceCategoryMasterQuery,
-  useCreateServiceCategoryMasterMutation,
-  useGetRateListDetailQuery,
-  useCreateRateListDetailMutation,
-  useUpdateRateListDetailMutation,
-  useDeleteRateListDetailMutation,
-} = billingMasterApi;
+export const { useCreateServiceMutation,useGetPartyNameQuery,useCreateRatelistMutation,useCreateRatelistDetailsQuery} = billingMasterApi;
