@@ -46,6 +46,8 @@ function App() {
               <Route path='/ServiceCatMaster' element={<ServiceCatMaster/>}/>
               <Route path='/ServiceDepartmentMaster' element={<ServiceDepartmentMaster/>}/>
               <Route path='/RateListMaster' element={<RateListMaster/>}/>
+              <Route path='/RateListMaster/:id' element={<RateListMaster/>}/>
+
 
               {/* FIXED: Billinginformation route */}
               <Route

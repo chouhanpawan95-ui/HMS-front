@@ -294,6 +294,15 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/RateListInfo" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="RateList Info"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
+
               </List>
               </Collapse>
             </List>
