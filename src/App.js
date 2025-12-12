@@ -20,6 +20,7 @@ import CityMaster from './Master/Location/CityMaster';
 import ServiceCatMaster from './Master/BillingMaster/ServiceCatMaster';
 import ServiceDepartmentMaster from './Master/BillingMaster/ServiceDepartmentMaster';
 import RateListMaster from './Master/BillingMaster/RateListMaster';
+import PartyMaster from './Master/BillingMaster/PartyMaster';
 
 function App() {
   return (
@@ -47,6 +48,7 @@ function App() {
               <Route path='/ServiceDepartmentMaster' element={<ServiceDepartmentMaster/>}/>
               <Route path='/RateListMaster' element={<RateListMaster/>}/>
               <Route path='/RateListMaster/:id' element={<RateListMaster/>}/>
+              <Route path='/PartyMaster' element={<PartyMaster/>}/>
 
 
               {/* FIXED: Billinginformation route */}

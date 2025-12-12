@@ -21,8 +21,10 @@ export const billingMasterApi = createApi({
     "RateList",
     "Service",
     "RateListDetail",
+    "PartyMaster",
   ],
   endpoints: (builder) => ({
+    
     getService: builder.query({
       query: () => "service",
       providesTags: ["Service"],
@@ -142,7 +144,6 @@ export const billingMasterApi = createApi({
       }),
       invalidatesTags: ["RateListDetail"],
     }),
-
     updateRateListDetail: builder.mutation({
       query: ({ id, payload }) => ({
         url: `ratelistdetail/${id}`,
@@ -151,7 +152,6 @@ export const billingMasterApi = createApi({
       }),
       invalidatesTags: ["RateListDetail"],
     }),
-
     deleteRateListDetail: builder.mutation({
       query: (id) => ({
         url: `ratelistdetail/${id}`,
@@ -159,6 +159,35 @@ export const billingMasterApi = createApi({
       }),
       invalidatesTags: ["RateListDetail"],
     }),
+
+    // Party Master
+    getPartyMaster : builder.query({
+      query: () => "partymaster",
+      providesTags:['PartyMaster'],
+      transformResponse:(res) => res.data || [],
+    }),
+    createPartyMaster:builder.mutation({
+      query:(partymaster) => ({
+        url:"/partymaster",
+        method:"POST",
+        body:partymaster
+      }),invalidatesTags:["PartyMaster"],
+    }),
+    updatePartyMaster:builder.mutation({
+      query:(id,payload) => ({
+        url:`/partymaster/${id}`,
+        method:"PUT",
+        body:payload
+      }), invalidatesTags:["PartyMaster"]
+    }),
+    deletePartyMaster:builder.mutation({
+      query:(id) => ({
+        url:`/partymaster${id}`,
+        method:'DELETE',
+      }),invalidatesTags:["PartyMaster"]
+    })
+
+    
   }),
 });
 // Export the auto-generated hooks
@@ -166,14 +195,24 @@ export const {
   useGetRateListQuery,
   useCreateRateListMutation,
   useUpdateRateListMutation,
+
   useGetServiceQuery,
   useCreateServiceMutation,
+
   useGetServiceDepartmentMasterQuery,
   useCreateServiceDepartmentMasterMutation,
+
   useGetServiceCategoryMasterQuery,
   useCreateServiceCategoryMasterMutation,
+
   useGetRateListDetailQuery,
   useCreateRateListDetailMutation,
   useUpdateRateListDetailMutation,
   useDeleteRateListDetailMutation,
+
+  useGetPartyMasterQuery,
+  useCreatePartyMasterMutation,
+  useUpdatePartyMasterMutation,
+  useDeletePartyMasterMutation,
+  
 } = billingMasterApi;

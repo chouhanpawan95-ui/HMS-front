@@ -280,7 +280,17 @@ const RateListMaster = () => {
     }
     if (isEdit) {
       try {
-        console.log("Updating rows:", rows);
+        // console.log("Updating rows:", rows);
+
+        await updateRateListDetail({
+          id:id,
+          body:{
+            RateListName:rateListName,
+            StartDate:startDate,
+            Validupto:validupto,
+          },
+        }).unwrap();
+
         for (let formData of rows) {
           await updateRateListDetail({
             id: formData._id,
@@ -342,8 +352,8 @@ const RateListMaster = () => {
         sx={{ mb: 3 }}
       >
         <Tab label="Rate List Info" />
-        <Tab label="Rate List" disabled={isEdit} />
-        <Tab label="Rate List Detail" disabled={!createRateListId} />
+        <Tab label="Rate List" />
+        <Tab label="Rate List Detail" disabled={!createRateListId && !isEdit} />
       </Tabs>
 
       {activeTab === 0 && (
@@ -352,7 +362,7 @@ const RateListMaster = () => {
             {/* Page Title */}
             <Typography
               variant="h4"
-              sx={{ mb: 3, fontWeight: 600 }}
+              // sx={{ mb: 3, fontWeight: 600 }}
               className={style.header}
             >
               RateList Info
