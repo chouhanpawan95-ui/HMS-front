@@ -25,8 +25,8 @@ import {
 } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem"
 import { Radio, RadioGroup, FormControl } from "@mui/material";
-import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
-import {useCreateRatelistMutation,useCreateRatelistDetailsQuery} from '../features/api/billingMasterApi.js'
+import { useGetPatientsQuery } from "../features/api/patientsApi";
+import {useCreateRatelistMutation,useCreateRatelistDetailsQuery,useGetPartyNameQuery,useCreateBillMutation} from '../features/api/billingMasterApi.js'
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,11 +38,12 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
-  const [createbill, { isSuccess, isError, error }] = useCreateBillMutation();
   const [createRatelist, { data: createRatelistResponse }] =
   useCreateRatelistMutation();
+  const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
+  console.log("CreateBill response", createbilldetails, "loading", isCreating, "error", createBillError)
   const { data:CreateRatedetails } = useCreateRatelistDetailsQuery();
-  console.log("createRateList",CreateRatedetails)
+  const { data:partyNameData } = useGetPartyNameQuery();
   // console.log("createRatedetails",CreateRatedetails)
   const [rate, setRate] = useState("");
   const [billDate, setBillDate] = useState("");
@@ -55,7 +56,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [editingRowIndex, setEditingRowIndex] = useState(null);
 // Target RateListId
 const [selectedRateListId, setSelectedRateListId] = useState("");
+const [partyName, setPartyName] = useState("");
 const [selectedServices, setSelectedServices] = useState([]);
+const [billingRemarks, setBillingRemarks] = useState("");
 // First API response (RateList)
 const rateList = createRatelistResponse?.data || [];
 
@@ -201,11 +204,62 @@ useEffect(() => {
     setSelectedRateListId(createRatelistResponse.data[0].rateListId);
   }
 }, [createRatelistResponse]);
-  const handleConfirmYes = () => {
+  const handleConfirmYes = async () => {
     setOpenDialog(false);
-    console.log("✅ Form submitted successfully!");
-    // Your form submission logic here (API call etc.)
-    setSelectedPatient(null); // Go back to table list after submission
+    try {
+      const totals = calculateBillTotals();
+      
+      // compute numeric registration id for FK_RegId
+      const computeRegId = () => {
+        if (billDetails.FK_RegId && !isNaN(Number(billDetails.FK_RegId))) return Number(billDetails.FK_RegId);
+        if (selectedPatient?.PK_RegId && !isNaN(Number(selectedPatient.PK_RegId))) return Number(selectedPatient.PK_RegId);
+        if (selectedPatient?.id && !isNaN(Number(selectedPatient.id))) return Number(selectedPatient.id);
+        if (selectedPatient?._id && !isNaN(Number(selectedPatient._id))) return Number(selectedPatient._id);
+        const pid = selectedPatient?.patientId;
+        if (typeof pid === 'string') {
+          const m = pid.match(/(\d+)/);
+          if (m) return Number(m[1]);
+        }
+        return 0;
+      };
+
+      const billMasterPayload = {
+        // omit PK_BillId so backend will auto-generate it
+        FK_FinYearId: billDetails.FK_FinYearId || 1,
+        FK_BranchId: billDetails.FK_BranchId || 1,
+        BillNo: billDetails.BillNo || "",
+        BillDate: billDate || billDetails.BillDate || new Date().toISOString(),
+        FK_RegId: computeRegId(),
+        FK_DoctorId: billDetails.FK_DoctorId || (selectedPatient?.doctorId ? Number(selectedPatient.doctorId) : 0),
+        IsMLC: billDetails.IsMLC === true ? true : false,
+        IsAcademic: billDetails.IsAcademic === true ? true : false,
+        TotalAmt: Number(totals.totalGross) || 0,
+        ServiceChargeAmt: Number(totals.totalServiceCharge) || 0,
+        DiscountAmt: Number(totals.totalDiscount) || 0,
+        NetBillAmt: Number(totals.totalNetAmount) || 0,
+        Remarks: billingRemarks || billDetails.Remarks || "",
+        Iscancel: billDetails.Iscancel === true ? true : false,
+        PrintCount: billDetails.PrintCount || 0,
+        IsActive: billDetails.IsActive !== false ? true : false,
+        HospitalDiscount: billDetails.HospitalDiscount || 0,
+        MOUDiscount: billDetails.MOUDiscount || 0,
+      };
+
+      console.log("Create bill master payload:", billMasterPayload);
+      const billMasterResp = await createBill(billMasterPayload).unwrap();
+      console.log("Create bill master response:", billMasterResp);
+      
+      // After successful master creation, optionally save tableRows for later use
+      // If backend returns PK_BillId in response, we can use it for detail operations
+      // For now, we'll just go back to patient list after master is created
+      setSelectedPatient(null);
+      alert("✅ Bill created successfully!");
+      
+    } catch (err) {
+      console.error("Error creating bill:", err);
+      if (err && err.data) console.error("Server error data:", err.data);
+      alert("❌ Error creating bill. Check console for details.");
+    }
   };
   useEffect(() => {
   createRatelist();   // 🔥 API will run here
@@ -516,7 +570,7 @@ const handleInputChange = (index, field, value) => {
                         ? "Walk-In"
                         : selectedPatient?.isAppointment
                           ? "With Appointment"
-                          : ""
+                          : "Walk-In"
                     }
                     onChange={(e) => {
                       const value = e.target.value;
@@ -638,7 +692,7 @@ const handleInputChange = (index, field, value) => {
 
                     {categoryList.map((cat) => (
                       <MenuItem key={cat.id} value={cat.id}>
-                        {cat.CategoryName}  {cat.CategoryCode}
+                        {cat.CategoryName}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -975,23 +1029,19 @@ const handleInputChange = (index, field, value) => {
               <TextField
                 select
                 fullWidth
-                label="Party Name"
-                value={selectedRateListId}     // controlled value
+                label="Party Name"            
                 onChange={(e) => {
-                  setSelectedRateListId(e.target.value);               
-                 
+                  setPartyName(e.target.value);            
                 }}
                 sx={{ width: "230px", height: "10px" }}
               >
-                {createRatelistResponse?.data?.map((item) => (
-                  <MenuItem key={item._id} value={item.rateListId}>
-                    {item.RateListName}
+                {partyNameData?.data?.map((item) => (
+                  <MenuItem key={item.FK_CityId} value={item.partyId}>
+                    {item.PartyName}
                   </MenuItem>
                 ))}
               </TextField>
-              <Grid item xs={12} md={6}>
-                <TextField label="Amount" size="small" fullWidth />
-              </Grid>
+             
             </Grid>
 
             <Box
@@ -1000,27 +1050,34 @@ const handleInputChange = (index, field, value) => {
               justifyContent="space-between"
               alignItems="center"
               flexWrap="wrap"
+              gap={2}
             >
-              <Typography sx={{ fontWeight: "bold", color: "#b45f06" }}>
-                {(() => {
-                  const totals = calculateBillTotals();
-                  const amount = Number(totals.totalNetAmount);
-                  const words = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-                  if (amount === 100) return 'One Hundred';
-                  if (amount === 200) return 'Two Hundred';
-                  return amount.toString();
-                })()}
-              </Typography>
+              <Box sx={{ flex: 1, minWidth: "150px" }}>
+                <TextField 
+                  sx={{ width: 230 }}
+                  label="Amount" 
+                  size="small" 
+                  fullWidth 
+                  value={(() => {
+                    const totals = calculateBillTotals();
+                    const amount = Number(totals.totalNetAmount);
+                    if (amount === 100) return 'One Hundred';
+                    if (amount === 200) return 'Two Hundred';
+                    return amount.toString();
+                  })()}
+                  disabled
+                />
+              </Box>
               <Box sx={{ fontSize: 14 }}>
                 {(() => {
                   const totals = calculateBillTotals();
                   return (
                     <>
-                      <Typography>Total Amount: {totals.totalGross}</Typography>
-                      <Typography>Service Charge: {totals.totalServiceCharge}</Typography>
-                      <Typography>Less Discount: {totals.totalDiscount}</Typography>
-                      <Typography>Net Bill Amount: {totals.totalNetAmount}</Typography>
-                      <Typography>Current Payable: {totals.totalNetAmount}</Typography>
+                      <Typography><strong>Total Amount:</strong> {totals.totalGross}</Typography>
+                      <Typography><strong>Service Charge:</strong> {totals.totalServiceCharge}</Typography>
+                      <Typography><strong>Less Discount:</strong> {totals.totalDiscount}</Typography>
+                      <Typography><strong>Net Bill Amount:</strong> {totals.totalNetAmount}</Typography>
+                      <Typography><strong>Current Payable:</strong> {totals.totalNetAmount}</Typography>
                     </>
                   );
                 })()}
@@ -1030,7 +1087,7 @@ const handleInputChange = (index, field, value) => {
             <Divider sx={{ my: 2 }} />
 
             {/* ===== BILLING REMARKS ===== */}
-            <TextField label="Billing Remarks" fullWidth size="small" />
+            <TextField label="Billing Remarks" fullWidth size="small" value={billingRemarks} onChange={(e) => setBillingRemarks(e.target.value)} />
 
             {/* ===== ACTION BUTTONS ===== */}
             <Box
