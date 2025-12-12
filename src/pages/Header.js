@@ -6,36 +6,24 @@ import {
   Typography,
   InputBase,
   Box,
-  Menu,
-  MenuItem,
   Avatar,
   Badge,
-  Divider,
   Tooltip,
   Drawer
 } from "@mui/material";
 import {
-  Menu as MenuIcon,
   Search as SearchIcon,
   MailOutline as MailIcon,
   NotificationsNone as NotificationsIcon,
-  // PowerSettingsNew as PowerIcon,
   Settings as SettingsIcon,
   Fullscreen as FullscreenIcon,
-  Cached as CachedIcon,
-  Logout as LogoutIcon,
-  // Dashboard as DashboardIcon,
 } from "@mui/icons-material";
 
-export default function Navbar() {
+export default function Header() {
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [anchorElMessages, setAnchorElMessages] = useState(null);
-  const [anchorElNotifications, setAnchorElNotifications] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const openProfile = Boolean(anchorElProfile);
-  const openMessages = Boolean(anchorElMessages);
-  const openNotifications = Boolean(anchorElNotifications);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
@@ -44,13 +32,7 @@ export default function Navbar() {
   // Sidebar Drawer for Mobile
   const drawer = (
     <Box sx={{ width: 240 }} role="presentation" onClick={handleDrawerToggle}>
-
-
-
-    </Box>
-
-
-
+     </Box>
   );
 
   return (
@@ -64,22 +46,14 @@ export default function Navbar() {
           backgroundColor: "#578ee5", color: "#fff"
         }}
       >
-        <Toolbar sx={{ display: "flex", justifyContent: "space-between", ml: 4, mt: 1 }}>
+        <Toolbar sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
           {/* LEFT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
-            {/* Mobile menu icon */}
+           {/* MENU ICON FOR MOBILE */}
+           {/* <IconButton color="inherit" edge='start' sx={{display:{xs:'flex', lg:'none'}}}>
+            <MenuIcon/>
+           </IconButton> */}
 
-            {/* Logo */}
-            {/* <Box
-              component="img"
-              //src="/dist/assets/images/logo.png"
-              alt="logo"
-              sx={{
-                height: 80,
-                width: 120,
-                display: "block",
-              }}
-            /> */}
             <Typography
               variant="h6"
               sx={{
@@ -102,7 +76,6 @@ export default function Navbar() {
               px: 1.5,
               width: "40%",
               maxWidth: 400,
-              mr: 30,
             }}
           >
             <SearchIcon color="action" />
@@ -113,10 +86,9 @@ export default function Navbar() {
           </Box>
 
           {/* RIGHT SECTION */}
-          <Box display="flex" alignItems="center" gap={{ xs: 0.5, sm: 1, color: "#fff" }}>
+          <Box display="flex" alignItems="center" gap={1}>
             <IconButton
               color="inherit"
-              onClick={(e) => setAnchorElMessages(e.currentTarget)}
             >
               <Badge color="warning" variant="dot">
                 <MailIcon />
@@ -125,7 +97,6 @@ export default function Navbar() {
 
             <IconButton
               color="inherit"
-              onClick={(e) => setAnchorElNotifications(e.currentTarget)}
             >
               <Badge color="error" variant="dot">
                 <NotificationsIcon />
@@ -153,23 +124,7 @@ export default function Navbar() {
         </Toolbar>
       </AppBar>
 
-      {/* MOBILE DRAWER */}
-      {/* <Drawer
-        anchor="left"
-        open={mobileOpen}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
-        sx={{
-          display: { xs: "block", md: "none" },
-          // "& .MuiDrawer-paper": { boxSizing: "border-box", width: 240 },
-          '& .MuiDrawer-paper': {
-            width: 'auto',     // or any value you want
-          },
-        }}
-      >
-        {drawer}
-      </Drawer> */}
-      <Drawer
+       <Drawer
         anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
@@ -185,77 +140,7 @@ export default function Navbar() {
       >
         {drawer}
       </Drawer>
-
-      {/* PROFILE MENU */}
-      <Menu
-        anchorEl={anchorElProfile}
-        open={openProfile}
-        onClose={() => setAnchorElProfile(null)}
-        transformOrigin={{ horizontal: "right", vertical: "top" }}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      >
-        <MenuItem>
-          <CachedIcon fontSize="small" sx={{ mr: 1 }} />
-          Activity Log
-        </MenuItem>
-        <Divider />
-        <MenuItem>
-          <LogoutIcon fontSize="small" sx={{ mr: 1 }} />
-          Sign Out
-        </MenuItem>
-      </Menu>
-
-      {/* MESSAGES MENU */}
-      <Menu
-        anchorEl={anchorElMessages}
-        open={openMessages}
-        onClose={() => setAnchorElMessages(null)}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      >
-        <Typography variant="subtitle2" sx={{ px: 2, py: 1 }}>
-          Messages
-        </Typography>
-        <Divider />
-        {["face4.jpg", "face2.jpg", "face3.jpg"].map((face, i) => (
-          <MenuItem key={i}>
-            <Avatar
-              src={`/dist/assets/images/faces/${face}`}
-              sx={{ width: 35, height: 35, mr: 2 }}
-            />
-            <Box>
-              <Typography variant="body2">New message received</Typography>
-              <Typography variant="caption" color="text.secondary">
-                {i * 5 + 1} mins ago
-              </Typography>
-            </Box>
-          </MenuItem>
-        ))}
-      </Menu>
-
-      {/* NOTIFICATIONS MENU */}
-      <Menu
-        anchorEl={anchorElNotifications}
-        open={openNotifications}
-        onClose={() => setAnchorElNotifications(null)}
-        anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
-      >
-        <Typography variant="subtitle2" sx={{ px: 2, py: 1 }}>
-          Notifications
-        </Typography>
-        <Divider />
-        <MenuItem>
-          <NotificationsIcon color="success" sx={{ mr: 2 }} />
-          Event Today
-        </MenuItem>
-        <MenuItem>
-          <SettingsIcon color="warning" sx={{ mr: 2 }} />
-          Settings Updated
-        </MenuItem>
-        <MenuItem>
-          <MenuIcon color="info" sx={{ mr: 2 }} />
-          Launch Admin
-        </MenuItem>
-      </Menu>
+     
     </>
   );
 }
