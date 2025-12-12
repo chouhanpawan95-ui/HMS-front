@@ -41,28 +41,29 @@ export default function CountryMaster() {
   if(isLoading) return <Loader></Loader>
 
   return (
-    <Container className={styles.container}>
+    <Container className={styles.container} >
       <Typography variant="h4" className={styles.header} sx={{ mb: 2 }}>
         Country Master
       </Typography>
+      
       <form onSubmit={handleSubmit(onSubmit)} className={styles.form}>
-        <TextField
+        <TextField className={styles.text}
           label="Country Name"
           {...register("name", { required: "Country Name is required" })}
           error={!!errors.name}
           helperText={errors.name?.message}
-          fullWidth
-          sx={{ mt: 2 }}
+          // sx={{color:"#578ee5"}}
+          focused 
         />
         <TextField
           label="Country Code"
           {...register("code", { required: "Country Code is required" })}
           error={!!errors.code}
           helperText={errors.code?.message}
-          fullWidth
-          sx={{ mt: 2 }}
+          sx={{color:"#578ee5"}}
+          focused 
         />
-        <Button type="submit" variant="contained" sx={{ mt: 2, width: "100%" }}>
+        <Button type="submit" variant="contained" className={styles.button}>
           Save
         </Button>
       </form>

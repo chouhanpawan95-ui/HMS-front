@@ -18,33 +18,6 @@ const CityMaster = () => {
   const {data:CityMaster,isLoading,refetch} = useGetCitiesQuery(selectedDistrict);
   const [createCity] = useCreateCityMutation();
 
-  // const [countries, setCountries] = useState([]);
-  // const [states, setStates] = useState([]);
-  // const [districts, setDistricts] = useState([]);
-
-  // const [locationData, setLocationData] = useState({});
-
-  // Load initial data
-  // useEffect(() => {
-  //   const stored = JSON.parse(localStorage.getItem("locationData")) || {};
-  //   setLocationData(stored);
-  //   setCountries(Object.keys(stored));
-  // }, []);
-
-  // Update state list when country selected
-  // useEffect(() => {
-  //   if (selectedCountry) {
-  //     setStates(locationData[selectedCountry]?.states || []);
-  //   }
-  // }, [selectedCountry, locationData]);
-
-  // Update district list when state selected
-  // useEffect(() => {
-  //   if (selectedCountry && selectedState) {
-  //     setDistricts(locationData[selectedCountry]?.districts?.[selectedState] || []);
-  //   }
-  // }, [selectedCountry, selectedState, locationData]);
-
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
   const onSubmit = async(data) => {
@@ -60,28 +33,6 @@ const CityMaster = () => {
       console.log('Api validation error message:', err.data);
       alert("backend error"+JSON.stringify(err.data));
     }
-
-    // const country = locationData[selectedCountry];
-
-    // const updated = {
-    //   ...locationData,
-
-    //   [selectedCountry]: {
-    //     ...country,
-
-    //     cities: {
-    //       ...country.cities,
-    //       [selectedDistrict]: [
-    //         ...(country.cities?.[selectedDistrict] || []),
-    //         data.city
-    //       ]
-    //     }
-    //   }
-    // };
-
-    // localStorage.setItem("locationData", JSON.stringify(updated));
-    // alert("City Added!");
-    // reset();
   };
   if(isLoading) return <Loader></Loader>
 

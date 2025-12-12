@@ -1,21 +1,33 @@
-import Header from './Header'
-import Sidebar from './Sidebar'
-import { Outlet } from 'react-router-dom'
+import { Outlet } from "react-router-dom";
+import { Box, CssBaseline } from "@mui/material";
 
+import Header from "./Header";
+import Sidebar from "./Sidebar";
 
-const Layout = () => {
+export default function Layout() {
 
-  return(
-    <div className='layout'>
-      <Header/>
+  return (
+    <Box sx={{ display: "flex" }}>
+      <CssBaseline />
+
+      {/* HEADER */}
+      <Header  />
+
+      {/* SIDEBAR */}
       <Sidebar/>
 
-      <div className='content' style={{ marginTop: '73px' }}>
-        <Outlet/>
-      </div>
-
-    </div>
+      {/* MAIN CONTENT AREA */}
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          mt: "10px",
+          width: "100%", // always full width
+          transition: "all 0.3s ease",
+        }}
+      >
+        <Outlet />
+      </Box>
+    </Box>
   );
-
 }
-export default Layout;

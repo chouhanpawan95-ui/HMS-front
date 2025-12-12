@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -23,7 +22,7 @@ import {
   Checkbox,
   IconButton,
 } from "@mui/material";
-import MenuItem from "@mui/material/MenuItem"
+import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
 import {useCreateRatelistMutation,useCreateRatelistDetailsQuery} from '../features/api/billingMasterApi.js'
@@ -259,8 +258,8 @@ const handleInputChange = (index, field, value) => {
   const patients = Array.isArray(patientsResp)
     ? patientsResp
     : patientsResp && Array.isArray(patientsResp.data)
-      ? patientsResp.data
-      : [];
+    ? patientsResp.data
+    : [];
   const paginatedPatients = filteredPatients.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
@@ -352,18 +351,35 @@ const handleInputChange = (index, field, value) => {
     Diagnosis: "",
   };
   return (
-    <Box sx={{ background: "#fff", color: "#000", p: 2, mt: 8, minHeight: "100vh" }}>
+    <Box
+      sx={{
+        background: "#fff",
+        color: "#000",
+        p: 2,
+        mt: 8,
+        minHeight: "100vh",
+      }}
+    >
       {/* =================== PATIENT SEARCH TABLE =================== */}
       {!selectedPatient ? (
         <>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Search For FirstName
-          </Typography>
+          {isLoading ? (
+            <Box sx={{ display: "flex", justifyContent: "center" }}>
+              <Loader />
+            </Box>
+          ) : (
+            <>
+              <Typography variant="h6" sx={{ mb: 1 }}>
+                Search For FirstName
+              </Typography>
 
-          <SearchBar sx={{ mb: '5px' }}
-            patients={patients}
-            onFilter={setFilteredPatients}
-          />
+              <SearchBar
+                sx={{ mb: "5px" }}
+                patients={patients}
+                onFilter={setFilteredPatients}
+              />
+            </>
+          )}
 
           {/* Patient Table */}
           <TableContainer component={Paper} sx={{ mt: 5 }}>
@@ -383,7 +399,11 @@ const handleInputChange = (index, field, value) => {
                   ].map((col) => (
                     <TableCell
                       key={col}
-                      sx={{ fontWeight: "bold", color: "#fff", whiteSpace: "nowrap" }}
+                      sx={{
+                        fontWeight: "bold",
+                        color: "#fff",
+                        whiteSpace: "nowrap",
+                      }}
                     >
                       {col}
                     </TableCell>
@@ -484,8 +504,9 @@ const handleInputChange = (index, field, value) => {
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Patient Name"
-                  value={`${selectedPatient?.firstName || ""} ${selectedPatient?.lastName || ""
-                    }`}
+                  value={`${selectedPatient?.firstName || ""} ${
+                    selectedPatient?.lastName || ""
+                  }`}
                   size="small"
                   fullWidth
                 />
@@ -493,8 +514,9 @@ const handleInputChange = (index, field, value) => {
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Age/Sex"
-                  value={`${selectedPatient?.ageYMD || ""} / ${selectedPatient?.sex || ""
-                    }`}
+                  value={`${selectedPatient?.ageYMD || ""} / ${
+                    selectedPatient?.sex || ""
+                  }`}
                   size="small"
                   fullWidth
                 />
@@ -515,8 +537,8 @@ const handleInputChange = (index, field, value) => {
                       selectedPatient?.isWalkIn
                         ? "Walk-In"
                         : selectedPatient?.isAppointment
-                          ? "With Appointment"
-                          : ""
+                        ? "With Appointment"
+                        : ""
                     }
                     onChange={(e) => {
                       const value = e.target.value;
@@ -527,7 +549,11 @@ const handleInputChange = (index, field, value) => {
                       }));
                     }}
                   >
-                    <FormControlLabel value="Walk-In" control={<Radio />} label="Walk-In" />
+                    <FormControlLabel
+                      value="Walk-In"
+                      control={<Radio />}
+                      label="Walk-In"
+                    />
                     <FormControlLabel
                       value="With Appointment"
                       control={<Radio />}
@@ -597,8 +623,7 @@ const handleInputChange = (index, field, value) => {
                   display="flex"
                   alignItems="center"
                   flexWrap="wrap"
-                >
-                </Grid>
+                ></Grid>
               </Grid>
               <Grid container spacing={2} sx={{ mt: 2 }}>
                 <Grid item xs={12} sm={6} md={3}>
@@ -638,7 +663,7 @@ const handleInputChange = (index, field, value) => {
 
                     {categoryList.map((cat) => (
                       <MenuItem key={cat.id} value={cat.id}>
-                        {cat.CategoryName}  {cat.CategoryCode}
+                        {cat.CategoryName} {cat.CategoryCode}
                       </MenuItem>
                     ))}
                   </TextField>
@@ -667,8 +692,8 @@ const handleInputChange = (index, field, value) => {
                   md={12}
                   display="flex"
                   alignItems="center"
-                  flexWrap="wrap"              >
-                </Grid>
+                  flexWrap="wrap"
+                ></Grid>
                 <Grid container spacing={2} sx={{ mt: 2 }}>
                   <Grid item xs={12} sm={6} md={3}>
                     <TextField
@@ -725,8 +750,7 @@ const handleInputChange = (index, field, value) => {
                     display="flex"
                     alignItems="center"
                     flexWrap="wrap"
-                  >
-                  </Grid>
+                  ></Grid>
                 </Grid>
               </Grid>
             </Box>
@@ -1077,13 +1101,16 @@ const handleInputChange = (index, field, value) => {
           <Button onClick={handleConfirmNo} color="secondary">
             No
           </Button>
-          <Button onClick={handleConfirmYes} color="primary" variant="contained">
+          <Button
+            onClick={handleConfirmYes}
+            color="primary"
+            variant="contained"
+          >
             Yes
           </Button>
         </DialogActions>
       </Dialog>
     </Box>
-
   );
 };
 

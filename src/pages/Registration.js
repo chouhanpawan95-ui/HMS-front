@@ -324,6 +324,7 @@ React.useEffect(() => {
                     value={patient.dateTime}                  
                     onChange={handleChange}
                     size="small"
+                    disabled
                     type="text"                                    
                   />                  
                 </Grid>

@@ -1,0 +1,27 @@
+.header {
+  background: #1976d2;
+  border-bottom: 2px solid #578ee5;
+  color: #fff;
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 2px;
+}
+
+.buttonContainer{
+    align-items: center;
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 5px;
+  transition: 0.3s ease;
+}

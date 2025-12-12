@@ -1,8 +1,6 @@
 import './App.css';
 import { Box } from '@mui/material';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Header from './pages/Header';
-import Sidebar from './pages/Sidebar';
 import Registration from './pages/Registration';
 import BillTest from './pages/BillTest';
 import Dashboard from './pages/Dashboard';
@@ -19,13 +17,16 @@ import UserMaster from './Master/UserManagement/UserMaster';
 import UpdateUser from './Master/UserManagement/UpdateUser';
 import ServiceDeptMaster from './Master/BillingMaster/ServiceDeptMaster';
 import CityMaster from './Master/Location/CityMaster';
+import ServiceCatMaster from './Master/BillingMaster/ServiceCatMaster';
+import ServiceDepartmentMaster from './Master/BillingMaster/ServiceDepartmentMaster';
+import RateListMaster from './Master/BillingMaster/RateListMaster';
 
 function App() {
   return (
     <BrowserRouter>
       <Box sx={{ display: 'flex' }}>
-        <Header />
-        <Sidebar />
+        {/* <Header />
+        <Sidebar /> */}
 
         {/* Main content area where Routes render */}
         <Box component="main" sx={{ flexGrow: 1 }} className='css-1du1ywb'>
@@ -42,6 +43,12 @@ function App() {
               <Route path="/UpdateUser/:id" element={<UpdateUser />} />
               <Route path='/ServiceDeptMaster' element={<ServiceDeptMaster/>}/>
               <Route path='/CityMaster' element={<CityMaster/>}/>
+              <Route path='/ServiceCatMaster' element={<ServiceCatMaster/>}/>
+              <Route path='/ServiceDepartmentMaster' element={<ServiceDepartmentMaster/>}/>
+              <Route path='/RateListMaster' element={<RateListMaster/>}/>
+              <Route path='/RateListMaster/:id' element={<RateListMaster/>}/>
+
+
               {/* FIXED: Billinginformation route */}
               <Route
                 path="/Billinginformation"
