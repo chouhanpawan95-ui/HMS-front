@@ -25,7 +25,7 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateBillMutation } from "../features/api/patientsApi";
-import {useCreateRatelistMutation,useCreateRatelistDetailsQuery} from '../features/api/billingMasterApi.js'
+import {useCreateRatelistMutation,useCreateRatelistDetailsQuery} from '../features/api/billingMasterApi.js';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
