@@ -21,8 +21,10 @@ export const billingMasterApi = createApi({
     "RateList",
     "Service",
     "RateListDetail",
+    "PartyMaster",
   ],
   endpoints: (builder) => ({
+    
     getService: builder.query({
       query: () => "service",
       providesTags: ["Service"],
@@ -46,7 +48,7 @@ export const billingMasterApi = createApi({
     createRateList: builder.mutation({
       query: (rateList) => ({
         url: "/ratelistmaster",
-        method: "POST",
+        method: "GET",
         body: rateList,
       }),
     }),
@@ -115,18 +117,79 @@ export const billingMasterApi = createApi({
         method: "PUT",
         body: payload,
       }),
-    }),  
+      invalidatesTags: ["ServiceCategoryMaster"],
+    }),
+
+    deleteServiceCategoryMaster: builder.mutation({
+      query: (id) => ({
+        url: `servicecategorymaster/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["ServiceCategoryMaster"],
+    }),
+
+    // rate list Detail
+
+    getRateListDetail: builder.query({
+      query: () => "ratelistdetail",
+      providesTags: ["RateListDetail"],
+      transformErrorResponse: (res) => res.data || [],
+    }),
     createRatelistDetails: builder.query({
     query: () => ({
     url: '/ratelistdetail',
     method: 'GET',
       }),
     }),
-   getPartyName: builder.query({
-    query: () => ({
-    url: '/partymaster',
-    method: 'GET',
+     createRateListDetail: builder.mutation({
+      query: (ratelistdetail) => ({
+        url: "/ratelistdetail",
+        method: "POST",
+        body: ratelistdetail,
       }),
+      invalidatesTags: ["RateListDetail"],
+    }),
+    updateRateListDetail: builder.mutation({
+      query: ({ id, payload }) => ({
+        url: `ratelistdetail/${id}`,
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["RateListDetail"],
+    }),
+    deleteRateListDetail: builder.mutation({
+      query: (id) => ({
+        url: `ratelistdetail/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["RateListDetail"],
+    }),
+
+    // Party Master
+    getPartyMaster : builder.query({
+      query: () => "partymaster",
+      providesTags:['PartyMaster'],
+      transformResponse:(res) => res.data || [],
+    }),
+    createPartyMaster:builder.mutation({
+      query:(partymaster) => ({
+        url:"/partymaster",
+        method:"POST",
+        body:partymaster
+      }),invalidatesTags:["PartyMaster"],
+    }),
+    updatePartyMaster:builder.mutation({
+      query:(id,payload) => ({
+        url:`/partymaster/${id}`,
+        method:"PUT",
+        body:payload
+      }), invalidatesTags:["PartyMaster"]
+    }),
+    deletePartyMaster:builder.mutation({
+      query:(id) => ({
+        url:`/partymaster${id}`,
+        method:'DELETE',
+      }),invalidatesTags:["PartyMaster"]
     }),
     createBill: builder.mutation({
       query: (patient) => ({
@@ -135,7 +198,39 @@ export const billingMasterApi = createApi({
         body: patient,
       }),
     }),
+    getPartyName: builder.query({
+    query: () => ({
+    url: '/partymaster',
+    method: 'GET',
+      }),
+    }),
   }),
 });
 // Export the auto-generated hooks
-export const { useCreateServiceMutation,useGetPartyNameQuery,useCreateRatelistMutation,useCreateBillMutation,useCreateRatelistDetailsQuery} = billingMasterApi;
+export const {
+  useGetRateListQuery,
+  useCreateRateListMutation,
+  useUpdateRateListMutation,
+
+  useGetServiceQuery,
+  useCreateServiceMutation,
+  useCreateBillMutation  ,
+  useGetPartyNameQuery,
+  useGetServiceDepartmentMasterQuery,
+  useCreateServiceDepartmentMasterMutation,
+
+  useGetServiceCategoryMasterQuery,
+  useCreateServiceCategoryMasterMutation,
+
+  useGetRateListDetailQuery,
+  useCreateRateListDetailMutation,
+  useCreateRatelistDetailsQuery,
+  useUpdateRateListDetailMutation,
+  useDeleteRateListDetailMutation,
+
+  useGetPartyMasterQuery,
+  useCreatePartyMasterMutation,
+  useUpdatePartyMasterMutation,
+  useDeletePartyMasterMutation,
+  
+} = billingMasterApi;

@@ -25,7 +25,7 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import {useCreateRatelistMutation,useCreateRatelistDetailsQuery,useGetPartyNameQuery,useCreateBillMutation} from '../features/api/billingMasterApi.js';
+import {useCreateRateListMutation,useCreateRatelistDetailsQuery,useGetPartyNameQuery,useCreateBillMutation} from '../features/api/billingMasterApi.js'
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -38,7 +38,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
   const [createRatelist, { data: createRatelistResponse }] =
-  useCreateRatelistMutation();
+  useCreateRateListMutation();
   const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
   console.log("CreateBill response", createbilldetails, "loading", isCreating, "error", createBillError)
   const { data:CreateRatedetails } = useCreateRatelistDetailsQuery();
