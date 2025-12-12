@@ -18,11 +18,15 @@ const PartyMaster = () => {
   } = useForm();
 
   const [selectedCity, setSelectedCity] = useState("");
-  const { data: city = [], isLoading: isCityLoading } = useGetCitiesQuery();
+  const { data: cityResponse, isLoading: isCityLoading } = useGetCitiesQuery();
+  const city = cityResponse?.data ?? [];
 
   const [selectedRateList, setSelectedRateList] = useState("");
-  const { data: rateList = [], isLoading: isRateListLoading } =
-    useGetRateListQuery();
+  const { data: rateListResponse, isLoading: isRateListLoading } =useGetRateListQuery();
+  const rateList = rateListResponse??[];
+  console.log("RateList Response:", rateListResponse);
+  console.log("RateList Data:", rateList);
+
 
   const [
     createPartyMaster,
@@ -40,7 +44,7 @@ const PartyMaster = () => {
         ContactPerson: data.contactperson,
         ContactNoMob: data.contactnomod,
         EmailId: data.emailid,
-        FK_RateListId: data.ratelist,
+        FK_RateListId: data.rateListId,
         Remarks: data.remarks,
         FreeDays: data.freedays,
         NoofVisit: data.noofvisit,
@@ -50,14 +54,14 @@ const PartyMaster = () => {
     }
   };
 
-  const partyType = {
-    general: "GENERAL",
-    pat: "PAT",
-    tpa: "TAP",
-    panel: "PANEL",
-    insurance: "Insurance",
-    cmbpartytype: "CmbPartyType",
-  };
+  const partyType = [
+    "GENERAL",
+    "PAT",
+    "TAP",
+    "PANEL",
+    "Insurance",
+    "CmbPartyType",
+  ];
 
   const isLoading = isCityLoading || isPartyMasterLoading || isRateListLoading;
   if (isLoading) return <Loader />;
@@ -92,10 +96,9 @@ const PartyMaster = () => {
             error={!!errors.partytype}
             helperText={errors.partytype?.message}
           >
-            {Object.values(partyType).map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
+            <option value="">Select Party Type</option>
+            {partyType.map((p) => (
+              <option key={p} value={p}>{p}</option>
             ))}
           </TextField>
           <TextField
@@ -119,15 +122,15 @@ const PartyMaster = () => {
           <TextField
             select
             label="City Name"
-            {...register("cityId", {
+            {...register("cityname", {
               required: "City is required",
             })}
-            error={!!errors.cityId}
-            helperText={errors.cityId?.message}
+            error={!!errors.cityname}
+            helperText={errors.cityname?.message}
           >     
-            {/* {city.map((c) => (
+            {city.map((c) => (
               <option key={c.CityId} value={c.CityId}>{ c.CityName }</option>
-            ))} */}
+            ))}
           </TextField>
           
           <TextField
@@ -157,13 +160,20 @@ const PartyMaster = () => {
             helperText={errors.email?.message}
           />
           <TextField
+            select
+            SelectProps={{native:true}}
             label="RateList Id"
-            {...register("rateListid", {
+            {...register("rateListId", {
               required: "RateList Id is required",
             })}
-            error={!!errors.FK_RateListId}
-            helperText={errors.FK_RateListId?.message}
-          />
+            error={!!errors.rateListId}
+            helperText={errors.rateListId?.message}
+          >
+            <option value="">Select RateList Name</option>
+            {rateList.map((r) => (
+              <option key={r.rateListId} value={r.rateListId}>{ r.RateListName }</option>
+            ))}
+          </TextField>
           <TextField
             label="Remark"
             {...register("remark", {
