@@ -28,8 +28,26 @@ export const billingMasterApi = createApi({
         method: 'GET',
         body: patient,
       }),
-    }),    
+    }),  
+    createRatelistDetails: builder.query({
+    query: () => ({
+    url: '/ratelistdetail',
+    method: 'GET',
+      }),
+    }),
+    getPartyName: builder.query({
+      // args is an object with optional query params
+      query: (args = {}) => {
+        const { patientId } = args;
+        const params = {};
+        if (patientId !== undefined) params.patientId = patientId;
+        return {
+          url: 'patients/next-id',
+          method: 'GET',
+        };
+      }
+    }),
   }),
 });
 // Export the auto-generated hooks
-export const { useCreateServiceMutation,useCreateRatelistMutation} = billingMasterApi;
+export const { useCreateServiceMutation,useGetPartyNameQuery,useCreateRatelistMutation,useCreateRatelistDetailsQuery} = billingMasterApi;
