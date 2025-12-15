@@ -26,6 +26,7 @@ import {
   useGetServiceQuery,
   useUpdateRateListDetailMutation,
   useDeleteRateListDetailMutation,
+  useUpdateRateListMutation,
 } from "../../features/api/billingMasterApi";
 import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";
@@ -84,6 +85,7 @@ const RateListMaster = () => {
   const [createRateListDetail] = useCreateRateListDetailMutation();
 
   const [updateRateListDetail] = useUpdateRateListDetailMutation();
+  const [updateRateList] = useUpdateRateListMutation();
 
   const navigate = useNavigate();
 
@@ -93,6 +95,7 @@ const RateListMaster = () => {
   const [filterService, setFilterService] = useState("");
   const [filterRateList, setFilterRateList] = useState("");
 
+  
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState([
     {
@@ -119,8 +122,11 @@ const RateListMaster = () => {
   // Load details into rows when in edit mode
   useEffect(() => {
     if (isEdit && details.length > 0) {
+      const rateDetailsForId = details.filter(
+        (item) => item.FK_RateListId === id || item.FK_RateListId === (id)
+      );
       setRows(
-        details.map((item) => ({
+        rateDetailsForId.map((item) => ({
           _id: item._id,
           FK_ServiceId: item.FK_ServiceId,
           RateGeneral: item.RateGeneral,
@@ -155,15 +161,27 @@ const RateListMaster = () => {
 
   // Merge rateList + rateListDetail
   const mergedData = infoDetail.map((detail) => {
-    const rl = infoList.find((r) => r._id === detail.FK_RateListId);
+    const rl = infoList.find(
+      (r) => (r._id ?? r.rateListId) === detail.FK_RateListId
+    );
     return {
       ...detail,
       RateListName: rl?.RateListName || "--",
-      BranchId: rl?.FK_BranchId || "--",
-      StartDate: rl?.StartDate?.split("T")[0] || "--",
-      Validupto: rl?.Validupto?.split("T")[0] || "--",
+      BranchId: rl?.FK_BranchId ?? rl?.FK_BranchId ?? "--",
+      StartDate:
+        (rl?.StartDate ?? rl?.startdate)
+          ? (rl?.StartDate ?? rl?.startdate).split("T")[0]
+          : "--",
+      Validupto:
+        (rl?.Validupto ?? rl?.Validupto ?? rl?.validupto)
+          ? (rl?.Validupto ?? rl?.validupto).split("T")[0]
+          : "--",
     };
   });
+
+  console.log(infoList.map(r => r._id));
+  console.log(infoDetail.map(d => d.FK_RateListId));
+
 
   // Apply search + filters
   const filteredRows = mergedData.filter((row) => {
@@ -185,6 +203,24 @@ const RateListMaster = () => {
 
     return matchesSearch && matchesBranch && matchesService && matchesRateList;
   });
+
+  // If editing, prefill the RateList form with master values
+  useEffect(() => {
+    if (isEdit && infoList.length > 0) {
+      const currentRateList = infoList.find(
+        (r) => (r._id ?? r.rateListId) === id
+      );
+      if (currentRateList) {
+        reset({
+          RateListName: currentRateList.RateListName,
+          StartDate: ((currentRateList.StartDate ?? currentRateList.startdate) || "").split("T")[0] || "",
+          Validupto: ((currentRateList.Validupto ?? currentRateList.validupto) || "").split("T")[0] || "",
+          FK_BranchId: currentRateList.FK_BranchId ?? "",
+        });
+        setCreatedRateListId(currentRateList._id ?? currentRateList.rateListId ?? "");
+      }
+    }
+  }, [isEdit, infoList, id, reset]);
 
   const paginatedRows = filteredRows.slice(
     (page - 1) * rowsPerPage,
@@ -220,7 +256,7 @@ const RateListMaster = () => {
   const deleteRow = async (index) => {
     const row = rows[index];
     if (row._id) {
-      await deleteRateListDetail(row._id);
+      await deleteRateListDetail(row._id ?? row.rateListDetailId);
     }
     setRows((prev) => prev.filter((_, i) => i !== index));
   };
@@ -254,17 +290,29 @@ const RateListMaster = () => {
 
   const onSubmitRateList = async (data) => {
     try {
-      const res = await createRateList({
+      let res;
+      if (isEdit) {
+        // update existing rate list
+        res = await updateRateList({ id, payload: {
+          FK_BranchId: data.FK_BranchId || "",
+          RateListName: data.RateListName,
+          StartDate: data.StartDate,
+          Validupto: data.Validupto,
+          IsActive: true,
+        }}).unwrap();
+      } else {
+        res = await createRateList({
         FK_BranchId: data.FK_BranchId || "",
         RateListName: data.RateListName,
         StartDate: data.StartDate,
         Validupto: data.Validupto,
         IsActive: true,
-      }).unwrap();
+        }).unwrap();
+      }
 
       // alert("Rate List added successfully!");
 
-      setCreatedRateListId(res?.RateListId || res?._id); // USE backend returned ID
+      setCreatedRateListId(res?.rateListId || res?.RateListId || res?._id || "");
       setActiveTab(2); // move next tab
 
       reset();
@@ -275,26 +323,34 @@ const RateListMaster = () => {
   };
 
   const submitDetails = async () => {
-    if (!createRateList && !isEdit) {
+    if (!createRateListId && !isEdit) {
       return alert("RateList id missing");
     }
     if (isEdit) {
       try {
-        // console.log("Updating rows:", rows);
-
-        await updateRateListDetail({
-          id:id,
-          body:{
-            RateListName:rateListName,
-            StartDate:startDate,
-            Validupto:validupto,
-          },
-        }).unwrap();
+        // Master update happens from Rate List tab; details update only here
 
         for (let formData of rows) {
-          await updateRateListDetail({
-            id: formData._id,
-            body: {
+          if (formData._id || formData.rateListDetailId) {
+            await updateRateListDetail({
+              id: formData._id ?? formData.rateListDetailId,
+              payload: {
+                FK_RateListId: id,
+                FK_ServiceId: formData.FK_ServiceId,
+                RateGeneral: formData.RateGeneral,
+                RateSemiPrivate: formData.RateSemiPrivate,
+                RatePrivate: formData.RatePrivate,
+                RateSemiDelux: formData.RateSemiDelux,
+                RateDelux: formData.RateDelux,
+                Discount: formData.Discount,
+                MaxDiscountLimit: formData.MaxDiscountLimit,
+                ServiceCharge: formData.ServiceCharge,
+                IsActive: formData.IsActive,
+              },
+            }).unwrap();
+          } else {
+            // create new detail if no id present
+            await createRateListDetail({
               FK_RateListId: id,
               FK_ServiceId: formData.FK_ServiceId,
               RateGeneral: formData.RateGeneral,
@@ -306,8 +362,8 @@ const RateListMaster = () => {
               MaxDiscountLimit: formData.MaxDiscountLimit,
               ServiceCharge: formData.ServiceCharge,
               IsActive: formData.IsActive,
-            },
-          }).unwrap();
+            }).unwrap();
+          }
         }
       } catch (err) {
         console.error("Update error:", err);
@@ -337,7 +393,20 @@ const RateListMaster = () => {
       }
       alert("RateListDetail created");
       setActiveTab(0);
-      setRows([]);
+      setRows([
+        {
+          FK_ServiceId: "",
+          RateGeneral: "",
+          RateSemiPrivate: "",
+          RatePrivate: "",
+          RateSemiDelux: "",
+          RateDelux: "",
+          ServiceCharge: "",
+          Discount: "",
+          MaxDiscountLimit: "",
+          IsActive: true,
+        },
+      ]);
     } catch (err) {
       alert("Details error: " + JSON.stringify(err.data));
     }
