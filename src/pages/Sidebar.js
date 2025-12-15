@@ -302,6 +302,14 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                       primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                     />
                   </ListItemButton>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/PackageMaster" onClick={handleMenuClick}>
+                    <ListItemIcon sx={{ minWidth: 30 }}>
+                    </ListItemIcon>
+                    <ListItemText
+                      primary="Package Master"
+                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
+                    />
+                  </ListItemButton>
 
               </List>
               </Collapse>

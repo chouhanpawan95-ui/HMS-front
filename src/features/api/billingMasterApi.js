@@ -22,6 +22,8 @@ export const billingMasterApi = createApi({
     "Service",
     "RateListDetail",
     "PartyMaster",
+    "PackageMaster",
+    "PackageDetail"
   ],
   endpoints: (builder) => ({
     getService: builder.query({
@@ -208,6 +210,63 @@ export const billingMasterApi = createApi({
         method: "GET",
       }),
     }),
+
+    // Package Master
+    getPackageMaster: builder.query({
+      query: () => 'packagemaster',
+      providersTags: ['PackageMaster'],
+      transformResponse: (res) => res.data || [],
+    }),
+    createPackageMaster: builder.mutation({
+      query: (packagemaster) => ({
+        url: '/packagemaster',
+        method: 'POST',
+        body: packagemaster,
+      }), invalidatesTags: ['PackageMaster'],
+    }),
+    updatePackageMaster: builder.mutation({
+      query: ({id,payload}) => ({
+        url:`packagemaster/${id}`,
+        method: 'PUT',
+        body:payload,
+      }), invalidatesTags: ['PackageMaster'],
+    }),
+    deletePackageMaster: builder.mutation({
+      query: (id) => ({
+        url: `packagemaster/${id}`,
+        method: 'DELETE',
+      }), invalidatesTags: ['PackageMaster'],
+    }),
+
+    // Package Detail
+    getPackageDetail : builder.query({
+      query: () => 'packagedetail',
+      providersTags:['PackageDetail'],
+      transformResponse : (res) => res.data || [],
+    }),
+    createPackageDetail: builder.mutation({
+      query: (packagedetail) => ({
+        url: '/packagedetail',
+        method:'POST',
+        body: packagedetail,
+      }), invalidatesTags: ['PackageDetail']
+    }),
+    updatePackageDetail:builder.mutation({
+      query: ({id,payload}) => ({
+        url: `packagedetail/${id}`,
+        method:'PUT',
+        body:payload,
+      }), invalidatesTags: ['PackageDetail'],
+    }),
+    deletePackageDetail: builder.mutation({
+      query: (id) => ({
+        url: `packagedetail/${id}`,
+        method: 'DELETE',
+      }), invalidatesTags: ['PackageDetail'],
+    })
+
+
+    
   }),
 });
 // Export the auto-generated hooks
@@ -236,4 +295,10 @@ export const {
   useCreatePartyMasterMutation,
   useUpdatePartyMasterMutation,
   useDeletePartyMasterMutation,
+
+  useGetPackageMasterQuery,
+  useCreatePackageMasterMutation,
+  useUpdatePackageMasterMutation,
+  useDeletePackageMasterMutation,
+
 } = billingMasterApi;

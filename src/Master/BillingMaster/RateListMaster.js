@@ -413,7 +413,7 @@ const RateListMaster = () => {
   };
 
   return (
-    <Box sx={{ p: 3, mt: 10 }}>
+    <Box sx={{ p: 3, mt: 6 }}>
       <Tabs
         value={activeTab}
         onChange={(e, v) => setActiveTab(v)}
@@ -443,7 +443,8 @@ const RateListMaster = () => {
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 2,
-                mb: 3,
+                mb: 1,
+                mt:1,
                 alignItems: "center",
               }}
             >
@@ -542,7 +543,7 @@ const RateListMaster = () => {
                         key={title}
                         sx={{
                           fontWeight: "bold",
-                          backgroundColor: "#1976d2",
+                          backgroundColor: "#578EE5",
                           color: "#fff",
                         }}
                       >
@@ -850,6 +851,7 @@ const RateListMaster = () => {
           </Box>
         </Paper>
       )}
+
     </Box>
   );
 };
