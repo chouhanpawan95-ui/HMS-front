@@ -25,7 +25,7 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import {useCreateRateListMutation,useCreateRatelistDetailsQuery,useGetPartyNameQuery,useCreateBillMutation} from '../features/api/billingMasterApi.js'
+import {useGetBillIdQuery,useCreateRateListMutation,useCreateRatelistDetailsQuery,useGetPartyNameQuery,useCreateBillMutation} from '../features/api/billingMasterApi.js'
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -37,6 +37,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
+  const { data: billId } = useGetBillIdQuery();
   const [createRatelist, { data: createRatelistResponse }] =
   useCreateRateListMutation();
   const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
@@ -49,6 +50,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [page, setPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [filteredPatients, setFilteredPatients] = useState([]);
+  // Invoice/Bill No (controlled field)
+  const [billNo, setBillNo] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null); 
@@ -205,6 +208,7 @@ useEffect(() => {
 }, [createRatelistResponse]);
   const handleConfirmYes = async () => {
     setOpenDialog(false);
+    let billMasterPayload; // declared here so catch can retry with fallback id
     try {
       const totals = calculateBillTotals();
       
@@ -222,27 +226,79 @@ useEffect(() => {
         return 0;
       };
 
-      const billMasterPayload = {
+      billMasterPayload = {
         // omit PK_BillId so backend will auto-generate it
+        FK_BillingCompanyId: billDetails.FK_BillingCompanyId || 1,
         FK_FinYearId: billDetails.FK_FinYearId || 1,
         FK_BranchId: billDetails.FK_BranchId || 1,
+        FK_BillTypeId: billDetails.FK_BillTypeId || 1,
+        FK_CategoryId: billDetails.FK_CategoryId || 1,
+        FK_BillSerieseId: billDetails.FK_BillSerieseId || 1,
         BillNo: billDetails.BillNo || "",
-        BillDate: billDate || billDetails.BillDate || new Date().toISOString(),
+        BillDate: billDate || billDetails.BillDate || new Date().toISOString(), 
+        BillTime: billDetails.BillTime || new Date().toISOString().slice(11, 19),     
         FK_RegId: computeRegId(),
-        FK_DoctorId: billDetails.FK_DoctorId || (selectedPatient?.doctorId ? Number(selectedPatient.doctorId) : 0),
+        FK_IPDId: billDetails.FK_IPDId || 0,
+        FK_DoctorId: billDetails.FK_DoctorId || 0,
+        FK_DrDeptID: billDetails.FK_DrDeptID || 0,
+        FK_ReferredById: billDetails.FK_ReferredById || 0,
+        FK_PartyId: billDetails.FK_PartyId || 0,
         IsMLC: billDetails.IsMLC === true ? true : false,
         IsAcademic: billDetails.IsAcademic === true ? true : false,
+        AgeYear: billDetails.AgeYear || 0,
+        AgeMonth: billDetails.AgeMonth || 0,
+        AgeDays: billDetails.AgeDays || 0,
         TotalAmt: Number(totals.totalGross) || 0,
         ServiceChargeAmt: Number(totals.totalServiceCharge) || 0,
         DiscountAmt: Number(totals.totalDiscount) || 0,
         NetBillAmt: Number(totals.totalNetAmount) || 0,
+        RateType: billDetails.RateType || "",
         Remarks: billingRemarks || billDetails.Remarks || "",
         Iscancel: billDetails.Iscancel === true ? true : false,
+        FK_CreatedById: billDetails.FK_CreatedById || 1,
+        FK_CancelledById: billDetails.FK_CancelledById || 0,
+        CancelledDateTime: billDetails.CancelledDateTime || null,
         PrintCount: billDetails.PrintCount || 0,
+        FreeReason: billDetails.FreeReason || "",
         IsActive: billDetails.IsActive !== false ? true : false,
+        PK_SynchId: billDetails.PK_SynchId || "",
+        OLDBillID: billDetails.OLDBillID || "",
+        OLDBillNo: billDetails.OLDBillNo || "",
+        OLDRegID: billDetails.OLDRegID || "", 
+        ReportDeliveryDateTime: billDetails.ReportDeliveryDateTime || null,
+        FK_OrganizerId: billDetails.FK_OrganizerId || 0,
+        Tokenno: billDetails.Tokenno || "",
+        Cancelreason: billDetails.Cancelreason || "",
         HospitalDiscount: billDetails.HospitalDiscount || 0,
         MOUDiscount: billDetails.MOUDiscount || 0,
+        FK_PaytypeID: billDetails.FK_PaytypeID || 0,
+        BillRefID: billDetails.BillRefID || 0,
+        Diagnosis: billDetails.Diagnosis || "",
+        // include details array built from UI rows
+        BillDetails: tableRows.map((r) => {
+          const res = calculateNetFromAmount(r);
+          return {
+            FK_ServiceId: Number(r.FK_ServiceId) || 0,
+            ServiceName: r.ServiceName || "",
+            RateGeneral: Number(r.RateGeneral) || Number(r.Rate) || 0,
+            Qty: Number(r.Qty) || 1,
+            DiscountAmt: Number(res.discountAmount) || Number(r.Discount) || 0,
+            Discountpercent: Number(res.discountPercent) || Number(r.Discountpercent) || 0,
+            ServiceChargeAmt: Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
+            SCPercent: Number(res.serviceChargePercent) || Number(r.SCPercent) || 0,
+            NetAmt: Number(res.netAmount) || 0,
+            Remarks: r.Remarks || "",
+            IsActive: r.IsActive !== false,
+          };
+        }),
       };
+      // Remove any PK_BillId that may be present but is falsy/non-positive
+      if (Object.prototype.hasOwnProperty.call(billMasterPayload, 'PK_BillId')) {
+        if (!billMasterPayload.PK_BillId || Number(billMasterPayload.PK_BillId) <= 0) {
+          console.warn('Removing invalid PK_BillId from payload before submit');
+          delete billMasterPayload.PK_BillId;
+        }
+      }
 
       console.log("Create bill master payload:", billMasterPayload);
       const billMasterResp = await createBill(billMasterPayload).unwrap();
@@ -256,6 +312,25 @@ useEffect(() => {
       
     } catch (err) {
       console.error("Error creating bill:", err);
+      // Detect duplicate-key / PK_BillId:null type errors and retry with a fallback PK_BillId once
+      const errString = JSON.stringify(err || {}).toLowerCase();
+      if (errString.includes('duplicate key') || errString.includes('pk_billid')) {
+        try {
+          const fallbackId = Date.now();
+          console.warn('Retrying createBill with fallback PK_BillId:', fallbackId);
+          billMasterPayload.PK_BillId = fallbackId;
+          if (Array.isArray(billMasterPayload.BillDetails)) {
+            billMasterPayload.BillDetails = billMasterPayload.BillDetails.map((d) => ({ ...d, FK_BillId: Number(fallbackId) }));
+          }
+          const retryResp = await createBill(billMasterPayload).unwrap();
+          console.log('Retry create success:', retryResp);
+          setSelectedPatient(null);
+          alert('✅ Bill created successfully (with fallback PK_BillId)');
+          return;
+        } catch (err2) {
+          console.error('Retry failed:', err2);
+        }
+      }
       if (err && err.data) console.error("Server error data:", err.data);
       alert("❌ Error creating bill. Check console for details.");
     }
@@ -355,7 +430,8 @@ const handleInputChange = (index, field, value) => {
 
   const [rows, setRows] = useState([]);
 
-  const billDetails = {
+  // Billing details state (bound to inputs and submitted)
+  const [billDetails, setBillDetails] = useState({
     PK_BillId: "",
     FK_BillingCompanyId: "",
     FK_FinYearId: "",
@@ -372,24 +448,24 @@ const handleInputChange = (index, field, value) => {
     FK_DrDeptID: "",
     FK_ReferredById: "",
     FK_PartyId: "",
-    IsMLC: "",
-    IsAcademic: "",
+    IsMLC: false,
+    IsAcademic: false,
     AgeYear: "",
     AgeMonth: "",
     AgeDays: "",
     TotalAmt: "",
     ServiceChargeAmt: "",
-    DiscountAmt: false,
+    DiscountAmt: 0,
     NetBillAmt: "",
     RateType: "",
     Remarks: "",
-    Iscancel: "",
+    Iscancel: false,
     FK_CreatedById: "",
     FK_CancelledById: "",
     CancelledDateTime: "",
-    PrintCount: "",
+    PrintCount: 0,
     FreeReason: "",
-    IsActive: "",
+    IsActive: true,
     PK_SynchId: "",
     OLDBillID: "",
     OLDBillNo: "",
@@ -398,12 +474,12 @@ const handleInputChange = (index, field, value) => {
     FK_OrganizerId: "",
     Tokenno: "",
     Cancelreason: "",
-    HospitalDiscount: "",
-    MOUDiscount: "",
+    HospitalDiscount: 0,
+    MOUDiscount: 0,
     FK_PaytypeID: "",
     BillRefID: "",
     Diagnosis: "",
-  };
+  });
   return (
     <Box
       sx={{
@@ -637,7 +713,8 @@ const handleInputChange = (index, field, value) => {
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     label="Invoice/Bill No"
-                    // value={selectedPatient?.patientId || ""}
+                    value={billDetails.BillNo || ""}
+                    onChange={(e) => setBillDetails((prev) => ({ ...prev, BillNo: e.target.value }))}
                     size="small"
                     fullWidth
                   />
@@ -656,7 +733,7 @@ const handleInputChange = (index, field, value) => {
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     label="Branch"
-                    // value={selectedPatient?.branch || ""}
+                    value={billDetails.FK_BranchId || ""}                   
                     size="small"
                     fullWidth
                   />
@@ -1055,7 +1132,9 @@ const handleInputChange = (index, field, value) => {
                 fullWidth
                 label="Party Name"            
                 onChange={(e) => {
-                  setPartyName(e.target.value);            
+                  const v = e.target.value;
+                  setPartyName(v);
+                  setBillDetails((prev) => ({ ...prev, FK_PartyId: isNaN(Number(v)) ? v : Number(v) }));
                 }}
                 sx={{ width: "230px", height: "10px" }}
               >

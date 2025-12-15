@@ -204,6 +204,18 @@ export const billingMasterApi = createApi({
     method: 'GET',
       }),
     }),
+    getBillId: builder.query({
+      // args is an object with optional query params
+      query: (args = {}) => {
+        const { patientId } = args;
+        const params = {};
+        if (patientId !== undefined) params.patientId = patientId;
+        return {
+          url: 'patients/next-id',
+          method: 'GET',
+        };
+      }
+    }),
   }),
 });
 // Export the auto-generated hooks
@@ -211,7 +223,7 @@ export const {
   useGetRateListQuery,
   useCreateRateListMutation,
   useUpdateRateListMutation,
-
+  useGetBillIdQuery,
   useGetServiceQuery,
   useCreateServiceMutation,
   useCreateBillMutation  ,
