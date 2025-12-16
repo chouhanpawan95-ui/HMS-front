@@ -2,8 +2,9 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { get } from "react-hook-form";
 
 // Configure the base query with the API URL
+const billingBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.REACT_APP_API_URL,
+  baseUrl: billingBaseUrl,
   credentials: "include",
   prepareHeaders: (headers) => {
     headers.set("Content-Type", "application/json");
@@ -131,13 +132,12 @@ export const billingMasterApi = createApi({
     }),
 
     // rate list Detail
-
     getRateListDetail: builder.query({
       query: () => "ratelistdetail",
       providesTags: ["RateListDetail"],
       transformResponse: (res) => res.data || [],
     }),
-    createRatelistDetails: builder.query({
+    GetRatelistDetails: builder.query({
       query: () => ({
         url: "/ratelistdetail",
         method: "GET",
@@ -204,71 +204,39 @@ export const billingMasterApi = createApi({
         body: patient,
       }),
     }),
+     createBilldetails: builder.mutation({
+      query: (patient) => ({
+        url: '/billdetails',
+        method: 'POST',
+        body: patient,
+      }),
+    }),   
+    getbillDetail: builder.query({
+    query: () => ({
+      url: '/billmasters',
+      method: 'GET',
+      }),
+    }),
+    ///Service name
+    getServiceName: builder.query({
+    query: () => ({
+      url: '/service',
+      method: 'GET',
+      }),
+    }),
+    // Fetch a single bill master by id (useful to load full bill details)
+    getBillById: builder.query({
+      query: (id) => ({
+        url: `/billmasters/${id}`,
+        method: 'GET',
+      }),
+      transformResponse: (res) => res.data || res || {},
+    }),
     getPartyName: builder.query({
       query: () => ({
         url: "/partymaster",
         method: "GET",
       }),
-    }),
-
-    // Package Master
-    getPackageMaster: builder.query({
-      query: () => "packagemaster",
-      providesTags: ["PackageMaster"],
-      transformResponse: (res) => res.data || [],
-    }),
-    createPackageMaster: builder.mutation({
-      query: (packagemaster) => ({
-        url: "/packagemaster",
-        method: "POST",
-        body: packagemaster,
-      }),
-      invalidatesTags: ["PackageMaster"],
-    }),
-    updatePackageMaster: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `packagemaster/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
-      invalidatesTags: ["PackageMaster"],
-    }),
-    deletePackageMaster: builder.mutation({
-      query: (id) => ({
-        url: `packagemaster/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["PackageMaster"],
-    }),
-
-    // Package Detail
-    getPackageDetail: builder.query({
-      query: () => "packagedetail",
-      providesTags: ["PackageDetail"],
-      transformResponse: (res) => res.data || [],
-    }),
-    createPackageDetail: builder.mutation({
-      query: (packagedetail) => ({
-        url: "/packagedetail",
-        method: "POST",
-        body: packagedetail,
-      }),
-      invalidatesTags: ["PackageDetail"],
-    }),
-    updatePackageDetail: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `packagedetail/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
-      invalidatesTags: ["PackageDetail"],
-    }),
-    deletePackageDetail: builder.mutation({
-      query: (id) => ({
-        url: `packagedetail/${id}`,
-        method: "DELETE",
-      }),
-      invalidatesTags: ["PackageDetail", "PackageMaster"],
     }),
   }),
 });
@@ -277,11 +245,14 @@ export const {
   useGetRateListQuery,
   useCreateRateListMutation,
   useUpdateRateListMutation,
-
+  useGetBillIdQuery,
+  useGetBillByIdQuery,
   useGetServiceQuery,
   useCreateServiceMutation,
-  useCreateBillMutation,
+  useCreateBillMutation  ,
   useGetPartyNameQuery,
+  useGetbillDetailQuery,
+  useGetServiceNameQuery,
   useGetServiceDepartmentMasterQuery,
   useCreateServiceDepartmentMasterMutation,
 
@@ -290,7 +261,7 @@ export const {
 
   useGetRateListDetailQuery,
   useCreateRateListDetailMutation,
-  useCreateRatelistDetailsQuery,
+  useGetRatelistDetailsQuery,
   useUpdateRateListDetailMutation,
   useDeleteRateListDetailMutation,
 

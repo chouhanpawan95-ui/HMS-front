@@ -18,6 +18,10 @@ import {
   Paper,
   useTheme,
   Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 import {
@@ -32,26 +36,22 @@ import {
 import SearchBar from "../component/SearchBar";
 import Loader from "../component/Loader";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-
-// Chart data
-const chartData = [
-  { day: "Mon", medical: 45, appointed: 25 },
-  { day: "Tue", medical: 60, appointed: 40 },
-  { day: "Wed", medical: 50, appointed: 35 },
-  { day: "Thu", medical: 75, appointed: 55 },
-  { day: "Fri", medical: 80, appointed: 70 },
-  { day: "Sat", medical: 55, appointed: 40 },
-  { day: "Sun", medical: 70, appointed: 60 },
-];
-
+import {useGetbillDetailQuery} from '../features/api/billingMasterApi.js';
+import { useNavigate, Link } from 'react-router-dom';
 export default function Dashboard() {
   const theme = useTheme();
+  const navigate = useNavigate();
 
   // Pagination / search state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const { data: billdetails } = useGetbillDetailQuery();
+  console.log("billdetails",billdetails);
+  const [openBillsDialog, setOpenBillsDialog] = useState(false);
+  const [selectedPatientForBills, setSelectedPatientForBills] = useState(null);
+  const [billsFilterText, setBillsFilterText] = useState("");
 
   // API call
   const {
@@ -60,7 +60,7 @@ export default function Dashboard() {
     isLoading,
     isError,
   } = useGetPatientsQuery({ page, limit, q: searchQuery });
-
+  console.log("seepatient",patientsResp);
   // Extract array from API response
   const patients = Array.isArray(patientsResp)
     ? patientsResp
@@ -101,46 +101,7 @@ export default function Dashboard() {
         </Alert>
       )}
 
-      {/* Chart */}
-      <Card className="dashboard-card" elevation={2} sx={{ mb: 3 }}>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Daily Statistics
-          </Typography>
-
-          {/* responsive chart wrapper: allow horizontal scroll on very small screens */}
-          <Box className="chart-scroll" sx={{ width: "100%", overflowX: "auto" }}>
-            <Box
-              className="chart-container"
-              sx={{
-                minWidth: { xs: 600, sm: 700, md: 900 },
-                height: { xs: 180, sm: 220, md: 250 },
-                minHeight: 140,
-              }}
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <XAxis dataKey="day" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar
-                    dataKey="medical"
-                    fill={theme.palette.primary.main}
-                    radius={6}
-                  />
-                  <Bar
-                    dataKey="appointed"
-                    fill={theme.palette.success.light}
-                    radius={6}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          </Box>
-        </CardContent>
-      </Card>
-
-      {/* Search Bar */}
+       {/* Search Bar */}
       <Box
         className="search-section"
         display="flex"
@@ -234,6 +195,15 @@ export default function Dashboard() {
                 >
                   Address
                 </TableCell>
+                <TableCell
+                  sx={{
+                    fontWeight: "bold",
+                    color: "primary.main",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  Bill
+                </TableCell>
               </TableRow>
             </TableHead>
 
@@ -299,6 +269,18 @@ export default function Dashboard() {
                       >
                         {row.permanentAddress?.addressLine || ""}
                       </TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          onClick={() => {
+                            setSelectedPatientForBills(row);
+                            setOpenBillsDialog(true);
+                          }}
+                        >
+                          View Bills
+                        </Button>
+                      </TableCell>
                     </TableRow>
                   );
                 })
@@ -312,6 +294,109 @@ export default function Dashboard() {
             </TableBody>
           </Table>
         </TableContainer>
+
+        {/* Bills Dialog */}
+        <Dialog open={openBillsDialog} onClose={() => setOpenBillsDialog(false)} fullWidth maxWidth="md">
+          <DialogTitle>Patient Bills</DialogTitle>
+          <DialogContent>
+            {
+              (() => {
+                const allBills = Array.isArray(billdetails?.data)
+                  ? billdetails.data
+                  : Array.isArray(billdetails)
+                  ? billdetails
+                  : [];
+                if (!selectedPatientForBills) return <Typography>No patient selected.</Typography>;
+
+                // determine candidate registration ids (try multiple possibilities)
+                const candidateIds = [];
+                const addCandidate = (v) => {
+                  if (v === undefined || v === null) return;
+                  const num = Number(v);
+                  if (!isNaN(num) && num !== 0) candidateIds.push(num);
+                  // also keep string representation for non-numeric ids
+                  candidateIds.push(String(v));
+                };
+                addCandidate(selectedPatientForBills.PK_RegId);
+                addCandidate(selectedPatientForBills.id);
+                addCandidate(selectedPatientForBills.patientId);
+                addCandidate(selectedPatientForBills.oldNo);
+                addCandidate(selectedPatientForBills.oldRegId || selectedPatientForBills.OLDRegID);
+
+                // normalize bills array
+                const allBillsArr = allBills || [];
+
+                // Filter bills matching any of candidate ids (numeric or string match)
+                let filtered = allBillsArr.filter((b) => {
+                  const billIdsToCheck = [b.FK_RegId, b.OLDRegID, b.OLDRegId, b.oldRegId, b.patientId, b.FK_RegId?.toString(), b.PK_BillId];
+                  return candidateIds.some((cid) => billIdsToCheck.some((x) => x !== undefined && x !== null && String(x) === String(cid)));
+                });
+
+                // Apply simple text filter (search within BillNo or Remarks)
+                if (billsFilterText && billsFilterText.trim() !== '') {
+                  const q = billsFilterText.trim().toLowerCase();
+                  filtered = filtered.filter((b) => (String(b.BillNo || b.billId || b.PK_BillId || '') + ' ' + String(b.Remarks || '')).toLowerCase().includes(q));
+                }
+
+                // Sort by BillDate desc when possible
+                filtered.sort((a, b) => {
+                  const da = a.BillDate ? new Date(a.BillDate).getTime() : 0;
+                  const db = b.BillDate ? new Date(b.BillDate).getTime() : 0;
+                  return db - da;
+                });
+
+                if (!filtered.length) return <Typography>No bills found for this patient.</Typography>;
+
+                return (
+                  <>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
+                      <TextField size="small" placeholder="Filter by bill # or remarks" value={billsFilterText} onChange={(e) => setBillsFilterText(e.target.value)} sx={{ flex: 1 }} />
+                      <Typography sx={{ ml: 1 }}><strong>{filtered.length}</strong> bill(s)</Typography>
+                    </Box>
+                    <TableContainer component={Paper} sx={{ mt: 1 }}>
+                      <Table size="small">
+                        <TableHead>
+                          <TableRow>
+                            <TableCell>Bill ID</TableCell>
+                            <TableCell>Bill No</TableCell>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Net Amount</TableCell>
+                            <TableCell>Remarks</TableCell>
+                          </TableRow>
+                        </TableHead>
+                        <TableBody>
+                          {filtered.map((b, i) => (
+                            <TableRow key={i}>
+                              <TableCell>
+                                <Button
+                                  component={Link}
+                                  to="/Billinginformation"
+                                  state={{ bill: b, patient: selectedPatientForBills }}
+                                  size="small"
+                                  variant="text"
+                                  sx={{ textTransform: 'none', color: 'primary.main', textDecoration: 'underline', cursor: 'pointer' }}
+                                >
+                                  {b.billId || b.PK_BillId || b.BillNo}
+                                </Button>
+                              </TableCell>
+                              <TableCell>{b.BillNo || b.billId || b.PK_BillId}</TableCell>
+                              <TableCell>{b.BillDate ? new Date(b.BillDate).toLocaleString() : ''}</TableCell>
+                              <TableCell>{b.NetBillAmt ?? b.NetAmt ?? ''}</TableCell>
+                              <TableCell>{b.Remarks || ''}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </TableContainer>
+                  </>
+                );
+              })()
+            }
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setOpenBillsDialog(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
 
         {/* Pagination + Total */}
         <Box

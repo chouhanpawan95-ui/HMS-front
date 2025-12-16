@@ -79,7 +79,7 @@ export default function PatientRegistrationForm() {
   const [createPatient, { isLoading, isSuccess, isError, error }] =
     useCreatePatientMutation();
   const { data: PatientId } = useGetPatientIdQuery();
-  console.log("Next PatientId:", PatientId?.nextId ?? "");
+  console.log("Next PatientId:", PatientId?.patientId);
   // required fields config (edit this array to change which fields are required)
   const requiredFields = [
     "patientId",
@@ -90,10 +90,10 @@ export default function PatientRegistrationForm() {
     "dateOfBirth",
   ];
 React.useEffect(() => {
-  if (PatientId?.nextId) {
+  if (PatientId?.patientId) {
     setPatient((prev) => ({
       ...prev,
-      patientId: PatientId.nextId,
+      patientId:PatientId?.patientId,
     }));
   }
 }, [PatientId]);
@@ -214,19 +214,20 @@ React.useEffect(() => {
     if (!patient.permanentAddress.stateName) { temp["permanentAddress.stateName"] = "State Name is requiered"; }
     if (!patient.permanentAddress.country) { temp["permanentAddress.country"] = "Country is requiered"; }
 
-
+console.log("Validation errors:", temp);
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+console.log("Submitting patient:");
     if (!validate()) {
       // keep the accordion open and focus is optional — here we simply stop submit
       return;
     }
     try {
+      
       await createPatient(patient).unwrap();
       setPatient(defaultPatient);
       setErrors({});
@@ -296,10 +297,9 @@ React.useEffect(() => {
               <Grid container spacing={4}>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
-                    fullWidth
-                    label="Patient ID"
+                    fullWidth                   
                     name="patientId"
-                    value={PatientId?.nextId ?? ""}
+                    defaultValue={PatientId?.patientId}
                     onChange={handleChange}
                     size="small"
                     type="text"  
