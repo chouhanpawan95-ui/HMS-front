@@ -155,7 +155,7 @@ const RateListMaster = () => {
 
   // Merge rateList + rateListDetail
   const mergedData = infoDetail.map((detail) => {
-    const rl = infoList.find((r) => r._id === detail.FK_RateListId);
+    const rl = infoList.find((r) => r.rateListId === detail.FK_RateListId);
     return {
       ...detail,
       RateListName: rl?.RateListName || "--",
