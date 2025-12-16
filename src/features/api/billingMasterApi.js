@@ -23,7 +23,7 @@ export const billingMasterApi = createApi({
     "RateListDetail",
     "PartyMaster",
     "PackageMaster",
-    "PackageDetail"
+    "PackageDetail",
   ],
   endpoints: (builder) => ({
     getService: builder.query({
@@ -213,60 +213,63 @@ export const billingMasterApi = createApi({
 
     // Package Master
     getPackageMaster: builder.query({
-      query: () => 'packagemaster',
-      providersTags: ['PackageMaster'],
+      query: () => "packagemaster",
+      providesTags: ["PackageMaster"],
       transformResponse: (res) => res.data || [],
     }),
     createPackageMaster: builder.mutation({
       query: (packagemaster) => ({
-        url: '/packagemaster',
-        method: 'POST',
+        url: "/packagemaster",
+        method: "POST",
         body: packagemaster,
-      }), invalidatesTags: ['PackageMaster'],
+      }),
+      invalidatesTags: ["PackageMaster"],
     }),
     updatePackageMaster: builder.mutation({
-      query: ({id,payload}) => ({
-        url:`packagemaster/${id}`,
-        method: 'PUT',
-        body:payload,
-      }), invalidatesTags: ['PackageMaster'],
+      query: ({ id, payload }) => ({
+        url: `packagemaster/${id}`,
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["PackageMaster"],
     }),
     deletePackageMaster: builder.mutation({
       query: (id) => ({
         url: `packagemaster/${id}`,
-        method: 'DELETE',
-      }), invalidatesTags: ['PackageMaster'],
+        method: "DELETE",
+      }),
+      invalidatesTags: ["PackageMaster"],
     }),
 
     // Package Detail
-    getPackageDetail : builder.query({
-      query: () => 'packagedetail',
-      providersTags:['PackageDetail'],
-      transformResponse : (res) => res.data || [],
+    getPackageDetail: builder.query({
+      query: () => "packagedetail",
+      providesTags: ["PackageDetail"],
+      transformResponse: (res) => res.data || [],
     }),
     createPackageDetail: builder.mutation({
       query: (packagedetail) => ({
-        url: '/packagedetail',
-        method:'POST',
+        url: "/packagedetail",
+        method: "POST",
         body: packagedetail,
-      }), invalidatesTags: ['PackageDetail']
+      }),
+      invalidatesTags: ["PackageDetail"],
     }),
-    updatePackageDetail:builder.mutation({
-      query: ({id,payload}) => ({
+    updatePackageDetail: builder.mutation({
+      query: ({ id, payload }) => ({
         url: `packagedetail/${id}`,
-        method:'PUT',
-        body:payload,
-      }), invalidatesTags: ['PackageDetail'],
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["PackageDetail"],
     }),
     deletePackageDetail: builder.mutation({
       query: (id) => ({
         url: `packagedetail/${id}`,
-        method: 'DELETE',
-      }), invalidatesTags: ['PackageDetail'],
-    })
-
-
-    
+        method: "DELETE",
+      }),
+      invalidatesTags: ["PackageDetail", "PackageMaster"],
+    }),
   }),
 });
 // Export the auto-generated hooks
@@ -301,4 +304,8 @@ export const {
   useUpdatePackageMasterMutation,
   useDeletePackageMasterMutation,
 
+  useGetPackageDetailQuery,
+  useCreatePackageDetailMutation,
+  useUpdatePackageDetailMutation,
+  useDeletePackageDetailMutation,
 } = billingMasterApi;

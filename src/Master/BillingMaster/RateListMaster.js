@@ -161,8 +161,7 @@ const RateListMaster = () => {
 
   // Merge rateList + rateListDetail
   const mergedData = infoDetail.map((detail) => {
-    const rl = infoList.find(
-      (r) => (r._id ?? r.rateListId) === detail.FK_RateListId
+    const rl = infoList.find((r) => (r._id ?? r.rateListId) === detail.FK_RateListId
     );
     return {
       ...detail,
@@ -170,17 +169,15 @@ const RateListMaster = () => {
       BranchId: rl?.FK_BranchId ?? rl?.FK_BranchId ?? "--",
       StartDate:
         (rl?.StartDate ?? rl?.startdate)
-          ? (rl?.StartDate ?? rl?.startdate).split("T")[0]
-          : "--",
+          ? (rl?.StartDate ?? rl?.startdate).split("T")[0]: "--",
       Validupto:
         (rl?.Validupto ?? rl?.Validupto ?? rl?.validupto)
-          ? (rl?.Validupto ?? rl?.validupto).split("T")[0]
-          : "--",
+          ? (rl?.Validupto ?? rl?.validupto).split("T")[0] : "--",
     };
   });
 
-  console.log(infoList.map(r => r._id));
-  console.log(infoDetail.map(d => d.FK_RateListId));
+  // console.log(infoList.map(r => r._id));
+  // console.log(infoDetail.map(d => d.FK_RateListId));
 
 
   // Apply search + filters
@@ -427,11 +424,10 @@ const RateListMaster = () => {
 
       {activeTab === 0 && (
         <Paper>
-          <Box sx={{}}>
+          <Box>
             {/* Page Title */}
             <Typography
               variant="h4"
-              // sx={{ mb: 3, fontWeight: 600 }}
               className={style.header}
             >
               RateList Info
@@ -676,7 +672,7 @@ const RateListMaster = () => {
             >
               <Table size="small">
                 <TableHead>
-                  <TableRow style={{ background: "#5896d4ff" }}>
+                  <TableRow style={{ background: "#578EE5" }}>
                     <TableCell>Service</TableCell>
                     <TableCell>Rate General</TableCell>
                     <TableCell>Rate Semi Private</TableCell>
