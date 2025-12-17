@@ -32,15 +32,14 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";
-import { use, useEffect, useRef, useState } from "react";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-import { Discount } from "@mui/icons-material";
 
 const PackageMaster = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const packageMasterId = id ? String(id): "";
 
   const [createPackageMaster, { isLoading: isCreatePackageMasterLoading }] =
     useCreatePackageMasterMutation();
@@ -52,12 +51,15 @@ const PackageMaster = () => {
     useUpdatePackageDetailMutation();
   const [updatePackageMaster, { isLoading: isUpdatePackageMasterLoading }] =
     useUpdatePackageMasterMutation();
+  
+  // console.log("Updating PackageMaster ID:", createdPackageMasterId);
+
 
   const [selectedPackageMaster, setSelectedPackageMaster] = useState("");
   const { data: packageMaster, isLoading: isPackageMasterLoading } =
     useGetPackageMasterQuery();
 
-  const [createdPackageMasterId, setCreatedPackageMasterId] = useState("");
+  const [createdPackageMasterId, setCreatedPackageMasterId] = useState(packageMasterId);
 
   const { data: packageDetail, isLoading: isPackageDetailLoading } =
     useGetPackageDetailQuery();
@@ -277,7 +279,7 @@ const PackageMaster = () => {
       if (!currentPackageMaster) return;
       reset({
         PackageName: currentPackageMaster.PackageName ?? "-",
-        PackageCode: currentPackageMaster.PackageCode ?? "-",
+        PackageCode: currentPackageMaster.PackageCodeNo ?? "-",
         PackageAmount: currentPackageMaster.PackageAmount ?? "-",
         PackageGroup: currentPackageMaster.PackageGroup ?? "-",
         ValidFrom:
@@ -312,7 +314,7 @@ const PackageMaster = () => {
 
     // const matchesSearch = filterService ? row.ServiceId === filterService : true;
     const matchesPackageGroup = filterPackageGroup
-      ? packagegroup === filterPackageGroup.toLowerCase()
+      ? row.packagegroup === filterPackageGroup.toLowerCase()
       : true;
 
     return matchesPackageGroup;
@@ -322,10 +324,11 @@ const PackageMaster = () => {
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   );
+
   const updateMasterAndDetail = async() => {
     try{
       await updatePackageMaster({
-        id,
+        id:createdPackageMasterId,
         payload:{
           PackageName:getValues('PackageName'),
           PackageCodeNo: getValues('PackageCodeNo'),
@@ -337,7 +340,7 @@ const PackageMaster = () => {
 
       for (const d of row){
         const payload = {
-          fk_PackageId:id,
+          FK_PackageId:createdPackageMasterId,
           FK_ServiceId:d.FK_ServiceId,
           RateGeneral:d.RateGeneral,
           RatePrivate:d.RatePrivate,
@@ -346,7 +349,7 @@ const PackageMaster = () => {
         };
         if (d._id){
           await updatePackageDetail({
-            id:d._id,
+            id:String(d._id),
             payload,
           }).unwrap();
         }else{
@@ -358,6 +361,7 @@ const PackageMaster = () => {
     }catch(error){
       console.error(error);
       alert('Update failed. Please try again.');
+      console.log('Update failed: '+ (error?.data?.message || error?.message || 'unknow error'))
     }
   };
 
