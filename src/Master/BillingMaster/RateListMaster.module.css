@@ -1,5 +1,5 @@
 .header {
-  background: #1976d2;
+  background: #578EE5;
   border-bottom: 2px solid #578ee5;
   color: #fff;
   align-items: center;
@@ -7,7 +7,8 @@
   justify-content: center;
   font-size: 1.5rem;
   font-weight: bold;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
+  font-weight: 600
 }
 
 .buttonContainer{
@@ -16,6 +17,25 @@
     flex-wrap: nowrap;
     justify-content: space-between;
     margin-top: 20px;
+    
+}
+.header {
+  font-size: clamp(1.2rem, 2.5vw, 2rem);
+  text-align: center;
+}
+
+.form {
+  width: 100%;
+}
+
+.button {
+  width: 100%;
+}
+
+@media (min-width: 600px) {
+  .button {
+    width: auto;
+  }
 }
 
 .form {
@@ -24,4 +44,7 @@
   gap: 16px;
   margin-top: 5px;
   transition: 0.3s ease;
+}
+.button{
+  color: #578EE5;
 }

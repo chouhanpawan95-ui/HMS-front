@@ -16,6 +16,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Grid,
   Pagination,
 } from "@mui/material";
 import {
@@ -26,6 +27,7 @@ import {
   useGetServiceQuery,
   useUpdateRateListDetailMutation,
   useDeleteRateListDetailMutation,
+  useUpdateRateListMutation,
 } from "../../features/api/billingMasterApi";
 import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";
@@ -34,28 +36,30 @@ import style from "../BillingMaster/RateListMaster.module.css";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
+import { Discount } from "@mui/icons-material";
 
 const RateListMaster = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const ratelistId = id ? String(id):"";
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
+    getValues,
   } = useForm();
 
-  const [
-    createRateList,
-    { isLoading: isCreateLoading, isSuccess, isError, error },
-  ] = useCreateRateListMutation();
+  const [ createRateList,  { isLoading: isCreateLoading, isSuccess, isError, error } ] = useCreateRateListMutation();
 
-  const [selectedRateList, setSelectedRateList] = useState("");
+  // const [selectedRateList, setSelectedRateList] = useState("");
 
   const [selectdService, setSelectedService] = useState("");
   const { data: service = [], isLoading: isServiceLoading } =
     useGetServiceQuery();
+
+  
 
   // Normalize services into a consistent shape so we always use the DB identifier
   // for option values (this handles cases where API returns fields like serviceId, ServiceId, service_code, _id, etc.)
@@ -75,8 +79,8 @@ const RateListMaster = () => {
         return { id: idVal, label, raw: s };
       })
     : [];
-  const { data: ratelist = [], isLoading: isRateListLoading } =
-    useGetRateListQuery();
+  const { data: ratelist = [], isLoading: isRateListLoading } = useGetRateListQuery();
+
   const { data: ratelistdetail, isLoading: isRateListDetailLoading } =
     useGetRateListDetailQuery();
   const [deleteRateListDetail] = useDeleteRateListDetailMutation();
@@ -84,6 +88,7 @@ const RateListMaster = () => {
   const [createRateListDetail] = useCreateRateListDetailMutation();
 
   const [updateRateListDetail] = useUpdateRateListDetailMutation();
+  const [updateRateList, {isLoading:isUpdateRateListLoading}]  = useUpdateRateListMutation();
 
   const navigate = useNavigate();
 
@@ -93,6 +98,7 @@ const RateListMaster = () => {
   const [filterService, setFilterService] = useState("");
   const [filterRateList, setFilterRateList] = useState("");
 
+  
   const [page, setPage] = useState(1);
   const [rows, setRows] = useState([
     {
@@ -109,7 +115,7 @@ const RateListMaster = () => {
     },
   ]);
   const [activeTab, setActiveTab] = useState(0);
-  const [createRateListId, setCreatedRateListId] = useState("");
+  const [createRateListId, setCreatedRateListId] = useState(ratelistId);
 
   // Get details array from API response
   const details = Array.isArray(ratelistdetail)
@@ -119,8 +125,17 @@ const RateListMaster = () => {
   // Load details into rows when in edit mode
   useEffect(() => {
     if (isEdit && details.length > 0) {
+      const rateDetailsForId = details.filter((item) => {
+        const fk =
+          item.FK_RateListId ??
+          item.FK_rateListId ??
+          item.ratelistId ??
+          item.rateListId ??
+          "";
+        return String(fk) === String(id);
+    });
       setRows(
-        details.map((item) => ({
+        rateDetailsForId.map((item) => ({
           _id: item._id,
           FK_ServiceId: item.FK_ServiceId,
           RateGeneral: item.RateGeneral,
@@ -154,14 +169,33 @@ const RateListMaster = () => {
     : [];
 
   // Merge rateList + rateListDetail
-  const mergedData = infoDetail.map((detail) => {
-    const rl = infoList.find((r) => r.rateListId === detail.FK_RateListId);
+  const mergedData = infoList.map((rl) => {
+    const rlId = 
+      rl._id ?? rl.ratelistId ?? rl.RateListId ?? rl.rateListId ?? '';
+
+    const detail = infoDetail.find((r) => {
+      const fk = r.FK_RateListId ?? r.FK_rateListId ?? r.RateListMaster ?? "";
+      return String(fk) === String(rlId);
+    });
     return {
-      ...detail,
-      RateListName: rl?.RateListName || "--",
-      BranchId: rl?.FK_BranchId || "--",
-      StartDate: rl?.StartDate?.split("T")[0] || "--",
-      Validupto: rl?.Validupto?.split("T")[0] || "--",
+      FK_RateListId:rlId,
+      BranchId:rl.FK_BranchId ?? '--',
+      RateListName:rl.RateListName ?? '--',
+      StartDate:
+        (rl?.StartDate ?? rl?.startdate)
+          ? (rl?.StartDate ?? rl?.startdate).split("T")[0]: "--",
+      Validupto:
+        (rl?.Validupto ?? rl?.Validupto ?? rl?.validupto)
+          ? (rl?.Validupto ?? rl?.validupto).split("T")[0] : "--",
+      RateDelux:detail?.RateDelux ?? '',
+      RateGeneral:detail?.RateGeneral ?? '',
+      RatePrivate:detail?.RatePrivate ?? '',
+      RateSemiDelux:detail?.RateSemiDelux ?? '',
+      RateSemiPrivate:detail?.RateSemiPrivate ?? '',
+      FK_ServiceId:detail?.FK_ServiceId??'',
+      MaxDiscountLimit:detail?.MaxDiscountLimit ?? '',
+      ServiceCharge:detail?.ServiceCharge ?? '',
+      Discount:detail?.Discount ?? '',
     };
   });
 
@@ -185,6 +219,24 @@ const RateListMaster = () => {
 
     return matchesSearch && matchesBranch && matchesService && matchesRateList;
   });
+
+  // If editing, prefill the RateList form with master values
+  useEffect(() => {
+    if (isEdit && infoList.length > 0) {
+      const currentRateList = infoList.find(
+        (r) => (r._id ?? r.rateListId) === id
+      );
+      if (currentRateList) {
+        reset({
+          RateListName: currentRateList.RateListName,
+          StartDate: ((currentRateList.StartDate ?? currentRateList.startdate) || "").split("T")[0] || "",
+          Validupto: ((currentRateList.Validupto ?? currentRateList.validupto) || "").split("T")[0] || "",
+          FK_BranchId: currentRateList.FK_BranchId ?? "",
+        });
+        setCreatedRateListId(currentRateList._id ?? currentRateList.rateListId ?? "");
+      }
+    }
+  }, [isEdit, infoList, id, reset]);
 
   const paginatedRows = filteredRows.slice(
     (page - 1) * rowsPerPage,
@@ -220,7 +272,7 @@ const RateListMaster = () => {
   const deleteRow = async (index) => {
     const row = rows[index];
     if (row._id) {
-      await deleteRateListDetail(row._id);
+      await deleteRateListDetail(row._id ?? row.rateListDetailId);
     }
     setRows((prev) => prev.filter((_, i) => i !== index));
   };
@@ -254,17 +306,29 @@ const RateListMaster = () => {
 
   const onSubmitRateList = async (data) => {
     try {
-      const res = await createRateList({
+      let res;
+      if (isEdit) {
+        // update existing rate list
+        res = await updateRateList({ id, payload: {
+          FK_BranchId: data.FK_BranchId || "",
+          RateListName: data.RateListName,
+          StartDate: data.StartDate,
+          Validupto: data.Validupto,
+          IsActive: true,
+        }}).unwrap();
+      } else {
+        res = await createRateList({
         FK_BranchId: data.FK_BranchId || "",
         RateListName: data.RateListName,
         StartDate: data.StartDate,
         Validupto: data.Validupto,
         IsActive: true,
-      }).unwrap();
+        }).unwrap();
+      }
 
       // alert("Rate List added successfully!");
 
-      setCreatedRateListId(res?.RateListId || res?._id); // USE backend returned ID
+      setCreatedRateListId(res?.rateListId || res?.RateListId || res?._id || "");
       setActiveTab(2); // move next tab
 
       reset();
@@ -275,16 +339,34 @@ const RateListMaster = () => {
   };
 
   const submitDetails = async () => {
-    if (!createRateList && !isEdit) {
+    if (!createRateListId && !isEdit) {
       return alert("RateList id missing");
     }
     if (isEdit) {
       try {
-        console.log("Updating rows:", rows);
+        // Master update happens from Rate List tab; details update only here
+
         for (let formData of rows) {
-          await updateRateListDetail({
-            id: formData._id,
-            body: {
+          if (formData._id || formData.rateListDetailId) {
+            await updateRateListDetail({
+              id: formData._id ?? formData.rateListDetailId,
+              payload: {
+                FK_RateListId: id,
+                FK_ServiceId: formData.FK_ServiceId,
+                RateGeneral: formData.RateGeneral,
+                RateSemiPrivate: formData.RateSemiPrivate,
+                RatePrivate: formData.RatePrivate,
+                RateSemiDelux: formData.RateSemiDelux,
+                RateDelux: formData.RateDelux,
+                Discount: formData.Discount,
+                MaxDiscountLimit: formData.MaxDiscountLimit,
+                ServiceCharge: formData.ServiceCharge,
+                IsActive: formData.IsActive,
+              },
+            }).unwrap();
+          } else {
+            // create new detail if no id present
+            await createRateListDetail({
               FK_RateListId: id,
               FK_ServiceId: formData.FK_ServiceId,
               RateGeneral: formData.RateGeneral,
@@ -296,8 +378,8 @@ const RateListMaster = () => {
               MaxDiscountLimit: formData.MaxDiscountLimit,
               ServiceCharge: formData.ServiceCharge,
               IsActive: formData.IsActive,
-            },
-          }).unwrap();
+            }).unwrap();
+          }
         }
       } catch (err) {
         console.error("Update error:", err);
@@ -327,14 +409,69 @@ const RateListMaster = () => {
       }
       alert("RateListDetail created");
       setActiveTab(0);
-      setRows([]);
+      setRows([
+        {
+          FK_ServiceId: "",
+          RateGeneral: "",
+          RateSemiPrivate: "",
+          RatePrivate: "",
+          RateSemiDelux: "",
+          RateDelux: "",
+          ServiceCharge: "",
+          Discount: "",
+          MaxDiscountLimit: "",
+          IsActive: true,
+        },
+      ]);
     } catch (err) {
       alert("Details error: " + JSON.stringify(err.data));
     }
   };
 
+  const updateMasterAndDetail = async () => {
+    try{
+      await updateRateList({
+        id:createRateListId,
+        payload:{
+          RateListName:getValues('RateListName'),
+          FK_BranchId:getValues('FK_BranchId'),
+          StartDate:getValues('StartDate'),
+          Validupto:getValues('Validupto')
+        }
+      }).unwrap();
+
+      for (const d of rows){
+        const payload = {
+          FK_RateListId:createRateListId,
+          FK_ServiceId:d.FK_ServiceId,
+          RateDelux:d.RateDelux,
+          RateGeneral:d.RateGeneral,
+          RatePrivate:d.RatePrivate,
+          RateSemiDelux:d.RateSemiDelux,
+          RateSemiPrivate:d.RateSemiPrivate,
+          Discount:d.Discount,
+          MaxDiscountLimit:d.MaxDiscountLimit,
+          ServiceCharge:d.ServiceCharge,
+        };
+        if(d._id){
+          await updateRateListDetail({
+            id:String(d._id),
+            payload,
+          }).unwrap();
+        }else{
+          await createRateListDetail(payload).unwrap();
+        }
+      }
+      alert('Rate Update Successfully');
+      navigate('/RateListMaster');
+    }catch(err){
+      alert('Update failed')
+      console.log('Update failed: '+(error?.data?.message || error?.message || 'Unknow error'))
+    }
+  }
+
   return (
-    <Box sx={{ p: 3, mt: 10 }}>
+    <Box sx={{ p: 3, mt: 6 }}>
       <Tabs
         value={activeTab}
         onChange={(e, v) => setActiveTab(v)}
@@ -342,17 +479,16 @@ const RateListMaster = () => {
         sx={{ mb: 3 }}
       >
         <Tab label="Rate List Info" />
-        <Tab label="Rate List" disabled={isEdit} />
-        <Tab label="Rate List Detail" disabled={!createRateListId} />
+        <Tab label="Rate List" />
+        <Tab label="Rate List Detail" disabled={!createRateListId && !isEdit} />
       </Tabs>
 
       {activeTab === 0 && (
         <Paper>
-          <Box sx={{}}>
+          <Box>
             {/* Page Title */}
             <Typography
               variant="h4"
-              sx={{ mb: 3, fontWeight: 600 }}
               className={style.header}
             >
               RateList Info
@@ -364,7 +500,8 @@ const RateListMaster = () => {
                 display: "flex",
                 flexWrap: "wrap",
                 gap: 2,
-                mb: 3,
+                mb: 1,
+                mt:1,
                 alignItems: "center",
               }}
             >
@@ -463,7 +600,7 @@ const RateListMaster = () => {
                         key={title}
                         sx={{
                           fontWeight: "bold",
-                          backgroundColor: "#1976d2",
+                          backgroundColor: "#578EE5",
                           color: "#fff",
                         }}
                       >
@@ -585,18 +722,62 @@ const RateListMaster = () => {
 
       {activeTab === 2 && (
         <Paper>
+
+          {isEdit && (
+            <>
+            <Typography variant="h5" sx={{ mb:2 }}>RateList Master</Typography>
+
+            <Grid container spacing={2} sx={{ mb:4 }}>
+              <Grid item xs={12} mb={4}>
+                <TextField
+                  label="RateList Name"
+                  fullWidth
+                  {...register('RateListName')}
+                />
+              </Grid>
+              
+              <Grid item xs={12} mb={4}>
+                <TextField
+                  label="BranchId"
+                  fullWidth
+                  {...register('FK_BranchId')}
+                />
+              </Grid>
+              <Grid item xs={12} mb={4}>
+                <TextField
+                  label='StartDate'
+                  fullWidth
+                  type="date"
+                  {...register('StartDate')}
+                  InputLabelProps={{shrink:true}}
+                />
+              </Grid>
+              <Grid item xs={12} mb={4}>
+                <TextField
+                  label="ValidUpto"
+                  fullWidth
+                  type="date"
+                  InputLabelProps={{shrink:true}}
+                  {...register('Validupto')}
+                />
+              </Grid>
+            </Grid>
+            </>
+          )}
+
           <Typography variant="h4" mb={2} className={style.header}>
             RateList Detail
           </Typography>
 
           <form onSubmit={handleSubmit(submitDetails)} className={style.form}>
+
             <TableContainer
               component={Paper}
               sx={{ maxHeight: 500, borderRadius: 2 }}
             >
               <Table size="small">
                 <TableHead>
-                  <TableRow style={{ background: "#5896d4ff" }}>
+                  <TableRow style={{ background: "#578EE5" }}>
                     <TableCell>Service</TableCell>
                     <TableCell>Rate General</TableCell>
                     <TableCell>Rate Semi Private</TableCell>
@@ -756,7 +937,8 @@ const RateListMaster = () => {
               </Table>
             </TableContainer>
           </form>
-          <Box className={style.buttonContainer}>
+
+          <Box sx={{mt:3, display:'flex', gap:2}}>
             <Button onClick={() => setActiveTab(1)} variant="contained">
               Back
             </Button>
@@ -765,12 +947,14 @@ const RateListMaster = () => {
               + Add Row
             </Button>
 
-            <Button type="button" variant="contained" onClick={submitDetails}>
-              {isEdit ? "Update" : "Create"}
+            <Button variant="contained" onClick={isEdit ? updateMasterAndDetail:submitDetails}
+            >
+              {isEdit ? "Update Rate" : "Create Rate"}
             </Button>
           </Box>
         </Paper>
       )}
+
     </Box>
   );
 };
