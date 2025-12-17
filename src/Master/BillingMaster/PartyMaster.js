@@ -6,9 +6,10 @@ import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";
 import {
   useCreatePartyMasterMutation,
+} from "../../features/api/Hooks/partyApi";
+import {
   useGetRateListQuery,
-} from "../../features/api/billingMasterApi";
-
+} from "../../features/api/Hooks/ratelistApi";
 const PartyMaster = () => {
   const {
     register,

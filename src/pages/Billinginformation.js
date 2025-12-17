@@ -26,10 +26,10 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import { useGetRateListQuery, useGetRateListDetailQuery } from '../features/api/Hooks/ratelistApi'
+import { useGetRateListQuery} from '../features/api/Hooks/ratelistApi'
 import {useGetPartyNameQuery} from '../features/api/Hooks/partyApi.js';
 import {useCreateBillMutation,useCreateBilldetailsMutation,useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery} from '../features/api/Hooks/billingApi.js';
-import {useGetServiceQuery} from '../features/api/Hooks/serviceApi.js';
+import {useGetServiceQuery} from '../features/api/Hooks/serviceApi';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";

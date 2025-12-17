@@ -4,11 +4,13 @@ import {
   useCreatePackageMasterMutation,
   useGetPackageDetailQuery,
   useCreatePackageDetailMutation,
-  useGetServiceQuery,
   useUpdatePackageDetailMutation,
   useDeletePackageDetailMutation,
   useUpdatePackageMasterMutation,
-} from "../../features/api/billingMasterApi";
+} from "../../features/api/Hooks/packageApi";
+import {
+  useGetServiceQuery,
+} from "../../features/api/Hooks/serviceApi";
 import {
   Box,
   Button,
