@@ -36,7 +36,7 @@ import {
 import SearchBar from "../component/SearchBar";
 import Loader from "../component/Loader";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import {useGetBillMasterQuery} from '../features/api/billingMasterApi.js';
+import {useGetBillMasterQuery} from '../features/api/Hooks/billingApi';
 import { useNavigate, Link } from 'react-router-dom';
 export default function Dashboard() {
   const theme = useTheme();
@@ -209,7 +209,7 @@ export default function Dashboard() {
 
             <TableBody>
               {filteredPatients.length > 0 ? (
-                filteredPatients.map((row, i) => {
+                filteredPatients?.map((row, i) => {
                   const name = `${row.title ? row.title + " " : ""}${
                     row.firstName || row.name || ""
                   } ${row.lastName || ""}`.trim();
@@ -219,7 +219,7 @@ export default function Dashboard() {
                     : row.date || "";
 
                   return (
-                    <TableRow key={i}>
+                    <TableRow key={row.patientId}>
                       <TableCell
                         sx={{
                           whiteSpace: "nowrap",

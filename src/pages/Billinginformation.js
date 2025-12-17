@@ -26,7 +26,10 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import { useGetBillIdQuery, useCreateRateListMutation, useGetRatelistDetailsQuery, useGetPartyNameQuery, useCreateBillMutation, useCreateBilldetailsMutation, useGetServiceQuery, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery, useGetBillDetailQuery } from '../features/api/billingMasterApi.js'
+import { useGetRateListQuery, useGetRateListDetailQuery } from '../features/api/Hooks/ratelistApi'
+import {useGetPartyNameQuery} from '../features/api/Hooks/partyApi.js';
+import {useCreateBillMutation,useCreateBilldetailsMutation,useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery} from '../features/api/Hooks/billingApi.js';
+import {useGetServiceQuery} from '../features/api/Hooks/serviceApi.js';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -43,9 +46,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
-  const { data: billId } = useGetBillIdQuery();
-  const [createRatelist, { data: createRatelistResponse }] =
-    useCreateRateListMutation();
+  const { data:GetRatelistResponse,  error } = useGetRateListQuery();
   const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
   const [createBillDetails, { data: createBillDetailsResp, isLoading: isCreatingDetails, error: createBillDetailsError }] = useCreateBilldetailsMutation();
   const { data: services } = useGetServiceQuery();
@@ -81,7 +82,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     return "";
   };
   console.log("CreateBill response", createbilldetails, "loading", isCreating, "error", createBillError)
-  const { data: GetRatedetails } = useGetRatelistDetailsQuery();
+  const { data: GetRatedetails } = useGetRateListQuery();
   const { data: partyNameData } = useGetPartyNameQuery();
   // console.log("GetRatedetails",GetRatedetails)
   const [rate, setRate] = useState("");
@@ -101,7 +102,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [selectedServices, setSelectedServices] = useState([]);
   const [billingRemarks, setBillingRemarks] = useState("");
   // First API response (RateList)
-  const rateList = createRatelistResponse?.data || [];
+  const rateList = GetRatelistResponse?.data || [];
 
   // Second API response (RateListDetails)
   const rateListDetails = GetRatedetails?.data || [];
@@ -115,7 +116,6 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const filteredRateListDetails = rateListDetails.filter(
     (item) => item.FK_RateListId === selectedRateListId
   );
-
   // 4. Extract FK_ServiceId from details
   console.log("filteredRateListDetails", filteredRateListDetails);
   const result = filteredRateListDetails.map(rate => {
@@ -265,13 +265,13 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   // When API loads → set default value automatically
   useEffect(() => {
     if (
-      createRatelistResponse?.data &&
-      createRatelistResponse.data.length > 0
+      GetRatelistResponse?.data &&
+      GetRatelistResponse.data.length > 0
     ) {
-      setSelectedRateListId(createRatelistResponse.data[0].rateListId);
+      setSelectedRateListId(GetRatelistResponse.data[0].rateListId);
     }
-  }, [createRatelistResponse]);
-
+  }, [GetRatelistResponse]);
+console.log("CreateRate",GetRatelistResponse?.data);
   // If navigated with a bill in location.state, populate bill and rows
   useEffect(() => {
     const bill = location?.state?.bill;
@@ -505,9 +505,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       alert("❌ Error creating bill. Check console for details.");
     }
   };
-  useEffect(() => {
-    createRatelist();   // 🔥 API will run here
-  }, []);
+  // useEffect(() => {
+  //   createRatelist();   // 🔥 API will run here
+  // }, []);
   const handleInputChange = (index, field, value) => {
     setTableRows(prev =>
       prev.map((row, i) => {
@@ -1039,37 +1039,42 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-                    <TextField
-                      select
-                      fullWidth
-                      label="Rate Type"
-                      value={selectedRateListId}
-                      sx={{ width: "230px", height: "10px" }}
-                      // 🔥 OPEN POPUP ON USER INTERACTION
-                      onClick={() => {
-                        if (selectedRateListId) {
-                          setOpenPopup(true);
-                        }
-                      }}
+                  <TextField
+                  select
+                  fullWidth
+                  label="Rate Type"
+                  name="rateListId"              // ✅ REQUIRED for form submit
+                  value={selectedRateListId}
+                  sx={{ width: "230px" }}
 
-                      // Keep onChange for multi-rate-type case
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        setSelectedRateListId(value);
-                        setSelectedServices([]);
+                  onClick={() => {
+                    if (selectedRateListId) {
+                      setOpenPopup(true);
+                    }
+                  }}
 
-                        if (value) {
-                          setOpenPopup(true);
-                        }
-                      }}
-                    >
+                  // onChange={(e) => {
+                  //   const value = e.target.value;
+                  //   console.log("valuepawan",value);
+                  //   setSelectedRateListId(value);
+                  //        setBillDetails(prev => ({
+                  //         ...prev,
+                  //         RateType: value
+                  //       }));
+                  //   setSelectedServices([]);
 
-                      {createRatelistResponse?.data?.map((item) => (
-                        <MenuItem key={item._id} value={item.rateListId}>
-                          {item.RateListName}
-                        </MenuItem>
-                      ))}
-                    </TextField>
+                  //   if (value) {
+                  //     setOpenPopup(true);
+                  //   }
+                  // }}
+                >
+                  {GetRatelistResponse?.data?.map((item) => (
+                    <MenuItem key={item._id} value={item.rateListId}>
+                      {item.RateListName}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
                   </Grid>
                   <Grid
                     item
@@ -1257,6 +1262,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   <DialogTitle>{editingRowIndex !== null ? 'Choose service to update row' : 'Select Services'}</DialogTitle>
                   <DialogContent>
                     {result?.length ? (
+                      console.log("result",result),
                       // Deduplicate by FK_ServiceId so duplicate SRV codes are not shown repeatedly
                       Array.from(new Map((result || []).map(i => [(i.serviceName || i._id || i.id), i])).values()).map((item, idx) => (
                         <div

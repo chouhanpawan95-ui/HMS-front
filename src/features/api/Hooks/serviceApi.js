@@ -1,0 +1,124 @@
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { get } from "react-hook-form";
+
+// Configure the base query with the API URL
+const billingBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const baseQuery = fetchBaseQuery({
+  baseUrl: billingBaseUrl,
+  credentials: "include",
+  prepareHeaders: (headers) => {
+    headers.set("Content-Type", "application/json");
+    return headers;
+  },
+});
+
+// Create the API slice
+export const serviceApi = createApi({
+  reducerPath: "serviceApi",
+  baseQuery,
+  tagTypes: [
+    "ServiceDepartmentMaster",
+    "ServiceCategoryMaster",
+    "RateList",
+    "Service",
+    "RateListDetail",
+    "PartyMaster",
+  ],
+  endpoints: (builder) => ({
+
+    getService: builder.query({
+      query: () => "service",
+      providesTags: ["Service"],
+      transformResponse: (res) => res.data || [],
+    }),
+    createService: builder.mutation({
+      query: (service) => ({
+        url: "/service",
+        method: "POST",
+        body: service,
+      }),
+    }), 
+
+    // service department master
+    getServiceDepartmentMaster: builder.query({
+      query: () => "servicedepartmentmaster",
+      providesTags: ["ServiceDepartmentMaster"],
+      transformResponse: (res) => res.data || [],
+    }),
+
+    createServiceDepartmentMaster: builder.mutation({
+      query: (servicedepartmentController) => ({
+        url: "/servicedepartmentmaster",
+        method: "POST",
+        body: servicedepartmentController,
+      }),
+      invalidatesTags: ["ServiceDepartmentMaster"],
+    }),
+
+    updateServiceDepartmentMaster: builder.mutation({
+      query: ({ id, payload }) => ({
+        url: `servicedepartmentmaster/${id}`,
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["ServiceDepartmentMaster"],
+    }),
+
+    deleteServiceDepartmentMaster: builder.mutation({
+      query: (id) => ({
+        url: `servicedepartmentmaster/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["ServiceDepartmentMaster"],
+    }),
+    // service category master
+    getServiceCategoryMaster: builder.query({
+      query: () => "servicecategorymaster",
+      providesTags: ["ServiceCategoryMaster"],
+      transformResponse: (res) => res.data || [],
+    }),
+    createServiceCategoryMaster: builder.mutation({
+      query: (servicecategorymaster) => ({
+        url: "servicecategorymaster",
+        method: "POST",
+        body: servicecategorymaster,
+      }),
+      invalidatesTags: ["ServiceCategoryMaster"],
+    }),
+
+    updateServiceCategoryMaster: builder.mutation({
+      query: ({ id, payload }) => ({
+        url: `servicecategorymaster/${id}`,
+        method: "PUT",
+        body: payload,
+      }),
+      invalidatesTags: ["ServiceCategoryMaster"],
+    }),
+
+    deleteServiceCategoryMaster: builder.mutation({
+      query: (id) => ({
+        url: `servicecategorymaster/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["ServiceCategoryMaster"],
+    }),
+    ///Service name
+    getServiceName: builder.query({
+      query: () => ({
+        url: '/service',
+        method: 'GET',
+      }),
+    }),   
+  }),
+});
+// Export the auto-generated hooks
+export const { 
+  useGetServiceQuery,
+  useCreateServiceMutation,
+  useGetServiceNameQuery,
+  useGetServiceDepartmentMasterQuery,
+  useCreateServiceDepartmentMasterMutation,
+  useGetServiceCategoryMasterQuery,
+  useCreateServiceCategoryMasterMutation,
+
+} = serviceApi;

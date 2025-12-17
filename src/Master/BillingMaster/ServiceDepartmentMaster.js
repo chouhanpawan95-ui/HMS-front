@@ -1,6 +1,6 @@
 import { Button, Container, TextField, Typography } from "@mui/material";
 import styles from "../../component/Container.module.css";
-import {useGetServiceDepartmentMasterQuery,useCreateServiceDepartmentMasterMutation} from '../../features/api/billingMasterApi';
+import {useGetServiceDepartmentMasterQuery,useCreateServiceDepartmentMasterMutation} from '../../features/api/Hooks/serviceApi.js';
 import Loader from "../../component/Loader";
 import { useForm } from "react-hook-form";
 
