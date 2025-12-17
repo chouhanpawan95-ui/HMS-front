@@ -11,7 +11,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { useCreateServiceMutation } from "../../features/api/patientsApi";
+import { useCreateServiceMutation } from "../../features/api/Hooks/serviceApi";
 import { jsx } from "react/jsx-runtime";
 
 export default function SampleForm() {

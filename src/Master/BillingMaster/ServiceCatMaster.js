@@ -4,7 +4,8 @@ import {
   useGetServiceCategoryMasterQuery,
   useCreateServiceCategoryMasterMutation,
   useGetServiceDepartmentMasterQuery,
-} from "../../features/api/billingMasterApi";
+} from "../../features/api/Hooks/serviceApi";
+
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";

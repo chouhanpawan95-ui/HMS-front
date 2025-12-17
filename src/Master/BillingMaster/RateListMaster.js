@@ -20,15 +20,16 @@ import {
   Pagination,
 } from "@mui/material";
 import {
+  useGetServiceQuery
+} from "../../features/api/Hooks/serviceApi.js";
+import {
   useCreateRateListMutation,
   useGetRateListQuery,
   useCreateRateListDetailMutation,
   useGetRateListDetailQuery,
-  useGetServiceQuery,
   useUpdateRateListDetailMutation,
   useDeleteRateListDetailMutation,
-  useUpdateRateListMutation,
-} from "../../features/api/billingMasterApi";
+} from "../../features/api/Hooks/ratelistApi";
 import { useForm } from "react-hook-form";
 import Loader from "../../component/Loader";
 import { useEffect, useState } from "react";
@@ -79,10 +80,13 @@ const RateListMaster = () => {
         return { id: idVal, label, raw: s };
       })
     : [];
-  const { data: ratelist = [], isLoading: isRateListLoading } = useGetRateListQuery();
-
+    console.log("Test project");
+  const { data: ratelist = [], isLoading: isRateListLoading } =
+    useGetRateListQuery();
+        console.log("Test project1",ratelist);
   const { data: ratelistdetail, isLoading: isRateListDetailLoading } =
     useGetRateListDetailQuery();
+     console.log("Test project2",ratelistdetail);
   const [deleteRateListDetail] = useDeleteRateListDetailMutation();
 
   const [createRateListDetail] = useCreateRateListDetailMutation();
@@ -159,7 +163,7 @@ const RateListMaster = () => {
   const infoList = Array.isArray(ratelist)
     ? ratelist
     : Array.isArray(ratelist?.data)
-    ? ratelist.data
+    ? ratelist?.data
     : [];
 
   const infoDetail = Array.isArray(ratelistdetail)
