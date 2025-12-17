@@ -27,7 +27,7 @@ export const billingMasterApi = createApi({
     "PackageDetail"
   ],
   endpoints: (builder) => ({
-    
+
     getService: builder.query({
       query: () => "service",
       providesTags: ["Service"],
@@ -138,12 +138,12 @@ export const billingMasterApi = createApi({
       transformErrorResponse: (res) => res.data || [],
     }),
     GetRatelistDetails: builder.query({
-    query: () => ({
-    url: '/ratelistdetail',
-    method: 'GET',
+      query: () => ({
+        url: '/ratelistdetail',
+        method: 'GET',
       }),
     }),
-     createRateListDetail: builder.mutation({
+    createRateListDetail: builder.mutation({
       query: (ratelistdetail) => ({
         url: "/ratelistdetail",
         method: "POST",
@@ -168,30 +168,30 @@ export const billingMasterApi = createApi({
     }),
 
     // Party Master
-    getPartyMaster : builder.query({
+    getPartyMaster: builder.query({
       query: () => "partymaster",
-      providesTags:['PartyMaster'],
-      transformResponse:(res) => res.data || [],
+      providesTags: ['PartyMaster'],
+      transformResponse: (res) => res.data || [],
     }),
-    createPartyMaster:builder.mutation({
-      query:(partymaster) => ({
-        url:"/partymaster",
-        method:"POST",
-        body:partymaster
-      }),invalidatesTags:["PartyMaster"],
+    createPartyMaster: builder.mutation({
+      query: (partymaster) => ({
+        url: "/partymaster",
+        method: "POST",
+        body: partymaster
+      }), invalidatesTags: ["PartyMaster"],
     }),
-    updatePartyMaster:builder.mutation({
-      query:(id,payload) => ({
-        url:`/partymaster/${id}`,
-        method:"PUT",
-        body:payload
-      }), invalidatesTags:["PartyMaster"]
+    updatePartyMaster: builder.mutation({
+      query: (id, payload) => ({
+        url: `/partymaster/${id}`,
+        method: "PUT",
+        body: payload
+      }), invalidatesTags: ["PartyMaster"]
     }),
-    deletePartyMaster:builder.mutation({
-      query:(id) => ({
-        url:`/partymaster${id}`,
-        method:'DELETE',
-      }),invalidatesTags:["PartyMaster"]
+    deletePartyMaster: builder.mutation({
+      query: (id) => ({
+        url: `/partymaster${id}`,
+        method: 'DELETE',
+      }), invalidatesTags: ["PartyMaster"]
     }),
     createBill: builder.mutation({
       query: (patient) => ({
@@ -200,38 +200,58 @@ export const billingMasterApi = createApi({
         body: patient,
       }),
     }),
-     createBilldetails: builder.mutation({
+    createBilldetails: builder.mutation({
       query: (patient) => ({
         url: '/billdetails',
         method: 'POST',
         body: patient,
       }),
-    }),   
-    getbillDetail: builder.query({
-    query: () => ({
-      url: '/billmasters',
-      method: 'GET',
+    }),
+    getBillDetail: builder.query({
+      query: () => ({
+        url: '/billdetails',
+        method: 'GET',
+      }),
+    }),
+    getBillMaster: builder.query({
+      query: () => ({
+        url: '/billmasters',
+        method: 'GET',
       }),
     }),
     ///Service name
     getServiceName: builder.query({
-    query: () => ({
-      url: '/service',
-      method: 'GET',
+      query: () => ({
+        url: '/service',
+        method: 'GET',
       }),
     }),
     // Fetch a single bill master by id (useful to load full bill details)
-    getBillById: builder.query({
+    getBillMasterById: builder.query({
       query: (id) => ({
         url: `/billmasters/${id}`,
         method: 'GET',
       }),
       transformResponse: (res) => res.data || res || {},
     }),
+      getBillDetailById: builder.query({
+      query: (id) => ({
+        url: `/billdetails/${id}`,
+        method: 'GET',
+      }),
+      transformResponse: (res) => res.data || res || {},
+    }),
+       getBillDetailByBillId: builder.query({
+      query: (billid) => ({
+        url: `/billdetails/bill/${billid}`,
+        method: 'GET',
+      }),
+      transformResponse: (res) => res.data || res || {},
+    }),
     getPartyName: builder.query({
-    query: () => ({
-    url: '/partymaster',
-    method: 'GET',
+      query: () => ({
+        url: '/partymaster',
+        method: 'GET',
       }),
     }),
     getBillId: builder.query({
@@ -308,13 +328,16 @@ export const {
   useCreateRateListMutation,
   useUpdateRateListMutation,
   useGetBillIdQuery,
-  useGetBillByIdQuery,
+  useGetBillMasterByIdQuery,
+ useGetBillDetailByIdQuery,
+  useGetBillDetailByBillIdQuery,
   useGetServiceQuery,
   useCreateServiceMutation,
-  useCreateBillMutation  ,
+  useCreateBillMutation,
   useCreateBilldetailsMutation,
   useGetPartyNameQuery,
-  useGetbillDetailQuery,
+  useGetBillMasterQuery,
+  useGetBillDetailQuery,
   useGetServiceNameQuery,
   useGetServiceDepartmentMasterQuery,
   useCreateServiceDepartmentMasterMutation,
