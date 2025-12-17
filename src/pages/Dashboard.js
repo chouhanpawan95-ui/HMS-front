@@ -36,7 +36,7 @@ import {
 import SearchBar from "../component/SearchBar";
 import Loader from "../component/Loader";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import {useGetbillDetailQuery} from '../features/api/billingMasterApi.js';
+import {useGetBillMasterQuery} from '../features/api/billingMasterApi.js';
 import { useNavigate, Link } from 'react-router-dom';
 export default function Dashboard() {
   const theme = useTheme();
@@ -47,7 +47,7 @@ export default function Dashboard() {
   const [limit, setLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
-  const { data: billdetails } = useGetbillDetailQuery();
+  const { data: billdetails } = useGetBillMasterQuery();
   console.log("billdetails",billdetails);
   const [openBillsDialog, setOpenBillsDialog] = useState(false);
   const [selectedPatientForBills, setSelectedPatientForBills] = useState(null);
