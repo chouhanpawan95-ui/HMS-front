@@ -26,13 +26,18 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import {useGetBillIdQuery,useCreateRateListMutation,useGetRatelistDetailsQuery,useGetPartyNameQuery,useCreateBillMutation,useCreateBilldetailsMutation, useGetServiceQuery} from '../features/api/billingMasterApi.js'
+import { useGetBillIdQuery, useCreateRateListMutation, useGetRatelistDetailsQuery, useGetPartyNameQuery, useCreateBillMutation, useCreateBilldetailsMutation, useGetServiceQuery, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery, useGetBillDetailQuery } from '../features/api/billingMasterApi.js'
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SearchIcon from '@mui/icons-material/Search';
 
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
+  const routerLocation = useLocation();
+
+  const { bill, patient } = routerLocation.state || {};
+
+  console.log("pawan test", bill?.billId, patient);
   const [firstName, setFirstName] = useState("");
   const [containsOption, setContainsOption] = useState("Contains");
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -40,12 +45,17 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
   const { data: billId } = useGetBillIdQuery();
   const [createRatelist, { data: createRatelistResponse }] =
-  useCreateRateListMutation();
+    useCreateRateListMutation();
   const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
   const [createBillDetails, { data: createBillDetailsResp, isLoading: isCreatingDetails, error: createBillDetailsError }] = useCreateBilldetailsMutation();
   const { data: services } = useGetServiceQuery();
+  const { data: getBillMaster } = useGetBillMasterByIdQuery(bill?.billId);
+  const { data: getBillDetail } = useGetBillDetailByBillIdQuery(bill?.billId);
+  console.log("getBillMaster", getBillMaster);
+  console.log("getBillMaster1", getBillDetail);
   // Utility: resolve service name from various potential sources
   const resolveServiceName = (input) => {
+    console.log("input", input)
     if (!input) return "";
     // If input is an object
     if (typeof input === "object") {
@@ -58,21 +68,21 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     const id = String(input);
     // Search services first
     if (Array.isArray(services)) {
-      const found = services.find(
-        (s) => String(s.FK_ServiceId || s.serviceId || s.ServiceId || s.id || s._id) === id
+      const found = services?.find(
+        s => String(s.serviceId || s.FK_ServiceId) === String(rate.FK_ServiceId)
       );
       if (found) return found.ServiceName || found.serviceName || found.name || found.Service || "";
     }
     // Fallback: search rate list details (may contain service names)
     if (Array.isArray(filteredRateListDetails)) {
-      const found = filteredRateListDetails.find((s) => String(s.FK_ServiceId || s.serviceId || s.id || s._id) === id);
+      const found = filteredRateListDetails?.find((s) => String(s.FK_ServiceId || s.serviceId || s.id || s._id) === id);
       if (found) return found.ServiceName || found.serviceName || found.Service || found.name || "";
     }
     return "";
   };
   console.log("CreateBill response", createbilldetails, "loading", isCreating, "error", createBillError)
-  const { data:GetRatedetails } = useGetRatelistDetailsQuery();
-  const { data:partyNameData } = useGetPartyNameQuery();
+  const { data: GetRatedetails } = useGetRatelistDetailsQuery();
+  const { data: partyNameData } = useGetPartyNameQuery();
   // console.log("GetRatedetails",GetRatedetails)
   const [rate, setRate] = useState("");
   const [billDate, setBillDate] = useState("");
@@ -83,63 +93,77 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [billNo, setBillNo] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null); 
+  const [selectedItem, setSelectedItem] = useState(null);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
-// Target RateListId
-const [selectedRateListId, setSelectedRateListId] = useState("");
-const [partyName, setPartyName] = useState("");
-const [selectedServices, setSelectedServices] = useState([]);
-const [billingRemarks, setBillingRemarks] = useState("");
-// First API response (RateList)
-const rateList = createRatelistResponse?.data || [];
+  // Target RateListId
+  const [selectedRateListId, setSelectedRateListId] = useState("");
+  const [partyName, setPartyName] = useState("");
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [billingRemarks, setBillingRemarks] = useState("");
+  // First API response (RateList)
+  const rateList = createRatelistResponse?.data || [];
 
-// Second API response (RateListDetails)
-const rateListDetails = GetRatedetails?.data || [];
+  // Second API response (RateListDetails)
+  const rateListDetails = GetRatedetails?.data || [];
 
-// 2. Filter RateList by rateListId
-const filteredRateList = rateList.filter(
-  (item) => item.rateListId === selectedRateListId
-);
+  // 2. Filter RateList by rateListId
+  const filteredRateList = rateList.filter(
+    (item) => item.rateListId === selectedRateListId
+  );
 
-// 3. Filter Details by FK_RateListId
-const filteredRateListDetails = rateListDetails.filter(
-  (item) => item.FK_RateListId === selectedRateListId
-);
+  // 3. Filter Details by FK_RateListId
+  const filteredRateListDetails = rateListDetails.filter(
+    (item) => item.FK_RateListId === selectedRateListId
+  );
 
-// 4. Extract FK_ServiceId from details
-const serviceIds = filteredRateListDetails.map((item) => item.FK_ServiceId);
- const [tableRows, setTableRows] = useState([]); // main table rows
+  // 4. Extract FK_ServiceId from details
+  console.log("filteredRateListDetails", filteredRateListDetails);
+  const result = filteredRateListDetails.map(rate => {
+    const service = services?.find(
+      s => s.serviceId === rate.FK_ServiceId
+    );
+
+    return {
+      ...rate,
+      ServiceName: service ? service.ServiceName : null
+    };
+  });
+  const serviceIds = filteredRateListDetails.map((item) => item.FK_ServiceId);
+  const [tableRows, setTableRows] = useState([]); // main table rows
   const [isViewMode, setIsViewMode] = useState(false);
   const location = useLocation();
+  // useEffect(()=>{
+  //   if(bill?.billId){
 
+  //   }
+  // },[bill?.billId])
   // Add new row to table
-    // Add a row; if `item` provided, populate fields from the service item
-    const handleAddRow = (item) => {
-      if (isViewMode) return; // don't add rows when viewing an existing bill
-      const newRow = item
-        ? {
-            FK_ServiceId: item.FK_ServiceId || item.FK_ServiceId || item.FK_ServiceId || "",
-            ServiceName: item.ServiceName || item.serviceName || resolveServiceName(item.FK_ServiceId) || resolveServiceName(item) || "",
-            RateGeneral: item.RateGeneral ?? item.Rate ?? item.RateAmount ?? 0,
-            Qty: item.Unit ?? item.UnitQty ?? 1,
-            Discountpercent: item.Discountpercent ?? 0,
-            Discount: item.Discount ?? 0,
-            SCPercent: item.SCPercent ?? 0,
-            ServiceCharge: item.ServiceCharge ?? item.ServiceCharges ?? 0,
-            Remarks: item.Remarks || item.remark || "",
-            ...item,
-          }
-        : {
-            ServiceName: "",
-            FK_ServiceId: null,
-            RateGeneral: 0,
-            Qty: 1,
-            NetAmount: 0,
-            Remarks: "",
-          };
-
-      setTableRows((prev) => [...prev, newRow]);
-    };
+  // Add a row; if `item` provided, populate fields from the service item
+  const handleAddRow = (item) => {
+    if (isViewMode) return; // don't add rows when viewing an existing bill
+    const newRow = item
+      ? {
+        FK_ServiceId: item.FK_ServiceId || item.FK_ServiceId || item.FK_ServiceId || "",
+        ServiceName: item.ServiceName || item.serviceName || resolveServiceName(item.FK_ServiceId) || resolveServiceName(item) || "",
+        RateGeneral: item.RateGeneral ?? item.Rate ?? item.RateAmount ?? 0,
+        Qty: item.Unit ?? item.UnitQty ?? 1,
+        Discountpercent: item.Discountpercent ?? 0,
+        Discount: item.Discount ?? 0,
+        SCPercent: item.SCPercent ?? 0,
+        ServiceCharge: item.ServiceCharge ?? item.ServiceCharges ?? 0,
+        Remarks: item.Remarks || item.remark || "",
+        ...item,
+      }
+      : {
+        ServiceName: "",
+        FK_ServiceId: null,
+        RateGeneral: 0,
+        Qty: 1,
+        NetAmount: 0,
+        Remarks: "",
+      };
+    setTableRows((prev) => [...prev, newRow]);
+  };
 
   // Apply a selected service to an existing row (edit mode)
   const applyServiceToRow = (item, rowIndex) => {
@@ -163,90 +187,90 @@ const serviceIds = filteredRateListDetails.map((item) => item.FK_ServiceId);
     setSelectedServices([]);
     setOpenPopup(false);
   };
-//Calculation of service
-const calculateNetFromAmount = (row) => {
-  const rate = Number(row.RateGeneral) || 0;
-  const qty = Number(row.Qty) || 1;
-
-  const gross = rate * qty;
-
-  let discountPercent = Number(row.Discountpercent) || 0;
-  let discountAmount = Number(row.Discount) || 0;
-
-  let scPercent = Number(row.SCPercent) || 0;
-  let scAmount = Number(row.ServiceCharge) || 0;
-
-  // ✅ If USER types DISCOUNT AMOUNT → calculate %
-  if (discountAmount > 0 && discountPercent === 0) {
-    discountPercent = (discountAmount / gross) * 100;
-  } 
-  // ✅ If USER types DISCOUNT % → calculate AMOUNT
-  else if (discountPercent > 0 && discountAmount === 0) {
-    discountAmount = (gross * discountPercent) / 100;
-  }
-
-  const afterDiscount = gross - discountAmount;
-
-  // ✅ If USER types SERVICE CHARGE AMOUNT → calculate %
-  if (scAmount > 0 && scPercent === 0) {
-    scPercent = (scAmount / afterDiscount) * 100;
-  } 
-  // ✅ If USER types SERVICE CHARGE % → calculate AMOUNT
-  else if (scPercent > 0 && scAmount === 0) {
-    scAmount = (afterDiscount * scPercent) / 100;
-  }
-
-  const netAmount = afterDiscount + scAmount;
-
-  return {
-    discountAmount: discountAmount.toFixed(2),
-    discountPercent: discountPercent.toFixed(2),
-    serviceChargeAmount: scAmount.toFixed(2),
-    serviceChargePercent: scPercent.toFixed(2),
-    netAmount: netAmount.toFixed(2),
-  };
-};
-
-// Calculate totals from all table rows
-const calculateBillTotals = () => {
-  let totalGross = 0;
-  let totalDiscount = 0;
-  let totalServiceCharge = 0;
-  let totalNetAmount = 0;
-
-  tableRows.forEach((row) => {
+  //Calculation of service
+  const calculateNetFromAmount = (row) => {
     const rate = Number(row.RateGeneral) || 0;
     const qty = Number(row.Qty) || 1;
+
     const gross = rate * qty;
-    
-    const result = calculateNetFromAmount(row);
-    
-    totalGross += gross;
-    totalDiscount += Number(result.discountAmount) || 0;
-    totalServiceCharge += Number(result.serviceChargeAmount) || 0;
-    totalNetAmount += Number(result.netAmount) || 0;
-  });
 
-  return {
-    totalGross: totalGross.toFixed(2),
-    totalDiscount: totalDiscount.toFixed(2),
-    totalServiceCharge: totalServiceCharge.toFixed(2),
-    totalNetAmount: totalNetAmount.toFixed(2),
+    let discountPercent = Number(row.Discountpercent) || 0;
+    let discountAmount = Number(row.Discount) || 0;
+
+    let scPercent = Number(row.SCPercent) || 0;
+    let scAmount = Number(row.ServiceCharge) || 0;
+
+    // ✅ If USER types DISCOUNT AMOUNT → calculate %
+    if (discountAmount > 0 && discountPercent === 0) {
+      discountPercent = (discountAmount / gross) * 100;
+    }
+    // ✅ If USER types DISCOUNT % → calculate AMOUNT
+    else if (discountPercent > 0 && discountAmount === 0) {
+      discountAmount = (gross * discountPercent) / 100;
+    }
+
+    const afterDiscount = gross - discountAmount;
+
+    // ✅ If USER types SERVICE CHARGE AMOUNT → calculate %
+    if (scAmount > 0 && scPercent === 0) {
+      scPercent = (scAmount / afterDiscount) * 100;
+    }
+    // ✅ If USER types SERVICE CHARGE % → calculate AMOUNT
+    else if (scPercent > 0 && scAmount === 0) {
+      scAmount = (afterDiscount * scPercent) / 100;
+    }
+
+    const netAmount = afterDiscount + scAmount;
+
+    return {
+      discountAmount: discountAmount.toFixed(2),
+      discountPercent: discountPercent.toFixed(2),
+      serviceChargeAmount: scAmount.toFixed(2),
+      serviceChargePercent: scPercent.toFixed(2),
+      netAmount: netAmount.toFixed(2),
+    };
   };
-};
+
+  // Calculate totals from all table rows
+  const calculateBillTotals = () => {
+    let totalGross = 0;
+    let totalDiscount = 0;
+    let totalServiceCharge = 0;
+    let totalNetAmount = 0;
+
+    tableRows.forEach((row) => {
+      const rate = Number(row.RateGeneral) || 0;
+      const qty = Number(row.Qty) || 1;
+      const gross = rate * qty;
+
+      const result = calculateNetFromAmount(row);
+
+      totalGross += gross;
+      totalDiscount += Number(result.discountAmount) || 0;
+      totalServiceCharge += Number(result.serviceChargeAmount) || 0;
+      totalNetAmount += Number(result.netAmount) || 0;
+    });
+
+    return {
+      totalGross: totalGross.toFixed(2),
+      totalDiscount: totalDiscount.toFixed(2),
+      totalServiceCharge: totalServiceCharge.toFixed(2),
+      totalNetAmount: totalNetAmount.toFixed(2),
+    };
+  };
 
 
 
 
-// When API loads → set default value automatically
-useEffect(() => {
-  if (
-    createRatelistResponse?.data &&
-    createRatelistResponse.data.length > 0
-  ) {
-    setSelectedRateListId(createRatelistResponse.data[0].rateListId);
-  }
-}, [createRatelistResponse]);
+  // When API loads → set default value automatically
+  useEffect(() => {
+    if (
+      createRatelistResponse?.data &&
+      createRatelistResponse.data.length > 0
+    ) {
+      setSelectedRateListId(createRatelistResponse.data[0].rateListId);
+    }
+  }, [createRatelistResponse]);
 
   // If navigated with a bill in location.state, populate bill and rows
   useEffect(() => {
@@ -270,13 +294,23 @@ useEffect(() => {
         NetBillAmt: bill.NetBillAmt || bill.NetAmt || prev.NetBillAmt,
         Remarks: bill.Remarks || prev.Remarks,
       }));
+      const result = getBillDetail?.map(rate => {
+        const service = services?.find(
+          s => s.serviceId === rate.FK_ServiceId
+        );
 
+        return {
+          ...rate,
+          ServiceName: service ? service.ServiceName : null
+        };
+      });
+      console.log("pawan chouhan",result)
       // map details if present
-      const detailsArr = bill.BillDetails || bill.details || bill.billDetails || bill.BillDetail || [];
+      const detailsArr = result// bill.BillDetails || bill.details || bill.billDetails || bill.BillDetail || [];
       if (Array.isArray(detailsArr) && detailsArr.length > 0) {
         const mapped = detailsArr.map((d) => ({
           FK_ServiceId: d.FK_ServiceId || d.serviceId || d.FK_ServiceId || "",
-          ServiceName: d.ServiceName || d.serviceName || resolveServiceName(d.FK_ServiceId) || "",
+          ServiceName: d.ServiceName,
           RateGeneral: d.Rate ?? d.rate ?? 0,
           Qty: d.Unit ?? d.unit ?? 1,
           Discountpercent: 0,
@@ -472,41 +506,41 @@ useEffect(() => {
     }
   };
   useEffect(() => {
-  createRatelist();   // 🔥 API will run here
-}, []);
-const handleInputChange = (index, field, value) => {
-  setTableRows(prev =>
-    prev.map((row, i) => {
-      if (i === index) {
-        // Create a new mutable object from the row
-        const newRow = { ...row };
+    createRatelist();   // 🔥 API will run here
+  }, []);
+  const handleInputChange = (index, field, value) => {
+    setTableRows(prev =>
+      prev.map((row, i) => {
+        if (i === index) {
+          // Create a new mutable object from the row
+          const newRow = { ...row };
 
-        // For textual fields keep the string, otherwise parse number
-        if (field === "ServiceName" || field === "Remarks" || field === "FK_ServiceId") {
-          newRow[field] = value;
-        } else {
-          newRow[field] = Number(value) || 0;
+          // For textual fields keep the string, otherwise parse number
+          if (field === "ServiceName" || field === "Remarks" || field === "FK_ServiceId") {
+            newRow[field] = value;
+          } else {
+            newRow[field] = Number(value) || 0;
+          }
+
+          // Reset related fields based on which field was changed
+          if (field === "Discount" && Number(value) > 0) {
+            newRow.Discountpercent = 0; // Reset % when amount is entered
+          } else if (field === "Discountpercent" && Number(value) > 0) {
+            newRow.Discount = 0; // Reset amount when % is entered
+          }
+
+          if (field === "ServiceCharge" && Number(value) > 0) {
+            newRow.SCPercent = 0; // Reset % when amount is entered
+          } else if (field === "SCPercent" && Number(value) > 0) {
+            newRow.ServiceCharge = 0; // Reset amount when % is entered
+          }
+
+          return newRow;
         }
-
-        // Reset related fields based on which field was changed
-        if (field === "Discount" && Number(value) > 0) {
-          newRow.Discountpercent = 0; // Reset % when amount is entered
-        } else if (field === "Discountpercent" && Number(value) > 0) {
-          newRow.Discount = 0; // Reset amount when % is entered
-        }
-
-        if (field === "ServiceCharge" && Number(value) > 0) {
-          newRow.SCPercent = 0; // Reset % when amount is entered
-        } else if (field === "SCPercent" && Number(value) > 0) {
-          newRow.ServiceCharge = 0; // Reset amount when % is entered
-        }
-
-        return newRow;
-      }
-      return row;
-    })
-  );
-};
+        return row;
+      })
+    );
+  };
 
   useEffect(() => {
     const now = new Date();
@@ -523,8 +557,8 @@ const handleInputChange = (index, field, value) => {
   const patients = Array.isArray(patientsResp)
     ? patientsResp
     : patientsResp && Array.isArray(patientsResp.data)
-    ? patientsResp.data
-    : [];
+      ? patientsResp.data
+      : [];
   const paginatedPatients = filteredPatients.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
@@ -561,8 +595,8 @@ const handleInputChange = (index, field, value) => {
     setOpenDialog(true);
   };
   const handleDeleteRow = (index) => {
-  setTableRows((prev) => prev.filter((_, i) => i !== index));
-};
+    setTableRows((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const [rows, setRows] = useState([]);
 
@@ -616,6 +650,7 @@ const handleInputChange = (index, field, value) => {
     BillRefID: "",
     Diagnosis: "",
   });
+  console.log("Billing", billDetails);
   return (
     <Box
       sx={{
@@ -770,9 +805,8 @@ const handleInputChange = (index, field, value) => {
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Patient Name"
-                  value={`${selectedPatient?.firstName || ""} ${
-                    selectedPatient?.lastName || ""
-                  }`}
+                  value={`${selectedPatient?.firstName || ""} ${selectedPatient?.lastName || ""
+                    }`}
                   size="small"
                   fullWidth
                 />
@@ -780,9 +814,8 @@ const handleInputChange = (index, field, value) => {
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Age/Sex"
-                  value={`${selectedPatient?.ageYMD || ""} / ${
-                    selectedPatient?.sex || ""
-                  }`}
+                  value={`${selectedPatient?.ageYMD || ""} / ${selectedPatient?.sex || ""
+                    }`}
                   size="small"
                   fullWidth
                 />
@@ -903,8 +936,8 @@ const handleInputChange = (index, field, value) => {
                   <TextField
                     label="Bill Series"
                     value={billDetails.FK_BillSerieseId || ""}
-                      onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BillSerieseId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
-                      disabled={isViewMode}
+                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BillSerieseId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    disabled={isViewMode}
                     size="small"
                     fullWidth
                   />
@@ -915,8 +948,8 @@ const handleInputChange = (index, field, value) => {
                     fullWidth
                     label="Bill Type entry"
                     value={billDetails.FK_BillTypeId || ""}
-                      onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BillTypeId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
-                      disabled={isViewMode}
+                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BillTypeId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    disabled={isViewMode}
                     sx={{ width: "230px", height: "10px" }}
                   >
                     <MenuItem value="">Bill Type entry</MenuItem>
@@ -979,17 +1012,19 @@ const handleInputChange = (index, field, value) => {
                   <Grid item xs={12} sm={6} md={3}>
                     <TextField
                       label="Reffered By"
-                      // value={selectedPatient?.patientId || ""}
+                      value={billDetails.FK_ReferredById || ""}
                       size="small"
                       fullWidth
+                      disabled={isViewMode}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <TextField
                       label="Party"
-                      // value={selectedPatient?.admissionId || ""}
+                      value={billDetails.FK_PartyId || ""}
                       size="small"
                       fullWidth
+                      disabled={isViewMode}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
@@ -999,30 +1034,43 @@ const handleInputChange = (index, field, value) => {
                       //   selectedPatient?.lastName || ""
                       // }`}
                       size="small"
+                      disabled={isViewMode}
                       fullWidth
                     />
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
-               <TextField
-                select
-                fullWidth
-                label="Rate Type"
-                value={selectedRateListId}     // controlled value
-                onChange={(e) => {
-                  setSelectedRateListId(e.target.value);
-                  // Clear any previous selections and open popup for this rate type
-                  setSelectedServices([]);
-                  if (e.target.value) setOpenPopup(true);
-                }}
-                sx={{ width: "230px", height: "10px" }}
-              >
-                {createRatelistResponse?.data?.map((item) => (
-                  <MenuItem key={item._id} value={item.rateListId}>
-                    {item.RateListName}
-                  </MenuItem>
-                ))}
-              </TextField>
-                </Grid>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Rate Type"
+                      value={selectedRateListId}
+                      sx={{ width: "230px", height: "10px" }}
+                      // 🔥 OPEN POPUP ON USER INTERACTION
+                      onClick={() => {
+                        if (selectedRateListId) {
+                          setOpenPopup(true);
+                        }
+                      }}
+
+                      // Keep onChange for multi-rate-type case
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setSelectedRateListId(value);
+                        setSelectedServices([]);
+
+                        if (value) {
+                          setOpenPopup(true);
+                        }
+                      }}
+                    >
+
+                      {createRatelistResponse?.data?.map((item) => (
+                        <MenuItem key={item._id} value={item.rateListId}>
+                          {item.RateListName}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
                   <Grid
                     item
                     xs={12}
@@ -1038,273 +1086,270 @@ const handleInputChange = (index, field, value) => {
 
             {/* ===== SERVICE TABLE ===== */}
             <Box mt={3}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="subtitle2">Services</Typography>
-            </Box>
-            <TableContainer component={Paper}>
-      <Table size="small">
-        {/* Table Header */}
-        <TableHead sx={{ backgroundColor: "#578EE5" }}>
-          <TableRow>
-            {/* Service ID is intentionally hidden from the UI; FK_ServiceId is kept in row data */}
-            <TableCell sx={{ color: "#fff" }}>Service Name</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Rate</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Qty</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Dis(%)</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Discount</TableCell>
-            <TableCell sx={{ color: "#fff" }}>S.C.(%)</TableCell>
-            <TableCell sx={{ color: "#fff" }}>S.Charge</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Net Amt</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Remarks</TableCell>
-            <TableCell sx={{ color: "#fff" }}>Action</TableCell>
-          </TableRow>
-        </TableHead>
+              <TableContainer component={Paper}>
+                <Table size="small">
+                  {/* Table Header */}
+                  <TableHead sx={{ backgroundColor: "#578EE5" }}>
+                    <TableRow>
+                      {/* Service ID is intentionally hidden from the UI; FK_ServiceId is kept in row data */}
+                      <TableCell sx={{ color: "#fff" }}>Service Name</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Rate</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Qty</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Dis(%)</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Discount</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>S.C.(%)</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>S.Charge</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Net Amt</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Remarks</TableCell>
+                      <TableCell sx={{ color: "#fff" }}>Action</TableCell>
+                    </TableRow>
+                  </TableHead>
 
-        {/* Table Body */}
-       <TableBody>
-  {/* SHOW ADDED ROWS */}
-{tableRows.length === 0 && (
-  <TableRow>
-    <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
-      <Typography>No services added yet.</Typography>
-    </TableCell>
-  </TableRow>
-)}
-    {tableRows.length > 0 &&
-  tableRows.map((row, index) => {
-    const result = calculateNetFromAmount(row);
-    return (
-      <TableRow key={index}>
-        {/* FK_ServiceId is stored on the row but not shown in the table */}
-        <TableCell>
-          <TextField
-            size="small"
-            value={row.ServiceName !== undefined && row.ServiceName !== null ? row.ServiceName : row.FK_ServiceId || ""}
-            onChange={(e) => handleInputChange(index, "ServiceName", e.target.value)}
-            onClick={() => { if (!isViewMode) { setEditingRowIndex(index); setOpenPopup(true); } }}
-            sx={{ width: 100, cursor: isViewMode ? 'default' : 'pointer' }}
-            disabled={isViewMode}
-          />
-          {/* Service selection is handled via the popup — inline dropdown removed */}
-        </TableCell>
-        {/* ✅ RATE */}
-        <TableCell>
-          <TextField
-            size="small"
-            value={row.RateGeneral || ""}
-            onChange={(e) =>
-              handleInputChange(index, "RateGeneral", e.target.value)
-            }
-            sx={{ width: 100 }}
-            disabled={isViewMode}
-          />
-        </TableCell>
+                  {/* Table Body */}
+                  <TableBody>
+                    {/* SHOW ADDED ROWS */}
+                    {tableRows.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={10} align="center" sx={{ py: 4 }}>
+                          <Typography>No services added yet.</Typography>
+                        </TableCell>
+                      </TableRow>
+                    )}
+                    {tableRows.length > 0 &&
+                      tableRows.map((row, index) => {
+                        const result = calculateNetFromAmount(row);
+                        return (
+                          <TableRow key={index}>
+                            {/* FK_ServiceId is stored on the row but not shown in the table */}
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                value={row.ServiceName !== undefined && row.ServiceName !== null ? row.ServiceName : row.FK_ServiceId || ""}
+                                onChange={(e) => handleInputChange(index, "ServiceName", e.target.value)}
+                                onClick={() => { if (!isViewMode) { setEditingRowIndex(index); setOpenPopup(true); } }}
+                                sx={{ width: 100, cursor: isViewMode ? 'default' : 'pointer' }}
+                                disabled={isViewMode}
+                              />
+                              {/* Service selection is handled via the popup — inline dropdown removed */}
+                            </TableCell>
+                            {/* ✅ RATE */}
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                value={row.RateGeneral || ""}
+                                onChange={(e) =>
+                                  handleInputChange(index, "RateGeneral", e.target.value)
+                                }
+                                sx={{ width: 100 }}
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ QTY */}
-        <TableCell>
-          <TextField
-            size="small"
-            value={row.Qty || 1}
-            onChange={(e) =>
-              handleInputChange(index, "Qty", e.target.value)
-            }
-            disabled={isViewMode}
-          />
-        </TableCell>
+                            {/* ✅ QTY */}
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                value={row.Qty || 1}
+                                onChange={(e) =>
+                                  handleInputChange(index, "Qty", e.target.value)
+                                }
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ DISCOUNT % (EDITABLE) */}
-        <TableCell>
-          <TextField
-            size="small"
-            value={row.Discountpercent !== undefined && row.Discountpercent > 0 ? row.Discountpercent : result.discountPercent}
-            onChange={(e) =>
-              handleInputChange(index, "Discountpercent", e.target.value)
-            }
-            disabled={isViewMode}
-          />
-        </TableCell>
+                            {/* ✅ DISCOUNT % (EDITABLE) */}
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                value={row.Discountpercent !== undefined && row.Discountpercent > 0 ? row.Discountpercent : result.discountPercent}
+                                onChange={(e) =>
+                                  handleInputChange(index, "Discountpercent", e.target.value)
+                                }
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ DISCOUNT AMOUNT (EDITABLE) */}
-        <TableCell>
-          <TextField
-            size="small"
-            value={row.Discount !== undefined && row.Discount > 0 ? row.Discount : result.discountAmount}
-            onChange={(e) =>
-              handleInputChange(index, "Discount", e.target.value)
-            }
-            disabled={isViewMode}
-          />
-        </TableCell>
+                            {/* ✅ DISCOUNT AMOUNT (EDITABLE) */}
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                value={row.Discount !== undefined && row.Discount > 0 ? row.Discount : result.discountAmount}
+                                onChange={(e) =>
+                                  handleInputChange(index, "Discount", e.target.value)
+                                }
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ SERVICE CHARGE % (EDITABLE) */}
-        <TableCell>
-          <TextField
-            sx={{ width: "80px" }}
-            size="small"
-            value={row.SCPercent !== undefined && row.SCPercent > 0 ? row.SCPercent : result.serviceChargePercent}
-            onChange={(e) =>
-              handleInputChange(index, "SCPercent", e.target.value)
-            }
-            disabled={isViewMode}
-          />
-        </TableCell>
+                            {/* ✅ SERVICE CHARGE % (EDITABLE) */}
+                            <TableCell>
+                              <TextField
+                                sx={{ width: "80px" }}
+                                size="small"
+                                value={row.SCPercent !== undefined && row.SCPercent > 0 ? row.SCPercent : result.serviceChargePercent}
+                                onChange={(e) =>
+                                  handleInputChange(index, "SCPercent", e.target.value)
+                                }
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ SERVICE CHARGE AMOUNT (EDITABLE) */}
-        <TableCell>
-          <TextField
-            sx={{ width: "80px" }}
-            size="small"
-            value={row.ServiceCharge !== undefined && row.ServiceCharge > 0 ? row.ServiceCharge : result.serviceChargeAmount}
-            onChange={(e) =>
-              handleInputChange(index, "ServiceCharge", e.target.value)
-            }
-            disabled={isViewMode}
-          />
-        </TableCell>
+                            {/* ✅ SERVICE CHARGE AMOUNT (EDITABLE) */}
+                            <TableCell>
+                              <TextField
+                                sx={{ width: "80px" }}
+                                size="small"
+                                value={row.ServiceCharge !== undefined && row.ServiceCharge > 0 ? row.ServiceCharge : result.serviceChargeAmount}
+                                onChange={(e) =>
+                                  handleInputChange(index, "ServiceCharge", e.target.value)
+                                }
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ NET AMOUNT (AUTO) */}
-        <TableCell>
-          <TextField
-            sx={{ width: "80px" }}
-            size="small"
-            value={result.netAmount}
-            disabled
-          />
-        </TableCell>
+                            {/* ✅ NET AMOUNT (AUTO) */}
+                            <TableCell>
+                              <TextField
+                                sx={{ width: "80px" }}
+                                size="small"
+                                value={result.netAmount}
+                                disabled
+                              />
+                            </TableCell>
 
-        <TableCell>
-          <TextField
-            size="small"
-            value={row.Remarks || ""}
-            onChange={(e) => handleInputChange(index, "Remarks", e.target.value)}
-            disabled={isViewMode}
-          />
-        </TableCell>
+                            <TableCell>
+                              <TextField
+                                size="small"
+                                value={row.Remarks || ""}
+                                onChange={(e) => handleInputChange(index, "Remarks", e.target.value)}
+                                disabled={isViewMode}
+                              />
+                            </TableCell>
 
-        {/* ✅ DELETE BUTTON */}
-        <TableCell>
-          <Button
-            variant="contained"
-            size="small"
-            color="primary"
-            startIcon={<DeleteIcon />}
-            onClick={() => handleDeleteRow(index)}
-            disabled={isViewMode}
-            sx={{
-              textTransform: "none",
-              borderRadius: "8px",
-              boxShadow: "none",
-            }}
-          >
-            Delete
-          </Button>
-           <TableCell> </TableCell>
-        </TableCell>
-      </TableRow>
-    );
-  })}
-</TableBody>
-
-      </Table>
-
-      {/* Popup */}
-      <Dialog open={openPopup} onClose={() => { setOpenPopup(false); setEditingRowIndex(null); }} fullWidth maxWidth="md">
-        <DialogTitle>{editingRowIndex !== null ? 'Choose service to update row' : 'Select Services'}</DialogTitle>
-        <DialogContent>
-          {filteredRateListDetails?.length ? (
-            // Deduplicate by FK_ServiceId so duplicate SRV codes are not shown repeatedly
-            Array.from(new Map((filteredRateListDetails || []).map(i => [(i.FK_ServiceId || i._id || i.id), i])).values()).map((item, idx) => (
-              <div
-                key={item.FK_ServiceId || item._id || item.id || idx}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '40px 1fr 150px',
-                  padding: '8px 0',
-                  borderBottom: '1px solid #ddd',
-                  cursor: 'pointer',
-                }}
-                onClick={(e) => {
-                  // toggle checkbox when clicking the row (but not checkbox itself)
-                  if (e.target.type !== 'checkbox') {
-                    setSelectedServices((prev) => {
-                      const isAlreadySelected = prev.some(
-                        (service) => service.FK_ServiceId === item.FK_ServiceId
-                      );
-                      if (isAlreadySelected) {
-                        return prev.filter(
-                          (service) => service.FK_ServiceId !== item.FK_ServiceId
+                            {/* ✅ DELETE BUTTON */}
+                            <TableCell>
+                              <Button
+                                variant="contained"
+                                size="small"
+                                color="primary"
+                                startIcon={<DeleteIcon />}
+                                onClick={() => handleDeleteRow(index)}
+                                disabled={isViewMode}
+                                sx={{
+                                  textTransform: "none",
+                                  borderRadius: "8px",
+                                  boxShadow: "none",
+                                }}
+                              >
+                                Delete
+                              </Button>
+                              <TableCell> </TableCell>
+                            </TableCell>
+                          </TableRow>
                         );
-                      } else {
-                        return [...prev, item];
-                      }
-                    });
-                  }
-                }}
-              >
-                <Checkbox
-                  checked={selectedServices.some(
-                    (service) => service.FK_ServiceId === item.FK_ServiceId
-                  )}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    setSelectedServices((prev) => {
-                      const isAlreadySelected = prev.some(
-                        (service) => service.FK_ServiceId === item.FK_ServiceId
-                      );
-                      if (isAlreadySelected) {
-                        return prev.filter(
-                          (service) => service.FK_ServiceId !== item.FK_ServiceId
-                        );
-                      } else {
-                        return [...prev, item];
-                      }
-                    });
-                  }}
-                />
-                <span>
-                  {item.ServiceName || item.serviceName || item.Service || item.name || item.FK_ServiceId}
-                  {item.FK_ServiceId && (item.ServiceName || item.serviceName) ? ` (${item.FK_ServiceId})` : ''}
-                </span>
-              </div>
-            ))
-          ) : (
-            <p>No Services Found</p>
-          )}
-        </DialogContent>
+                      })}
+                  </TableBody>
 
-        <DialogActions>
-          <Button onClick={() => { setOpenPopup(false); setSelectedServices([]); setEditingRowIndex(null); }}>Cancel</Button>
-          <Button
-            variant="contained"
-            disabled={selectedServices.length === 0}
-            onClick={() => {
-              if (editingRowIndex !== null) {
-                // apply first selected to the editing row, add remaining as new rows
-                const [first, ...rest] = selectedServices;
-                if (first) applyServiceToRow(first, editingRowIndex);
-                rest.forEach((item) => handleAddRow(item));
-                setSelectedServices([]);
-                setEditingRowIndex(null);
-                setOpenPopup(false);
-              } else {
-                selectedServices.forEach((item) => handleAddRow(item));
-                setSelectedServices([]);
-                setOpenPopup(false);
-              }
-            }}
-          >
-            Apply
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </TableContainer>
+                </Table>
+
+                {/* Popup */}
+                <Dialog open={openPopup} onClose={() => { setOpenPopup(false); setEditingRowIndex(null); }} fullWidth maxWidth="md">
+                  <DialogTitle>{editingRowIndex !== null ? 'Choose service to update row' : 'Select Services'}</DialogTitle>
+                  <DialogContent>
+                    {result?.length ? (
+                      // Deduplicate by FK_ServiceId so duplicate SRV codes are not shown repeatedly
+                      Array.from(new Map((result || []).map(i => [(i.serviceName || i._id || i.id), i])).values()).map((item, idx) => (
+                        <div
+                          key={item.FK_ServiceId || item._id || item.id || idx}
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: '40px 1fr 150px',
+                            padding: '8px 0',
+                            borderBottom: '1px solid #ddd',
+                            cursor: 'pointer',
+                          }}
+                          onClick={(e) => {
+                            // toggle checkbox when clicking the row (but not checkbox itself)
+                            if (e.target.type !== 'checkbox') {
+                              setSelectedServices((prev) => {
+                                const isAlreadySelected = prev.some(
+                                  (service) => service.FK_ServiceId === item.FK_ServiceId
+                                );
+                                if (isAlreadySelected) {
+                                  return prev.filter(
+                                    (service) => service.FK_ServiceId !== item.FK_ServiceId
+                                  );
+                                } else {
+                                  return [...prev, item];
+                                }
+                              });
+                            }
+                          }}
+                        >
+                          <Checkbox
+                            checked={selectedServices.some(
+                              (service) => service.FK_ServiceId === item.FK_ServiceId
+                            )}
+                            onChange={(e) => {
+                              e.stopPropagation();
+                              setSelectedServices((prev) => {
+                                const isAlreadySelected = prev.some(
+                                  (service) => service.FK_ServiceId === item.FK_ServiceId
+                                );
+                                if (isAlreadySelected) {
+                                  return prev.filter(
+                                    (service) => service.FK_ServiceId !== item.FK_ServiceId
+                                  );
+                                } else {
+                                  return [...prev, item];
+                                }
+                              });
+                            }}
+                          />
+                          <span>
+                            {item.ServiceName || item.serviceName || item.Service || item.name || item.FK_ServiceId}
+                            {item.FK_ServiceId && (item.ServiceName || item.serviceName) ? ` (${item.FK_ServiceId})` : ''}
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <p>No Services Found</p>
+                    )}
+                  </DialogContent>
+
+                  <DialogActions>
+                    <Button onClick={() => { setOpenPopup(false); setSelectedServices([]); setEditingRowIndex(null); }}>Cancel</Button>
+                    <Button
+                      variant="contained"
+                      disabled={selectedServices.length === 0}
+                      onClick={() => {
+                        if (editingRowIndex !== null) {
+                          // apply first selected to the editing row, add remaining as new rows
+                          const [first, ...rest] = selectedServices;
+                          if (first) applyServiceToRow(first, editingRowIndex);
+                          rest.forEach((item) => handleAddRow(item));
+                          setSelectedServices([]);
+                          setEditingRowIndex(null);
+                          setOpenPopup(false);
+                        } else {
+                          selectedServices.forEach((item) => handleAddRow(item));
+                          setSelectedServices([]);
+                          setOpenPopup(false);
+                        }
+                      }}
+                    >
+                      Apply
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+              </TableContainer>
             </Box>
             {/* ===== PARTY & TOTAL ===== */}
             <Grid container spacing={2} mt={3}>
               <TextField
                 select
                 fullWidth
-                label="Party Name"            
+                label="Party Name"
                 onChange={(e) => {
                   const v = e.target.value;
                   setPartyName(v);
@@ -1318,7 +1363,7 @@ const handleInputChange = (index, field, value) => {
                   </MenuItem>
                 ))}
               </TextField>
-             
+
             </Grid>
 
             <Box
@@ -1330,11 +1375,11 @@ const handleInputChange = (index, field, value) => {
               gap={2}
             >
               <Box sx={{ flex: 1, minWidth: "150px" }}>
-                <TextField 
+                <TextField
                   sx={{ width: 230 }}
-                  label="Amount" 
-                  size="small" 
-                  fullWidth 
+                  label="Amount"
+                  size="small"
+                  fullWidth
                   value={(() => {
                     const totals = calculateBillTotals();
                     const amount = Number(totals.totalNetAmount);
