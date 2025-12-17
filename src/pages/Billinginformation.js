@@ -21,7 +21,7 @@ import {
   DialogContentText,
   DialogTitle,
   Checkbox,
-  IconButton,
+  Pagination,
 } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
@@ -33,7 +33,6 @@ import {useGetServiceQuery} from '../features/api/Hooks/serviceApi.js';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
-import SearchIcon from '@mui/icons-material/Search';
 
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
   const routerLocation = useLocation();
@@ -563,10 +562,12 @@ console.log("CreateRate",GetRatelistResponse?.data);
     (page - 1) * rowsPerPage,
     page * rowsPerPage
   );
+
   // Initialize with all data when API loads
   useEffect(() => {
     setFilteredPatients(patients);
   }, [patients]);
+
   // 🧠 Auto-search on typing or option change
   useEffect(() => {
     let filtered = [...patients];
@@ -581,14 +582,17 @@ console.log("CreateRate",GetRatelistResponse?.data);
     }
     setFilteredPatients(filtered);
   }, [firstName, containsOption, patients]);
+
   // 🩺 Handle patient row click
   const handleRowClick = (patient) => {
     setSelectedPatient(patient);
   };
+
   // 🧾 Go back to patient table
   const handleBack = () => {
     setSelectedPatient(null);
   };
+
   // 🧾 Submit handler
   const handleSubmit = () => {
     setOpenDialog(true);
@@ -659,6 +663,7 @@ console.log("CreateRate",GetRatelistResponse?.data);
         p: 2,
         mt: 8,
         minHeight: "100vh",
+        ml: { xs: 0, md: 5},
       }}
     >
       {/* =================== PATIENT SEARCH TABLE =================== */}
@@ -1472,6 +1477,17 @@ console.log("CreateRate",GetRatelistResponse?.data);
           </Button>
         </DialogActions>
       </Dialog>
+      {/* // pagination */}
+      <Box sx={{ display:'flex', justifyContent:'center', mt:2 }}>
+        <Pagination
+          count = {Math.ceil(filteredPatients.length / rowsPerPage)}
+          page = {page}
+          onChange={(e,value) => setPage(value)}
+          color = 'primary'
+        />
+
+      </Box>
+
     </Box>
   );
 };
