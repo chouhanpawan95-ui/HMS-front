@@ -23,6 +23,9 @@ import {
   useGetServiceQuery
 } from "../../features/api/Hooks/serviceApi.js";
 import {
+  useUpdateRateListMutation
+} from "../../features/api/Hooks/ratelistApi.js";
+import {
   useCreateRateListMutation,
   useGetRateListQuery,
   useCreateRateListDetailMutation,
