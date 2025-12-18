@@ -26,56 +26,53 @@ import {
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery } from "../features/api/patientsApi";
-import { useGetRateListQuery,useGetRatelistDetailsQuery} from '../features/api/Hooks/ratelistApi'
-import {useGetPartyNameQuery} from '../features/api/Hooks/partyApi.js';
-import {useCreateBillMutation,useCreateBilldetailsMutation,useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery} from '../features/api/Hooks/billingApi.js';
-import {useGetServiceQuery} from '../features/api/Hooks/serviceApi';
+import { useGetRateListQuery, useGetRatelistDetailsQuery } from '../features/api/Hooks/ratelistApi'
+import { useGetPartyNameQuery } from '../features/api/Hooks/partyApi.js';
+import { useCreateBillMutation, useCreateBilldetailsMutation, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery } from '../features/api/Hooks/billingApi.js';
+import { useGetServiceQuery } from '../features/api/Hooks/serviceApi';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
 const BranchName = [
   { id: 1, BranchName: "Indore" },
-  { id: 2, BranchName: "Bhopal"},
-  { id: 3, BranchName: "Gwalior"},
-  { id: 4, BranchName: "Agar"},
-{ id: 4, BranchName: "Ujjain"},
+  { id: 2, BranchName: "Bhopal" },
+  { id: 3, BranchName: "Gwalior" },
+  { id: 4, BranchName: "Agar" },
+  { id: 4, BranchName: "Ujjain" },
 ];
 const FinYears = [
   { id: 1, FinYears: "2023-2024" },
-  { id: 2, FinYears: "2024-2025"},
-  { id: 3, FinYears: "2025-2026"},
+  { id: 2, FinYears: "2024-2025" },
+  { id: 3, FinYears: "2025-2026" },
 ];
 const BillSeries = [
-  { id: 1, BillSerieseName: "OPD CONSULTATION",BillSerieseCode:"OPD" },
-  { id: 2, BillSerieseName: "INVESTIGATION",BillSerieseCode:"INV"},
-  { id: 3, BillSerieseName: "IN-DOOR",BillSerieseCode:"IPD"},
+  { id: 1, BillSerieseName: "OPD CONSULTATION", BillSerieseCode: "OPD" },
+  { id: 2, BillSerieseName: "INVESTIGATION", BillSerieseCode: "INV" },
+  { id: 3, BillSerieseName: "IN-DOOR", BillSerieseCode: "IPD" },
 ];
 const PartyName = [
-  { id: 1, PartyName: "ABB LIMITED"},
-  { id: 2, PartyName: "INSURANCE LIMITED"},
-  { id: 3, PartyName: "ERGO HEALTH"},
+  { id: 1, PartyName: "ABB LIMITED" },
+  { id: 2, PartyName: "INSURANCE LIMITED" },
+  { id: 3, PartyName: "ERGO HEALTH" },
 ];
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
   const routerLocation = useLocation();
   const { bill, patient } = routerLocation.state || {};
-  console.log("pawan test", bill?.billId, patient);
   const [pkbillId, setpkbillId] = useState(bill?.billId);
   const [firstName, setFirstName] = useState("");
   const [containsOption, setContainsOption] = useState("Contains");
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
-  const { data:GetRatelistResponse,  error } = useGetRateListQuery();
+  const { data: GetRatelistResponse, error } = useGetRateListQuery();
   const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
   const [createBillDetails, { data: createBillDetailsResp, isLoading: isCreatingDetails, error: createBillDetailsError }] = useCreateBilldetailsMutation();
   const { data: services } = useGetServiceQuery();
   const { data: getBillMaster } = useGetBillMasterByIdQuery(bill?.billId);
   const { data: getBillDetail } = useGetBillDetailByBillIdQuery(bill?.billId);
-  console.log("getBillMaster", getBillMaster);
-  console.log("getBillMaster1", getBillDetail);
   // Utility: resolve service name from various potential sources
   const resolveServiceName = (input) => {
-    console.log("input", input)
+
     if (!input) return "";
     // If input is an object
     if (typeof input === "object") {
@@ -100,10 +97,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     }
     return "";
   };
-  console.log("CreateBill response", createbilldetails, "loading", isCreating, "error", createBillError)
   const { data: GetRatedetails } = useGetRatelistDetailsQuery();
   const { data: partyNameData } = useGetPartyNameQuery();
-  console.log("GetRatedetails",GetRatedetails?.data)
   const [rate, setRate] = useState("");
   const [billDate, setBillDate] = useState("");
   const [page, setPage] = useState(1);
@@ -130,38 +125,25 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const filteredRateList = rateList.filter(
     (item) => item.rateListId === selectedRateListId
   );
-    console.log("rateListDetails", selectedRateListId);
-        console.log("rateListDetails111", rateListDetails);
   // 3. Filter Details by FK_RateListId
   const filteredRateListDetails = rateListDetails.filter(
     (item) => item.FK_RateListId === selectedRateListId
   );
   // 4. Extract FK_ServiceId from details
-  console.log("filteredRateListDetails", filteredRateListDetails);
   const result = filteredRateListDetails.map(rate => {
     const service = services?.find(
       s => s.serviceId === rate.FK_ServiceId
     );
-    console.log("service",service);
     return {
       ...rate,
       ServiceName: service ? service.ServiceName : null
     };
   });
-  console.log("resultdata",result);
-  console.log("resultdata1",services);
   const serviceIds = filteredRateListDetails.map((item) => item.FK_ServiceId);
   const [tableRows, setTableRows] = useState([]); // main table rows
   const [isViewMode, setIsViewMode] = useState(false);
   const location = useLocation();
-  
-  // useEffect(()=>{
-  //   if(bill?.billId){
 
-  //   }
-  // },[bill?.billId])
-  // Add new row to table
-  // Add a row; if `item` provided, populate fields from the service item
   const handleAddRow = (item) => {
     if (isViewMode) return; // don't add rows when viewing an existing bill
     const newRow = item
@@ -293,7 +275,6 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       setSelectedRateListId(GetRatelistResponse.data[0].rateListId);
     }
   }, [GetRatelistResponse]);
-console.log("CreateRate",GetRatelistResponse?.data);
   // If navigated with a bill in location.state, populate bill and rows
   useEffect(() => {
     const bill = location?.state?.bill;
@@ -302,7 +283,6 @@ console.log("CreateRate",GetRatelistResponse?.data);
       setSelectedPatient(patientFromNav);
     }
     if (bill) {
-      console.log('Loading bill from navigation state:', bill);
       setIsViewMode(true);
       setBillDetails((prev) => ({
         ...prev,
@@ -310,7 +290,15 @@ console.log("CreateRate",GetRatelistResponse?.data);
         BillNo: bill.BillNo || bill.billId || prev.BillNo,
         BillDate: bill.BillDate || prev.BillDate,
         FK_RegId: bill.FK_RegId || prev.FK_RegId,
+        FK_BranchId:bill.FK_BranchId || prev.FK_BranchId,
+        FK_FinYearId:bill.FK_FinYearId || prev.FK_FinYearId,
+        FK_BillSerieseId:bill.FK_BillSerieseId || prev.FK_BillSerieseId,
+        FK_BillTypeId:bill.FK_BillTypeId || prev.FK_BillTypeId,
         FK_DoctorId: bill.FK_DoctorId || prev.FK_DoctorId,
+        FK_CategoryId:bill.FK_CategoryId || prev.FK_CategoryId,
+        FK_ReferredById:bill.FK_ReferredById || prev.FK_ReferredById,
+        FK_PartyId:bill.FK_PartyId || prev.FK_PartyId,
+        FreeReason:bill.FreeReason || prev.FreeReason,
         TotalAmt: bill.TotalAmt || bill.TotalAmount || prev.TotalAmt,
         DiscountAmt: bill.DiscountAmt || bill.Discount || prev.DiscountAmt,
         NetBillAmt: bill.NetBillAmt || bill.NetAmt || prev.NetBillAmt,
@@ -320,13 +308,11 @@ console.log("CreateRate",GetRatelistResponse?.data);
         const service = services?.find(
           s => s.serviceId === rate.FK_ServiceId
         );
-
         return {
           ...rate,
           ServiceName: service ? service.ServiceName : null
         };
       });
-      console.log("pawan chouhan",result)
       // map details if present
       const detailsArr = result// bill.BillDetails || bill.details || bill.billDetails || bill.BillDetail || [];
       if (Array.isArray(detailsArr) && detailsArr.length > 0) {
@@ -344,9 +330,9 @@ console.log("CreateRate",GetRatelistResponse?.data);
         setTableRows(mapped);
       }
     }
-  }, [location]);
-  const handleConfirmYes = async () => {
-    setOpenDialog(false);
+  }, [bill?.billId,getBillDetail, services]);
+
+  const billMasterSubmit = async () => {
     let billMasterPayload;
     try {
       const totals = calculateBillTotals();
@@ -398,123 +384,60 @@ console.log("CreateRate",GetRatelistResponse?.data);
         FK_PaytypeID: billDetails.FK_PaytypeID || 0,
         BillRefID: billDetails.BillRefID || 0,
         Diagnosis: billDetails.Diagnosis || "",
-      };
+      };      
       // Remove invalid PK_BillId if present
       if (Object.prototype.hasOwnProperty.call(billMasterPayload, 'PK_BillId')) {
         if (!billMasterPayload.PK_BillId || Number(billMasterPayload.PK_BillId) <= 0) delete billMasterPayload.PK_BillId;
-      }
-      
-      console.log("Create bill master payload:", billMasterPayload);
-      const billMasterResp = await createBill(billMasterPayload).unwrap();
-      console.log("Create bill master response:", billMasterResp);
-      // setpkbillId(billMasterResp?.billId)
-      // extract id from response
-      // const extractMasterId = (resp) => {
-      //   if (!resp) return null;
-      //   return resp.PK_BillId || resp.pk_billid || resp.billId || resp.id || resp._id || (resp.data && (resp.data.PK_BillId || resp.data.id || resp.data._id));
-      // };
-      // const masterId = extractMasterId(billMasterResp);
-      // console.log("masterId",masterId);
-      // create bill details referring to masterId
-      if (billMasterResp?.billId && Array.isArray(tableRows) && tableRows.length > 0) {
-        const details = tableRows.map((r) => {
-          const res = calculateNetFromAmount(r);
-          const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
-          const qty = Number(r.Qty) || 1;
-          const amount = rate * qty;
-          return {
-            FK_BillId: billMasterResp?.billId,
-            FK_ServiceId: String(r.FK_ServiceId || ""),
-            Rate: rate,
-            Unit: qty,
-            Amount: amount,
-            Discount: Number(res.discountAmount) || Number(r.Discount) || 0,
-            ServiceCharges: Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
-            NetAmt: Number(res.netAmount) || 0,
-            FK_PackageId: r.FK_PackageId || "",
-            IsPerformed: Boolean(r.IsPerformed) || false,
-            Remarks: r.Remarks || "",
-            Received: Boolean(r.Received) || false,
-            FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
-            FK_DoctorID: billDetails.FK_DoctorId ? String(billDetails.FK_DoctorId) : (selectedPatient?.doctorId ? String(selectedPatient.doctorId) : ""),
-          };
-        });
-
-        try {
-          //console.log('Submitting bill details (one-by-one) for master id', masterId);
-          // Post each detail individually (matches provided /api/billdetails example)
-          for (const d of details) {
-            console.log('Posting bill detail:', d);
-            await createBillDetails(d).unwrap();
-          }
-          console.log('All bill details submitted successfully');
-        } catch (dErr) {
-          console.error('Error creating bill details:', dErr);
-          alert('✅ Bill created, but failed to create one or more bill details. Check console for details.');
-          setSelectedPatient(null);
-          return;
-        }
-      }
-
-      setSelectedPatient(null);
-      alert("✅ Bill created successfully!");
+      }    
+      const billMasterResp = await createBill(billMasterPayload).unwrap();    
+      setpkbillId(billMasterResp?.billId)
+        billDeailSubmit(billMasterResp?.billId);    
     } catch (err) {
       console.error("Error creating bill:", err);
-      // Duplicate key / PK_BillId:null retry logic: only on master create
-      // const errString = JSON.stringify(err || {}).toLowerCase();
-      // if (errString.includes('duplicate key') || errString.includes('pk_billid')) {
-      //   try {
-      //     const fallbackId = Date.now();
-      //     console.warn('Retrying createBill with fallback PK_BillId:', fallbackId);
-      //     billMasterPayload.PK_BillId = fallbackId;
-      //     const retryResp = await createBill(billMasterPayload).unwrap();
-      //     console.log('Retry create success:', retryResp);
-      //     const masterId = retryResp.PK_BillId || retryResp.id || retryResp._id || (retryResp.data && (retryResp.data.PK_BillId || retryResp.data.id));
-      //     if (masterId && Array.isArray(tableRows) && tableRows.length > 0) {
-      //       const details = tableRows.map((r) => {
-      //         const res = calculateNetFromAmount(r);
-      //         const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
-      //         const qty = Number(r.Qty) || 1;
-      //         return {
-      //           FK_BillId: String(masterId),
-      //           FK_ServiceId: String(r.FK_ServiceId || ""),
-      //           Rate: rate,
-      //           Unit: qty,
-      //           Amount: rate * qty,
-      //           Discount: Number(res.discountAmount) || 0,
-      //           ServiceCharges: Number(res.serviceChargeAmount) || 0,
-      //           NetAmt: Number(res.netAmount) || 0,
-      //           FK_PackageId: r.FK_PackageId || "",
-      //           IsPerformed: Boolean(r.IsPerformed) || false,
-      //           Remarks: r.Remarks || "",
-      //           Received: Boolean(r.Received) || false,
-      //           FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
-      //           FK_DoctorID: billDetails.FK_DoctorId ? String(billDetails.FK_DoctorId) : (selectedPatient?.doctorId ? String(selectedPatient.doctorId) : ""),
-      //         };
-      //       });
-      //       try {
-      //         for (const d of details) {
-      //           console.log('Retry posting detail:', d);
-      //           await createBillDetails(d).unwrap();
-      //         }
-      //       } catch (dErr) {
-      //         console.error('Retry details failed:', dErr);
-      //       }
-      //     }
-      //     setSelectedPatient(null);
-      //     alert('✅ Bill created successfully (with fallback PK_BillId)');
-      //     return;
-      //   } catch (err2) {
-      //     console.error('Retry failed:', err2);
-      //   }
-      // }
-      // if (err && err.data) console.error("Server error data:", err.data);
-      // alert("❌ Error creating bill. Check console for details.");
     }
+  }
+  const billDeailSubmit = async (billId) => {    
+    if (billId && Array.isArray(tableRows) && tableRows.length > 0) {
+      const details = tableRows.map((r) => {
+        const res = calculateNetFromAmount(r);
+        const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
+        const qty = Number(r.Qty) || 1;
+        const amount = rate * qty;
+        return {
+          FK_BillId: billId,
+          FK_ServiceId: String(r.FK_ServiceId || ""),
+          Rate: rate,
+          Unit: qty,
+          Amount: amount,
+          Discount: Number(res.discountAmount) || Number(r.Discount) || 0,
+          ServiceCharges: Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
+          NetAmt: Number(res.netAmount) || 0,
+          FK_PackageId: r.FK_PackageId || "",
+          IsPerformed: Boolean(r.IsPerformed) || false,
+          Remarks: r.Remarks || "",
+          Received: Boolean(r.Received) || false,
+          FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
+          FK_DoctorID: billDetails.FK_DoctorId ? String(billDetails.FK_DoctorId) : (selectedPatient?.doctorId ? String(selectedPatient.doctorId) : ""),
+        };
+      });
+      try {
+        for (const d of details) {       
+          await createBillDetails(d).unwrap();         
+        }
+        alert("✅ Bill created successfully!");
+      } catch (dErr) {
+        console.error('Error creating bill details:', dErr);
+        alert('✅ Bill created, but failed to create one or more bill details. Check console for details.');
+        setSelectedPatient(null);
+        return;
+      }
+    }
+  }
+  const handleConfirmYes =() => {
+    setOpenDialog(false);
+    billMasterSubmit();
+    setSelectedPatient(null);
   };
-  // useEffect(() => {
-  //   createRatelist();   // 🔥 API will run here
-  // }, []);
   const handleInputChange = (index, field, value) => {
     setTableRows(prev =>
       prev.map((row, i) => {
@@ -558,7 +481,7 @@ console.log("CreateRate",GetRatelistResponse?.data);
   // If user cancels (No)
   const handleConfirmNo = () => {
     setOpenDialog(false);
-    setSelectedPatient(null); // Go back to patient list
+   // setSelectedPatient(null); // Go back to patient list
   };
   // Extract patients safely
   const patients = Array.isArray(patientsResp)
@@ -603,7 +526,6 @@ console.log("CreateRate",GetRatelistResponse?.data);
 
   // 🧾 Submit handler
   const handleSubmit = () => {
-    setOpenDialog(true);
     setOpenDialog(true);
   };
   const handleDeleteRow = (index) => {
@@ -662,7 +584,6 @@ console.log("CreateRate",GetRatelistResponse?.data);
     BillRefID: "",
     Diagnosis: "",
   });
-  console.log("Billing", billDetails);
   return (
     <Box
       sx={{
@@ -671,7 +592,7 @@ console.log("CreateRate",GetRatelistResponse?.data);
         p: 2,
         mt: 8,
         minHeight: "100vh",
-        ml: { xs: 0, md: 5},
+        ml: { xs: 0, md: 5 },
       }}
     >
       {/* =================== PATIENT SEARCH TABLE =================== */}
@@ -914,8 +835,8 @@ console.log("CreateRate",GetRatelistResponse?.data);
                     InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>                  
-                   <TextField
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
                     select
                     fullWidth
                     label="Select Branch"
@@ -932,8 +853,8 @@ console.log("CreateRate",GetRatelistResponse?.data);
                     ))}
                   </TextField>
                 </Grid>
-                <Grid item xs={12} sm={6} md={3}>                 
-                   <TextField
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
                     select
                     fullWidth
                     label="Select FinYear"
@@ -961,8 +882,8 @@ console.log("CreateRate",GetRatelistResponse?.data);
                 ></Grid>
               </Grid>
               <Grid container spacing={2} sx={{ mt: 3 }}>
-                <Grid item xs={12} sm={6} md={3}>                  
-                   <TextField
+                <Grid item xs={12} sm={6} md={3}>
+                  <TextField
                     select
                     fullWidth
                     label="Select BillSeries"
@@ -1045,93 +966,92 @@ console.log("CreateRate",GetRatelistResponse?.data);
                   flexWrap="wrap"
                 ></Grid>
                 <Grid container spacing={2} sx={{ mt: 3 }}>
-                  <Grid item xs={12} sm={6} md={3}>                    
-                  <TextField
-                    select
-                    fullWidth
-                    label="Reffered By"
-                    value={billDetails.FK_ReferredById || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_ReferredById: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
-                    disabled={isViewMode}
-                    sx={{ width: "230px", height: "10px" }}
-                  >
-                    <MenuItem value=""></MenuItem>
-                    {doctorList.map((doc) => (
-                      <MenuItem key={doc.id} value={doc.id}>
-                        {doc.name}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>                    
+                  <Grid item xs={12} sm={6} md={3}>
                     <TextField
-                    select
-                    fullWidth
-                    label="Select Party Name"
-                    value={billDetails.FK_PartyId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_PartyId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
-                    disabled={isViewMode}
-                    sx={{ width: "230px", height: "10px" }}
-                  >
-                    <MenuItem value=""></MenuItem>
-                    {PartyName.map((prt) => (
-                      <MenuItem key={prt.id} value={prt.id}>
-                        {prt.PartyName}
-                      </MenuItem>
-                    ))}
-                  </TextField>
+                      select
+                      fullWidth
+                      label="Reffered By"
+                      value={billDetails.FK_ReferredById || ""}
+                      onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_ReferredById: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                      disabled={isViewMode}
+                      sx={{ width: "230px", height: "10px" }}
+                    >
+                      <MenuItem value=""></MenuItem>
+                      {doctorList.map((doc) => (
+                        <MenuItem key={doc.id} value={doc.id}>
+                          {doc.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <TextField
-                        label="Free discount Reason"
-                        size="small"
-                        fullWidth
-                        disabled={isViewMode}
-                        value={billDetails.FreeReason}
-                        onChange={(e) =>
-                          setBillDetails((prev) => ({
-                            ...prev,
-                            FreeReason: e.target.value,
-                          }))
+                      select
+                      fullWidth
+                      label="Select Party Name"
+                      value={billDetails.FK_PartyId || ""}
+                      onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_PartyId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                      disabled={isViewMode}
+                      sx={{ width: "230px", height: "10px" }}
+                    >
+                      <MenuItem value=""></MenuItem>
+                      {PartyName.map((prt) => (
+                        <MenuItem key={prt.id} value={prt.id}>
+                          {prt.PartyName}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      label="Free discount Reason"
+                      size="small"
+                      fullWidth
+                      disabled={isViewMode}
+                      value={billDetails.FreeReason}
+                      onChange={(e) =>
+                        setBillDetails((prev) => ({
+                          ...prev,
+                          FreeReason: e.target.value,
+                        }))
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      select
+                      fullWidth
+                      label="Rate Type"
+                      name="rateListId"              // ✅ REQUIRED for form submit
+                      value={selectedRateListId}
+                      sx={{ width: "230px" }}
+
+                      onClick={() => {
+                        if (selectedRateListId) {
+                          setOpenPopup(true);
                         }
-                      />
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                  <TextField
-                  select
-                  fullWidth
-                  label="Rate Type"
-                  name="rateListId"              // ✅ REQUIRED for form submit
-                  value={selectedRateListId}
-                  sx={{ width: "230px" }}
-
-                  onClick={() => {
-                    if (selectedRateListId) {
-                      setOpenPopup(true);
-                    }
-                  }}
-
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    console.log("valuepawan",value);
-                    setSelectedRateListId(value);
-                         setBillDetails(prev => ({
+                      }}
+                     disabled={isViewMode}
+                      onChange={(e) => {
+                        const value = e.target.value;                      
+                        setSelectedRateListId(value);
+                        setBillDetails(prev => ({
                           ...prev,
                           RateType: value
                         }));
-                    setSelectedServices([]);
+                        setSelectedServices([]);
 
-                    if (value) {
-                      setOpenPopup(true);
-                    }
-                  }}
-                >
-                  {GetRatelistResponse?.data?.map((item) => (
-                    <MenuItem key={item._id} value={item.rateListId}>
-                      {item.RateListName}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                        if (value) {
+                          setOpenPopup(true);
+                        }
+                      }}
+                    >
+                      {GetRatelistResponse?.data?.map((item) => (
+                        <MenuItem key={item._id} value={item.rateListId}>
+                          {item.RateListName}
+                        </MenuItem>
+                      ))}
+                    </TextField>
 
                   </Grid>
                   <Grid
@@ -1318,11 +1238,11 @@ console.log("CreateRate",GetRatelistResponse?.data);
                 {/* Popup */}
                 <Dialog open={openPopup} onClose={() => { setOpenPopup(false); setEditingRowIndex(null); }} fullWidth maxWidth="md">
                   <DialogTitle>{editingRowIndex !== null ? 'Choose service to update row' : 'Select Services'}</DialogTitle>
-                  <DialogContent>                    
-                    {result?.length ? (                     
+                  <DialogContent>
+                    {result?.length ? (
                       // Deduplicate by FK_ServiceId so duplicate SRV codes are not shown repeatedly
                       Array.from(new Map((result || []).map(i => [(i.serviceName || i._id || i.id), i])).values()).map((item, idx) => (
-                         <div
+                        <div
                           key={item.FK_ServiceId || item._id || item.id || idx}
                           style={{
                             display: 'grid',
@@ -1348,7 +1268,7 @@ console.log("CreateRate",GetRatelistResponse?.data);
                               });
                             }
                           }}
-                        >   
+                        >
                           <Checkbox
                             checked={selectedServices.some(
                               (service) => service.FK_ServiceId === item.FK_ServiceId
@@ -1530,12 +1450,12 @@ console.log("CreateRate",GetRatelistResponse?.data);
         </DialogActions>
       </Dialog>
       {/* // pagination */}
-      <Box sx={{ display:'flex', justifyContent:'center', mt:2 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
         <Pagination
-          count = {Math.ceil(filteredPatients.length / rowsPerPage)}
-          page = {page}
-          onChange={(e,value) => setPage(value)}
-          color = 'primary'
+          count={Math.ceil(filteredPatients.length / rowsPerPage)}
+          page={page}
+          onChange={(e, value) => setPage(value)}
+          color='primary'
         />
 
       </Box>

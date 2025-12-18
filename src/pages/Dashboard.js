@@ -307,7 +307,7 @@ export default function Dashboard() {
                   ? billdetails
                   : [];
                 if (!selectedPatientForBills) return <Typography>No patient selected.</Typography>;
-
+            console.log("checkdata",billdetails?.data);
                 // determine candidate registration ids (try multiple possibilities)
                 const candidateIds = [];
                 const addCandidate = (v) => {
@@ -322,7 +322,7 @@ export default function Dashboard() {
                 addCandidate(selectedPatientForBills.patientId);
                 addCandidate(selectedPatientForBills.oldNo);
                 addCandidate(selectedPatientForBills.oldRegId || selectedPatientForBills.OLDRegID);
-
+               
                 // normalize bills array
                 const allBillsArr = allBills || [];
 
