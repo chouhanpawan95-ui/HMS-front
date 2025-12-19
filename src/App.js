@@ -15,7 +15,7 @@ import DistrictMaster from "./Master/Location/DistrictMaster";
 import AddUsermaster from "./Master/UserManagement/AddUsermaster";
 import UserMaster from "./Master/UserManagement/UserMaster";
 import UpdateUser from "./Master/UserManagement/UpdateUser";
-import ServiceDeptMaster from "./Master/BillingMaster/ServiceDeptMaster";
+import ServiceMaster from "./Master/BillingMaster/ServiceMaster";
 import CityMaster from "./Master/Location/CityMaster";
 import ServiceCatMaster from "./Master/BillingMaster/ServiceCatMaster";
 import ServiceDepartmentMaster from "./Master/BillingMaster/ServiceDepartmentMaster";
@@ -44,8 +44,8 @@ function App() {
               <Route path="/UserMaster" element={<UserMaster />} />
               <Route path="/UpdateUser/:id" element={<UpdateUser />} />
               <Route
-                path="/ServiceDeptMaster"
-                element={<ServiceDeptMaster />}
+                path="/ServiceMaster"
+                element={<ServiceMaster />}
               />
               <Route path="/CityMaster" element={<CityMaster />} />
               <Route path="/ServiceCatMaster" element={<ServiceCatMaster />} />

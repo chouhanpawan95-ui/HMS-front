@@ -258,11 +258,11 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               <Collapse in={openMenu.bm} timeout='auto' unmountOnExit >
               <List component='div' disablePadding>
 
-                <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceDeptMaster" onClick={handleMenuClick}>
+                <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
-                      primary="Service Dept. Master"
+                      primary="Service Master"
                       primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                     />
                   </ListItemButton>

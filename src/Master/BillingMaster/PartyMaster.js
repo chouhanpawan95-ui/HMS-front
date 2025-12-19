@@ -25,7 +25,8 @@ const PartyMaster = () => {
   const [selectedRateList, setSelectedRateList] = useState("");
   const { data: rateListResponse, isLoading: isRateListLoading } =
     useGetRateListQuery();
-  const rateList = rateListResponse ?? [];
+  // Normalize API response to an array (accept either an array or an object with `.data`)
+  const rateList = Array.isArray(rateListResponse) ? rateListResponse : rateListResponse?.data ?? [];
   console.log("RateList Response:", rateListResponse);
   console.log("RateList Data:", rateList);
 
