@@ -316,6 +316,39 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             </List>
           </Collapse>
 
+          <Collapse in={openMenu.um} timeout='auto' unmountOnExit>
+              <List component='div' disablePadding>
+                <ListItemButton sx={{pl:6}} onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleToggle('s');
+                }}>
+                  <ListItemIcon sx={{minWidth:30}}>
+                    <ArrowRightIcon sx={{fontSize:18,color:'#fff'}}/>
+                  </ListItemIcon>
+
+                  <ListItemText primary='Schedule' sx={{color:'#fff',fontSize:18}}/>
+                  <IconButton edge='end' size="small" sx={{ml:1,color:'#fff'}}>
+                    {openMenu.s?<ExpandLess/> : <ExpandMore/> }
+                  </IconButton>
+                </ListItemButton>
+
+                <Collapse in={openMenu.s} timeout='auto' unmountOnExit>
+                  <List component='div' disablePadding>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/OPDSchedule' onClick={handleMenuClick}>
+                    <ListItemIcon sx={{minWidth:30}}/>
+                    <ListItemText
+                      primary='OPD Appointment Schedule'
+                      primaryTypographyProps={{fontSize:'0.9rem', color:'#fff' }} 
+                    />
+                    </ListItemButton>
+
+                  </List>
+                </Collapse>
+
+              </List>
+          </Collapse>
+
         </List>
 
 

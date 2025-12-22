@@ -39,6 +39,7 @@ import Loader from "../../component/Loader";
 import { useEffect, useState } from "react";
 import style from "../BillingMaster/RateListMaster.module.css";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from '@mui/icons-material/Edit';
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { Discount } from "@mui/icons-material";
@@ -191,47 +192,80 @@ const RateListMaster = () => {
     : [];
 
   // Merge rateList + rateListDetail
-  const mergedData = infoList.map((rl) => {
-    const rlId =
-      rl._id ?? rl.ratelistId ?? rl.RateListId ?? rl.rateListId ?? "";
+  // const mergedData = infoList.map((rl) => {
+  //   const rlId =
+  //     rl._id ?? rl.ratelistId ?? rl.RateListId ?? rl.rateListId ?? "";
 
-    const detailsForRl = infoDetail.filter((r) => {
-      const fk =
-        r.FK_RateListId ??
-        r.FK_rateListId ??
-        r.ratelistId ??
-        r.rateListId ??
-        r.RateListMaster ??
-        r.RateListId ??
-        r.fk_rate_list_id ??
-        r.FK_RateList ?? "";
-      return String(fk) === String(rlId);
+  //   const detailsForRl = infoDetail.filter((r) => {
+  //     const fk =
+  //       r.FK_RateListId ??
+  //       r.FK_rateListId ??
+  //       r.ratelistId ??
+  //       r.rateListId ??
+  //       r.RateListMaster ??
+  //       r.RateListId ??
+  //       r.fk_rate_list_id ??
+  //       r.FK_RateList ??
+  //       "";
+  //     return String(fk) === String(rlId);
+  //   });
+  //   const firstDetail = detailsForRl[0];
+  //   return {
+  //     FK_RateListId: rlId,
+  //     BranchId: rl.FK_BranchId ?? "--",
+  //     RateListName: rl.RateListName ?? "--",
+  //     StartDate:
+  //       rl?.StartDate ?? rl?.startdate
+  //         ? (rl?.StartDate ?? rl?.startdate).split("T")[0]
+  //         : "--",
+  //     Validupto:
+  //       rl?.Validupto ?? rl?.validupto ?? rl?.validupto
+  //         ? (rl?.Validupto ?? rl?.validupto).split("T")[0]
+  //         : "--",
+  //     DetailsCount: detailsForRl.length,
+  //     RateDelux: firstDetail?.RateDelux ?? "--",
+  //     RateGeneral: firstDetail?.RateGeneral ?? "--",
+  //     RatePrivate: firstDetail?.RatePrivate ?? "--",
+  //     RateSemiDelux: firstDetail?.RateSemiDelux ?? "--",
+  //     RateSemiPrivate: firstDetail?.RateSemiPrivate ?? "--",
+  //     FK_ServiceId: firstDetail?.FK_ServiceId ?? "--",
+  //     MaxDiscountLimit: firstDetail?.MaxDiscountLimit ?? "--",
+  //     ServiceCharge: firstDetail?.ServiceCharge ?? "--",
+  //     Discount: firstDetail?.Discount ?? "--",
+  //   };
+  // });
+
+  const mergedData = infoDetail.map((detail) => {
+    const rl = infoList.find((r) => {
+      const rlId = 
+        r._id ?? r.ratelistId ?? r.RateListId ?? r.ratelistId ?? '';
+      const fk = 
+        detail.FK_RateListId ??
+        detail.FK_rateListId ??
+        detail.ratelistId ??
+        detail.RateListId ??
+        '';
+      return String(rlId) === String(fk);
     });
-    const firstDetail = detailsForRl[0];
-    return {
-      FK_RateListId: rlId,
-      BranchId: rl.FK_BranchId ?? "--",
-      RateListName: rl.RateListName ?? "--",
-      StartDate:
-        rl?.StartDate ?? rl?.startdate
-          ? (rl?.StartDate ?? rl?.startdate).split("T")[0]
-          : "--",
-      Validupto:
-        rl?.Validupto ?? rl?.validupto ?? rl?.validupto
-          ? (rl?.Validupto ?? rl?.validupto).split("T")[0]
-          : "--",
-      DetailsCount: detailsForRl.length,
-      RateDelux: firstDetail?.RateDelux ?? "--",
-      RateGeneral: firstDetail?.RateGeneral ?? "--",
-      RatePrivate: firstDetail?.RatePrivate ?? "--",
-      RateSemiDelux: firstDetail?.RateSemiDelux ?? "--",
-      RateSemiPrivate: firstDetail?.RateSemiPrivate ?? "--",
-      FK_ServiceId: firstDetail?.FK_ServiceId ?? "--",
-      MaxDiscountLimit: firstDetail?.MaxDiscountLimit ?? "--",
-      ServiceCharge: firstDetail?.ServiceCharge ?? "--",
-      Discount: firstDetail?.Discount ?? "--",
+    if (!rl) return null;
+    return{
+      FK_RateListId:rl._id ?? rl.ratelistId,
+      RateListName:rl.RateListName,
+      BranchId: rl.FK_BranchId,
+      StartDate: (rl.StartDate ?? rl.startdate)?.split('T')[0]??'--',
+      Validupto:(rl.Validupto ?? rl.validupto)?.split('T')[0] ?? '--',
+
+      FK_ServiceId:detail.FK_ServiceId,
+      RateGeneral:detail.RateGeneral,
+      RateSemiDelux:detail.RateSemiDelux,
+      RateDelux:detail.RateDelux,
+      RatePrivate:detail.RatePrivate,
+      RateSemiPrivate:detail.RateSemiPrivate,
+      Discount:detail.Discount,
+      MaxDiscountLimit:detail.MaxDiscountLimit,
+      ServiceCharge:detail.ServiceCharge,
     };
-  });
+  }).filter(Boolean);
 
   // Apply search + filters
   const filteredRows = mergedData.filter((row) => {
@@ -348,7 +382,8 @@ const RateListMaster = () => {
 
   const deleteRow = async (index) => {
     const row = rows[index];
-    const idToDelete = row._id ?? row.rateListDetailId ?? row.id ?? row.rateListDetail_Id;
+    const idToDelete =
+      row._id ?? row.rateListDetailId ?? row.id ?? row.rateListDetail_Id;
     if (idToDelete) {
       try {
         await deleteRateListDetail(idToDelete).unwrap();
@@ -366,7 +401,12 @@ const RateListMaster = () => {
 
   const handleDeleteRateList = async (rateListIdToDelete) => {
     if (!rateListIdToDelete) return;
-    if (!window.confirm("Are you sure you want to delete this Rate List and its details?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this Rate List and its details?"
+      )
+    )
+      return;
     try {
       await deleteRateList(rateListIdToDelete).unwrap();
       alert("Rate list deleted successfully");
@@ -672,7 +712,7 @@ const RateListMaster = () => {
             {/* Table */}
             <TableContainer
               component={Paper}
-              sx={{ maxHeight: 500, borderRadius: 2 }}
+              sx={{ maxHeight: 500, borderRadius: 2}}
             >
               <Table stickyHeader size="small">
                 <TableHead>
@@ -681,7 +721,6 @@ const RateListMaster = () => {
                       "ServiceId",
                       "BranchId",
                       "RateList Name",
-                      "Details",
                       "StartDate",
                       "Validupto",
                       "General",
@@ -708,13 +747,13 @@ const RateListMaster = () => {
                   </TableRow>
                 </TableHead>
 
-                <TableBody>
+                <TableBody backgroundColor='red'>
                   {paginatedRows.map((row, index) => (
                     <TableRow key={index} hover>
                       <TableCell>{row.FK_ServiceId}</TableCell>
                       <TableCell>{row.BranchId}</TableCell>
                       <TableCell>{row.RateListName}</TableCell>
-                      <TableCell>{row.DetailsCount}</TableCell>
+                      {/* <TableCell>{row.DetailsCount}</TableCell> */}
                       <TableCell>{row.StartDate}</TableCell>
                       <TableCell>{row.Validupto}</TableCell>
                       <TableCell>{row.RateGeneral}</TableCell>
@@ -727,23 +766,23 @@ const RateListMaster = () => {
                       <TableCell>{row.ServiceCharge}</TableCell>
 
                       <TableCell>
+                        <Box sx={{display:'flex'}}>
                         <Button
                           size="small"
                           onClick={() =>
                             navigate(`/RateListMaster/${row.FK_RateListId}`)
                           }
-                          variant="contained"
                         >
-                          Edit
+                          <EditIcon/>
                         </Button>
                         <Button
                           size="small"
-                          onClick={() => handleDeleteRateList(row.FK_RateListId)}
-                          variant="contained"
-                          sx={{mt:1}}
-                        >
-                          Delete
+                          onClick={() =>
+                            handleDeleteRateList(row.FK_RateListId)
+                          } >
+                          <DeleteIcon/>
                         </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -831,11 +870,11 @@ const RateListMaster = () => {
         <Paper>
           {isEdit && (
             <>
-              <Typography variant="h5" sx={{ mb: 2 }} className={style.header}>
+              <Typography variant="h5" sx={{ mb: 2 }}>
                 RateList Master
               </Typography>
 
-              <Grid container spacing={2} >
+              <Grid container spacing={2}>
                 <Grid item xs={12} mb={4}>
                   <TextField
                     label="RateList Name"
@@ -873,17 +912,14 @@ const RateListMaster = () => {
             </>
           )}
 
-          <Typography variant="h4" mb={2} className={style.header}>
+          <Typography variant="h4" mb={2} >
             RateList Detail
           </Typography>
 
-          <form onSubmit={handleSubmit(submitDetails)} className={style.form}>
-            <Button variant="contained" onClick={() => setOpenPopup(true)}>
-              Select Services
-            </Button>
-
-            <TableContainer component={Paper} sx={{ mt: 2 }}>
-              <Table size="small">
+          <form onSubmit={handleSubmit(submitDetails)}>
+            <TableContainer component={Paper}
+              sx={{ maxHeight: 500, borderRadius: 2 }}>
+              <Table stickyHeader size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>Service</TableCell>
@@ -892,15 +928,38 @@ const RateListMaster = () => {
                     <TableCell>Private</TableCell>
                     <TableCell>Semi Delux</TableCell>
                     <TableCell>Delux</TableCell>
+                    <TableCell>Discount</TableCell>
+                    <TableCell>MaxDiscount</TableCell>
+                    <TableCell>Service Charge</TableCell>
                     <TableCell>Action</TableCell>
                   </TableRow>
                 </TableHead>
+                
                 <TableBody>
                   {rows.map((row, idx) => (
                     <TableRow key={idx}>
                       <TableCell>
-                        {serviceLabelById(row.FK_ServiceId)}
+                        <TextField
+                          fullWidth
+                          size="small"
+                          select
+                          label="Service"
+                          value={row.FK_ServiceId || ""}
+                          onClick={() => {
+                            setEditingRowIndex(idx);
+                            setOpenPopup(true);
+                          }}
+                          SelectProps={{
+                            open: false, // IMPORTANT: disables default dropdown
+                          }}
+                        >
+                          <MenuItem value={row.FK_ServiceId}>
+                            {serviceLabelById(row.FK_ServiceId) ||
+                              "Select Service"}
+                          </MenuItem>
+                        </TextField>
                       </TableCell>
+
                       <TableCell>
                         <TextField
                           size="small"
@@ -955,7 +1014,42 @@ const RateListMaster = () => {
                         />
                       </TableCell>
                       <TableCell>
-                        <Button color="error" onClick={() => deleteRow(idx)}>
+                        <TextField
+                          size="small"
+                          value={row.Discount}
+                          onChange={(e) =>
+                            handleRowChange(idx, "Discount", e.target.value)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          value={row.MaxDiscountLimit}
+                          onChange={(e) =>
+                            handleRowChange(
+                              idx,
+                              "MaxDiscountLimit",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <TextField
+                          size="small"
+                          value={row.ServiceCharge}
+                          onChange={(e) =>
+                            handleRowChange(
+                              idx,
+                              "ServiceCharge",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </TableCell>
+                      <TableCell>
+                        <Button aria-label="delete" onClick={() => deleteRow(idx)}>
                           <DeleteIcon />
                         </Button>
                       </TableCell>
@@ -973,15 +1067,16 @@ const RateListMaster = () => {
             >
               <DialogTitle>Select Services</DialogTitle>
               <DialogContent>
-                {Array.isArray(normalizedServices) && normalizedServices.map((s) => (
-                  <Box key={s.id} display="flex" alignItems="center" mb={1}>
-                    <Checkbox
-                      checked={selectdServiceId.includes(s.id)}
-                      onChange={() => toggleService(s.id)}
-                    />
-                    <Typography>{s.label}</Typography>
-                  </Box>
-                ))}
+                {Array.isArray(normalizedServices) &&
+                  normalizedServices.map((s) => (
+                    <Box key={s.id} display="flex" alignItems="center" mb={1}>
+                      <Checkbox
+                        checked={selectdServiceId.includes(s.id)}
+                        onChange={() => toggleService(s.id)}
+                      />
+                      <Typography>{s.label}</Typography>
+                    </Box>
+                  ))}
 
                 <Box mt={2} display="flex" justifyContent="flex-end" gap={2}>
                   <Button onClick={() => setOpenPopup(false)}>Cancel</Button>
@@ -993,7 +1088,7 @@ const RateListMaster = () => {
             </Dialog>
           </form>
 
-          <Box sx={{ mt: 3, display: "flex", gap: 2 }}>
+          <Box sx={{ mt: 3, display: "flex", gap: 2,justifyContent: 'space-between' }}>
             <Button onClick={() => setActiveTab(1)} variant="contained">
               Back
             </Button>
