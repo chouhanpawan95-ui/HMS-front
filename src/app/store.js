@@ -8,6 +8,7 @@ import {rateListApi} from '../features/api/Hooks/ratelistApi';
 import {serviceApi} from '../features/api/Hooks/serviceApi';
 import {partyApi} from '../features/api/Hooks/partyApi';
 import { locationApi } from "../features/api/locationApi";
+import {scheduleApi} from "../features/api/scheduleApi";
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     [serviceApi.reducerPath]: serviceApi.reducer,
     [partyApi.reducerPath]: partyApi.reducer,
     [locationApi.reducerPath]: locationApi.reducer,
+    [scheduleApi.reducerPath]:scheduleApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -30,7 +32,8 @@ export const store = configureStore({
       serviceApi.middleware,
       rateListApi.middleware,
       partyApi.middleware,
-      locationApi.middleware
+      locationApi.middleware,
+      scheduleApi.middleware,
     ),
 });
 

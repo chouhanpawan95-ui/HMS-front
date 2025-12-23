@@ -15,13 +15,14 @@ import DistrictMaster from "./Master/Location/DistrictMaster";
 import AddUsermaster from "./Master/UserManagement/AddUsermaster";
 import UserMaster from "./Master/UserManagement/UserMaster";
 import UpdateUser from "./Master/UserManagement/UpdateUser";
-import ServiceDeptMaster from "./Master/BillingMaster/ServiceDeptMaster";
+import ServiceMaster from "./Master/BillingMaster/ServiceMaster";
 import CityMaster from "./Master/Location/CityMaster";
 import ServiceCatMaster from "./Master/BillingMaster/ServiceCatMaster";
 import ServiceDepartmentMaster from "./Master/BillingMaster/ServiceDepartmentMaster";
 import RateListMaster from "./Master/BillingMaster/RateListMaster";
 import PartyMaster from "./Master/BillingMaster/PartyMaster";
 import PackageMaster from "./Master/BillingMaster/PackageMaster";
+import OPDSchedule from "./Master/ScheduleMaster/OPDSchedule";
 
 function App() {
   return (
@@ -44,8 +45,8 @@ function App() {
               <Route path="/UserMaster" element={<UserMaster />} />
               <Route path="/UpdateUser/:id" element={<UpdateUser />} />
               <Route
-                path="/ServiceDeptMaster"
-                element={<ServiceDeptMaster />}
+                path="/ServiceMaster"
+                element={<ServiceMaster />}
               />
               <Route path="/CityMaster" element={<CityMaster />} />
               <Route path="/ServiceCatMaster" element={<ServiceCatMaster />} />
@@ -58,6 +59,7 @@ function App() {
               <Route path="/PartyMaster" element={<PartyMaster />} />
               <Route path="/PackageMaster" element={<PackageMaster />} />
               <Route path="/PackageMaster/:id" element={<PackageMaster />} />
+              <Route path="/OPDSchedule" element={<OPDSchedule/>}/>
 
               {/* FIXED: Billinginformation route */}
               <Route
