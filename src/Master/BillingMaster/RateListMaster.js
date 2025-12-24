@@ -99,7 +99,7 @@ const RateListMaster = () => {
   const result = normalizedServices;
   const { data: ratelist = [], isLoading: isRateListLoading } =
     useGetRateListQuery();
-  console.log("Test project1", ratelist);
+  console.log("Test project1", ratelist?.data??[]);
   const { data: ratelistdetail, isLoading: isRateListDetailLoading } =
     useGetRateListDetailQuery();
   console.log("Test project2", ratelistdetail);
