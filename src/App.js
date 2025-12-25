@@ -23,6 +23,7 @@ import RateListMaster from "./Master/BillingMaster/RateListMaster";
 import PartyMaster from "./Master/BillingMaster/PartyMaster";
 import PackageMaster from "./Master/BillingMaster/PackageMaster";
 import OPDSchedule from "./Master/ScheduleMaster/OPDSchedule";
+import AppointmentManager from "./Master/ScheduleMaster/AppointmentManager";
 
 function App() {
   return (
@@ -60,6 +61,7 @@ function App() {
               <Route path="/PackageMaster" element={<PackageMaster />} />
               <Route path="/PackageMaster/:id" element={<PackageMaster />} />
               <Route path="/OPDSchedule" element={<OPDSchedule/>}/>
+              <Route path="/AppointmentManager" element={<AppointmentManager/>} />
 
               {/* FIXED: Billinginformation route */}
               <Route
