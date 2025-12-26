@@ -48,34 +48,34 @@ export const scheduleApi = createApi ({
         method:'POST',
         body:DoctorOpdScheduleTimeDetail
       }), invalidatesTags:['OPDScheduleTimeDetail']
-    })
+    }),
 
     // opd appointment
-    // getOPDAppointment:builder.query({
-    //   query:() => 'opdappointments',
-    //   providesTags:['OPDAppointment'],
-    //   transformResponse:(res) => res.data || [],
-    // }),
-    // createOPDAppointment:builder.mutation({
-    //   query:(opdappointments) => ({
-    //     url:'opdappointments',
-    //     method:'POST',
-    //     body:opdappointments,
-    //   }), invalidatesTags:['OPDAppointment'],
-    // }),
-    // updateOPDAppointment:builder.mutation({
-    //   query:({id,payload}) => ({
-    //     url:`opdappointments/${id}`,
-    //     method:'PUT',
-    //     body:payload,
-    //   }),invalidatesTags:['OPDAppointment'],
-    // }),
-    // deleteOPDAppointment:builder.mutation({
-    //   query:({id}) => ({
-    //     method:'DELETE',
-    //     url:`opdappointments/${id}`
-    //   }),invalidatesTags:['OPDAppointment']
-    // }),
+    getOPDAppointment:builder.query({
+      query:() => 'opdappointments',
+      providesTags:['OPDAppointment'],
+      transformResponse:(res) => res.data || [],
+    }),
+    createOPDAppointment:builder.mutation({
+      query:(opdappointments) => ({
+        url:'opdappointments',
+        method:'POST',
+        body:opdappointments,
+      }), invalidatesTags:['OPDAppointment'],
+    }),
+    updateOPDAppointment:builder.mutation({
+      query:({id,payload}) => ({
+        url:`opdappointments/${id}`,
+        method:'PUT',
+        body:payload,
+      }),invalidatesTags:['OPDAppointment'],
+    }),
+    deleteOPDAppointment:builder.mutation({
+      query:({id}) => ({
+        method:'DELETE',
+        url:`opdappointments/${id}`
+      }),invalidatesTags:['OPDAppointment']
+    }),
 
   })
 });
@@ -88,10 +88,10 @@ export const {
   useGetOPDScheduleTimeDetailQuery,
   useCreateOPDScheduleTimeDetailMutation,
 
-  // useGetOPDAppointmentQuery,
-  // useCreateOPDAppointmentMutation,
-  // useUpdateOPDAppointmentMutation,
-  // useDeleteOPDAppointmentMutation,
+  useGetOPDAppointmentQuery,
+  useCreateOPDAppointmentMutation,
+  useUpdateOPDAppointmentMutation,
+  useDeleteOPDAppointmentMutation,
 
 
 } = scheduleApi;

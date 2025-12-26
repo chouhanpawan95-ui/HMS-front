@@ -37,18 +37,13 @@ const OPDSchedule = () => {
         fkBranchId: form.fkBranchId,
         fkScheduleTypeId: form.fkScheduleTypeId,
         fkDoctorId: form.fkDoctorId,
-
         scheduleDate: dayjs(form.scheduleDate).format("YYYY-MM-DD"),
-        // toDate: dayjs(form.toDate).format("YYYY-MM-DD"),
-
         fromApptTime: dayjs(form.fromApptTime).format("HH:mm"),
         toApptTime: dayjs(form.toApptTime).format("HH:mm"),
-
         intervalMinuit: Number(form.intervalMinuit),
         maxLimitSlot: Number(form.maxLimitSlot),
         isActive: true,
       }).unwrap();
-
       reset();
       alert("Doctor Schedule Created");
     } catch (err) {

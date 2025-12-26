@@ -747,7 +747,7 @@ const RateListMaster = () => {
                   </TableRow>
                 </TableHead>
 
-                <TableBody backgroundColor='red'>
+                <TableBody >
                   {paginatedRows.map((row, index) => (
                     <TableRow key={index} hover>
                       <TableCell>{row.FK_ServiceId}</TableCell>
