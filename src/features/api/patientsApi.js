@@ -14,6 +14,8 @@ const baseQuery = fetchBaseQuery({
 export const patientsApi = createApi({
   reducerPath: 'patientsApi',
   baseQuery,
+  // Add tagTypes so we can invalidate and refetch lists when mutations affect data
+  tagTypes: ['OpdVisits'],
   endpoints: (builder) => ({
     // Query to get all patients
     // Accepts optional params: { page, limit, q, sort }
@@ -69,8 +71,44 @@ export const patientsApi = createApi({
         body: patient,
       }),
     }),
+    getopdVisit: builder.query({
+    query: ({
+    page = 1,
+    limit = 10,
+    q = '',
+    sort = ''
+     } = {}) => ({
+    url: '/opdvisits',
+    params: {
+      page,
+      limit,
+      ...(q && { q }),
+      ...(sort && { sort })
+    }
+  }),
+  // Provide tags for the list so we can invalidate and refetch after mutations
+  providesTags: (result) =>
+    result?.data
+      ? [
+          { type: 'OpdVisits', id: 'LIST' },
+          ...result.data.map((opd) => ({ type: 'OpdVisits', id: opd.pkVisitId || opd.id || opd._id }))
+        ]
+      : [{ type: 'OpdVisits', id: 'LIST' }],
+}),
+
+    // Mutation to create OPD visit
+    createOpdVisit: builder.mutation({
+      query: (payload) => ({
+        url: '/opdvisits',
+        method: 'POST',
+        body: payload,
+      }),
+      // Invalidate the list so getopdVisit refetches and Dashboard shows fresh data
+      invalidatesTags: [{ type: 'OpdVisits', id: 'LIST' }],
+    }),
+
   }),
 });
 
 // Export the auto-generated hooks
-export const { useGetPatientsQuery,useGetPatientIdQuery,useCreateServiceMutation, useCreatePatientMutation,useCreateBillMutation } = patientsApi;
+export const { useGetPatientsQuery, useGetopdVisitQuery, useGetPatientIdQuery, useCreateServiceMutation, useCreatePatientMutation, useCreateBillMutation, useCreateOpdVisitMutation } = patientsApi;

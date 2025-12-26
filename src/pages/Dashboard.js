@@ -3,8 +3,6 @@ import React, { useEffect, useState } from "react";
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   Button,
   TextField,
   Table,
@@ -22,37 +20,34 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-} from "@mui/material";
-
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
   Tooltip,
-  ResponsiveContainer,
-} from "recharts";
+} from "@mui/material";
 
 import SearchBar from "../component/SearchBar";
 import Loader from "../component/Loader";
-import { useGetPatientsQuery } from "../features/api/patientsApi";
+import { useGetPatientsQuery,useGetopdVisitQuery } from "../features/api/patientsApi";
 import {useGetBillMasterQuery} from '../features/api/Hooks/billingApi';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 export default function Dashboard() {
   const theme = useTheme();
-  const navigate = useNavigate();
-
   // Pagination / search state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
+
+  // OPD visits state (we will show these rows instead of patients)
+  const [opdList, setOpdList] = useState([]);
+  const [filteredOpd, setFilteredOpd] = useState([]);
   const { data: billdetails } = useGetBillMasterQuery();
+
+  // Query OPD visits with pagination and optional search
+  const { data: getOpd, error: getOpdError, isLoading: getOpdLoading, isError: getOpdIsError } = useGetopdVisitQuery({ page, limit, q: searchQuery });
   console.log("billdetails",billdetails);
   const [openBillsDialog, setOpenBillsDialog] = useState(false);
   const [selectedPatientForBills, setSelectedPatientForBills] = useState(null);
   const [billsFilterText, setBillsFilterText] = useState("");
-
+  console.log("filteredPatients",filteredPatients);
   // API call
   const {
     data: patientsResp,
@@ -61,6 +56,17 @@ export default function Dashboard() {
     isError,
   } = useGetPatientsQuery({ page, limit, q: searchQuery });
   console.log("seepatient",patientsResp);
+console.log("getopdvisit", getOpd);
+
+  useEffect(() => {
+    const rows = Array.isArray(getOpd?.data)
+      ? getOpd.data
+      : Array.isArray(getOpd)
+      ? getOpd
+      : [];
+    setOpdList(rows);
+    setFilteredOpd(rows);
+  }, [getOpd]);
   // Extract array from API response
   const patients = Array.isArray(patientsResp)
     ? patientsResp
@@ -68,28 +74,25 @@ export default function Dashboard() {
     ? patientsResp.data
     : [];
 
-  // Extract total count if provided
-  const total =
-    patientsResp?.total ||
-    patientsResp?.totalCount ||
-    patientsResp?.meta?.total ||
-    null;
+  // Prefer total count from OPD response; fall back to patients response
+  const opdTotal = getOpd?.total || getOpd?.totalCount || getOpd?.meta?.total || null;
+  const total = opdTotal ?? (
+    patientsResp?.total || patientsResp?.totalCount || patientsResp?.meta?.total || null
+  );
 
   const totalPages = total ? Math.ceil(total / limit) : null;
-  const hasMore = totalPages ? page < totalPages : patients.length === limit;
+  // hasMore should reflect which list we're showing (OPD by default)
+  const hasMore = totalPages ? page < totalPages : (opdList.length === limit);
 
-  // Keep filtered data synced
-  // Initialize filtered data when API response arrives.
-  // Use patientsResp as dependency to avoid loops when `patients` is reconstructed
-  // as an empty array on every render before the API resolves.
+  // Sync filtered patients when API data changes
   useEffect(() => {
     if (patientsResp) {
       setFilteredPatients(patients);
     }
   }, [patientsResp]);
 
-  // Show loader
-  if (isLoading) return <Loader />;
+  // Show loader if patients or OPD are loading
+  if (isLoading || getOpdLoading) return <Loader />;
 
   return (
     <Box className="dashboard-wrapper" sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
@@ -101,7 +104,7 @@ export default function Dashboard() {
         </Alert>
       )}
 
-       {/* Search Bar */}
+       {/* Search Bar (now filters OPD visits) */}
       <Box
         className="search-section"
         display="flex"
@@ -111,7 +114,32 @@ export default function Dashboard() {
         gap={2}
         mb={2}
       >
-        <SearchBar patients={patients} onFilter={setFilteredPatients} />
+        <TextField
+          size="small"
+          placeholder="Search visits (visit id, reg id, name)"
+          value={searchQuery}
+          onChange={(e) => {
+            const q = e.target.value;
+            setSearchQuery(q);
+
+            // Client-side filter for immediate responsiveness while the API fetch runs
+            const lower = q.toLowerCase();
+            if (!lower) {
+              setFilteredOpd(opdList);
+              return;
+            }
+            setFilteredOpd(
+              (opdList || []).filter((o) => {
+                const fk = String(o.fkRegId || "").toLowerCase();
+                const vid = String(o.pkVisitId || o._id || "").toLowerCase();
+                const pname = (patients || []).find(p => String(p.patientId) === String(o.fkRegId) || String(p.id) === String(o.fkRegId));
+                const name = pname ? `${pname.firstName || ""} ${pname.lastName || ""}`.toLowerCase() : (String(o.patientName || "").toLowerCase());
+                return fk.includes(lower) || vid.includes(lower) || name.includes(lower);
+              })
+            );
+          }}
+          sx={{ width: 360 }}
+        />
       </Box>
 
       {/* TABLE SECTION */}
@@ -129,9 +157,14 @@ export default function Dashboard() {
           }}
         >
           {/* minWidth ensures ALL columns show on mobile via horizontal scroll */}
-          <Table stickyHeader sx={{ minWidth: 1100 }}>
+          <Table stickyHeader sx={{ minWidth: 1100, '& .MuiTableCell-head': { backgroundColor: '#f5f5f5', whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
             <TableHead>
               <TableRow>
+                <TableCell sx={{ fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
+                  <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} sx={{ flexWrap: 'nowrap' }}>
+                    <span>Seq</span>
+                  </Box>
+                </TableCell>
                 <TableCell
                   sx={{
                     fontWeight: "bold",
@@ -139,7 +172,7 @@ export default function Dashboard() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Patient ID
+                  Reg ID
                 </TableCell>
                 <TableCell
                   sx={{
@@ -157,7 +190,7 @@ export default function Dashboard() {
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Date & Time
+                  Visit Date & Time
                 </TableCell>
                 <TableCell
                   sx={{
@@ -208,73 +241,51 @@ export default function Dashboard() {
             </TableHead>
 
             <TableBody>
-              {filteredPatients.length > 0 ? (
-                filteredPatients?.map((row, i) => {
-                  const name = `${row.title ? row.title + " " : ""}${
-                    row.firstName || row.name || ""
-                  } ${row.lastName || ""}`.trim();
+              {filteredOpd.length > 0 ? (
+                filteredOpd?.map((row, i) => {
+                  // Try to find patient details for display
+                  const patient = (patients || []).find((p) =>
+                    String(p.patientId) === String(row.fkRegId) ||
+                    String(p.id) === String(row.fkRegId) ||
+                    String(p.oldNo) === String(row.oldRegId) ||
+                    String(p.PK_RegId) === String(row.fkRegId)
+                  );
 
-                  const dateTime = row.dateTime
-                    ? new Date(row.dateTime).toLocaleString()
-                    : row.date || "";
+                  const name = patient
+                    ? `${patient.title ? patient.title + " " : ""}${patient.firstName || patient.name || ""} ${patient.lastName || ""}`.trim()
+                    : (row.patientName || "");
+
+                  const visitDateTime = row.visitDate
+                    ? (new Date(row.visitDate).toLocaleString())
+                    : (row.visitDateTime || row.dateTime || "");
 
                   return (
-                    <TableRow key={row.patientId}>
-                      <TableCell
-                        sx={{
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {row.patientId || row.id}
+                    <TableRow key={row.pkVisitId || row._id || i}>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                          <div style={{ fontSize: 12, color: '#666' }}>#{i + 1}</div>
                       </TableCell>
-
-                      <TableCell
-                        sx={{
-                          whiteSpace: "nowrap",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{row.fkRegId || ""}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         <Box display="flex" alignItems="center" gap={1}>
                           <Avatar className="avatar-responsive" sx={{ width: 32, height: 32 }}>
-                            {(row.firstName || row.name || "")
-                              .charAt(0)
-                              .toUpperCase()}
+                            {(name || "").charAt(0).toUpperCase()}
                           </Avatar>
                           <Box sx={{ minWidth: 0 }}>{name}</Box>
                         </Box>
                       </TableCell>
-
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {dateTime}
-                      </TableCell>
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {row.dateOfBirth || ""}
-                      </TableCell>
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {row.sex || ""}
-                      </TableCell>
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>
-                        {row.permanentAddress?.mobileNo || ""}
-                      </TableCell>
-                      <TableCell
-                        sx={{
-                          whiteSpace: "nowrap",
-                          maxWidth: 240,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                        }}
-                      >
-                        {row.permanentAddress?.addressLine || ""}
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{visitDateTime}{row.visitTime ? `, ${row.visitTime}` : ""}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{patient?.dateOfBirth || ""}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{patient?.sex || ""}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>{patient?.permanentAddress?.mobileNo || ""}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap", maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis" }}>
+                        {patient?.permanentAddress?.addressLine || ""}
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
                         <Button
                           size="small"
                           variant="outlined"
                           onClick={() => {
-                            setSelectedPatientForBills(row);
+                            setSelectedPatientForBills(patient || { patientId: row.fkRegId, PK_RegId: row.fkRegId, oldNo: row.oldRegId });
                             setOpenBillsDialog(true);
                           }}
                         >
@@ -286,7 +297,7 @@ export default function Dashboard() {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} align="center" sx={{ py: 2 }}>
+                  <TableCell colSpan={9} align="center" sx={{ py: 2 }}>
                     No records found.
                   </TableCell>
                 </TableRow>
@@ -413,7 +424,7 @@ export default function Dashboard() {
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Total Records: {total ?? patients.length}
+            Total Records: {opdTotal ?? filteredOpd.length}
           </Typography>
 
           {/* Pagination Controls */}
