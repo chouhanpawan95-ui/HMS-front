@@ -25,7 +25,7 @@ import {
 } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
-import { useGetPatientsQuery } from "../features/api/patientsApi";
+import { useGetPatientsQuery, useCreateOpdVisitMutation } from "../features/api/patientsApi";
 import { useGetRateListQuery, useGetRatelistDetailsQuery } from '../features/api/Hooks/ratelistApi'
 import { useGetPartyNameQuery } from '../features/api/Hooks/partyApi.js';
 import { useCreateBillMutation, useCreateBilldetailsMutation, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery } from '../features/api/Hooks/billingApi.js';
@@ -33,6 +33,7 @@ import { useGetServiceQuery } from '../features/api/Hooks/serviceApi';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
+import { useNavigate } from "react-router-dom";
 const BranchName = [
   { id: 1, BranchName: "Indore" },
   { id: 2, BranchName: "Bhopal" },
@@ -56,6 +57,7 @@ const PartyName = [
   { id: 3, PartyName: "ERGO HEALTH" },
 ];
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
+  const navigate = useNavigate();
   const routerLocation = useLocation();
   const { bill, patient } = routerLocation.state || {};
   const [pkbillId, setpkbillId] = useState(bill?.billId);
@@ -67,6 +69,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const { data: GetRatelistResponse, error } = useGetRateListQuery();
   const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
   const [createBillDetails, { data: createBillDetailsResp, isLoading: isCreatingDetails, error: createBillDetailsError }] = useCreateBilldetailsMutation();
+  // OPD visit creation (executed after bill is created)
+  const [createOpdVisit] = useCreateOpdVisitMutation();
+  const [isSaving, setIsSaving] = useState(false);
   const { data: services } = useGetServiceQuery();
   const { data: getBillMaster } = useGetBillMasterByIdQuery(bill?.billId);
   const { data: getBillDetail } = useGetBillDetailByBillIdQuery(bill?.billId);
@@ -107,8 +112,6 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   // Invoice/Bill No (controlled field)
   const [billNo, setBillNo] = useState("");
   const [openPopup, setOpenPopup] = useState(false);
-  const [selectedService, setSelectedService] = useState(null);
-  const [selectedItem, setSelectedItem] = useState(null);
   const [editingRowIndex, setEditingRowIndex] = useState(null);
   // Target RateListId
   const [selectedRateListId, setSelectedRateListId] = useState("");
@@ -263,9 +266,6 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     };
   };
 
-
-
-
   // When API loads → set default value automatically
   useEffect(() => {
     if (
@@ -391,52 +391,123 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       }    
       const billMasterResp = await createBill(billMasterPayload).unwrap();    
       setpkbillId(billMasterResp?.billId)
-        billDeailSubmit(billMasterResp?.billId);    
+
+      setIsSaving(true);
+      try {
+        await billDeailSubmit(billMasterResp?.billId);
+      } finally {
+        setIsSaving(false);
+      }  
+     
     } catch (err) {
       console.error("Error creating bill:", err);
     }
   }
-  const billDeailSubmit = async (billId) => {    
-    if (billId && Array.isArray(tableRows) && tableRows.length > 0) {
-      const details = tableRows.map((r) => {
-        const res = calculateNetFromAmount(r);
-        const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
-        const qty = Number(r.Qty) || 1;
-        const amount = rate * qty;
-        return {
-          FK_BillId: billId,
-          FK_ServiceId: String(r.FK_ServiceId || ""),
-          Rate: rate,
-          Unit: qty,
-          Amount: amount,
-          Discount: Number(res.discountAmount) || Number(r.Discount) || 0,
-          ServiceCharges: Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
-          NetAmt: Number(res.netAmount) || 0,
-          FK_PackageId: r.FK_PackageId || "",
-          IsPerformed: Boolean(r.IsPerformed) || false,
-          Remarks: r.Remarks || "",
-          Received: Boolean(r.Received) || false,
-          FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
-          FK_DoctorID: billDetails.FK_DoctorId ? String(billDetails.FK_DoctorId) : (selectedPatient?.doctorId ? String(selectedPatient.doctorId) : ""),
-        };
-      });
-      try {
-        for (const d of details) {       
-          await createBillDetails(d).unwrap();         
+  const billDeailSubmit = async (billId) => {
+    if (!billId) return;
+
+    // Build details array (may be empty)
+    const details = Array.isArray(tableRows) && tableRows.length > 0 ? tableRows.map((r) => {
+      const res = calculateNetFromAmount(r);
+      const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
+      const qty = Number(r.Qty) || 1;
+      const amount = rate * qty;
+      return {
+        FK_BillId: billId,
+        FK_ServiceId: String(r.FK_ServiceId || ""),
+        Rate: rate,
+        Unit: qty,
+        Amount: amount,
+        Discount: Number(res.discountAmount) || Number(r.Discount) || 0,
+        ServiceCharges: Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
+        NetAmt: Number(res.netAmount) || 0,
+        FK_PackageId: r.FK_PackageId || "",
+        IsPerformed: Boolean(r.IsPerformed) || false,
+        Remarks: r.Remarks || "",
+        Received: Boolean(r.Received) || false,
+        FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
+        FK_DoctorID: billDetails.FK_DoctorId ? String(billDetails.FK_DoctorId) : (selectedPatient?.doctorId ? String(selectedPatient.doctorId) : ""),
+      };
+    }) : [];
+
+    // Prepare OPD payload
+    const visitDateISO = new Date(billDate).toISOString();
+    const visitTime = billDetails.BillTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+    const ageParts = (selectedPatient?.ageYMD || '').split(/[^\d]+/).map(n => parseInt(n) || 0);
+    const opdPayload = {
+      pkVisitId: `VISIT-${billId}`,
+      fkBranchId: String(billDetails.FK_BranchId || ''),
+      fkRegId: selectedPatient?.patientId || '',
+      fkPrimaryDoctorId: String(billDetails.FK_DoctorId || selectedPatient?.doctorId || ''),
+      visitDate: visitDateISO,
+      visitTime,
+      ageYear: ageParts[0] || 0,
+      ageMonth: ageParts[1] || 0,
+      ageDays: ageParts[2] || 0,
+      fkBillCategoryId: String(billDetails.FK_CategoryId || ''),
+      fkPatientLocationId: selectedPatient?.locationId || '',
+      isWaiting: false,
+      remarks: billingRemarks || '',
+      fkCreatedById: String(billDetails.FK_CreatedById || 1),
+      isWalkIn: Boolean(selectedPatient?.isWalkIn),
+      fkPartyId: String(billDetails.FK_PartyId || ''),
+      oldRegId: selectedPatient?.oldNo || '',
+    };
+
+    try {
+      // Create details in parallel
+      const detailPromises = details.map((d) => createBillDetails(d).unwrap());
+
+      // Only create OPD visit when Bill Type is "Consultation" (case-insensitive)
+      const selectedBillType = (billTypeList || []).find(b => String(b.id) === String(billDetails.FK_BillTypeId) || String(b.BillTypeId) === String(billDetails.FK_BillTypeId));
+      const billTypeName = (selectedBillType && (selectedBillType.name || selectedBillType.BillTypeName || selectedBillType.BillType || '') ) || '';
+      const isConsultation = String(billTypeName).toLowerCase().includes('consult');
+
+      const opdPromise = isConsultation ? createOpdVisit(opdPayload).unwrap() : null;
+
+      // Run all concurrently; include OPD promise only when applicable
+      const allPromises = [...detailPromises];
+      if (opdPromise) allPromises.push(opdPromise);
+
+      const results = await Promise.allSettled(allPromises);
+
+      const detailResults = results.slice(0, detailPromises.length);
+      const opdResult = opdPromise ? results[detailPromises.length] : null;
+
+      const failedDetails = detailResults.filter((r) => r.status === 'rejected');
+      const opdFailed = opdResult && opdResult.status === 'rejected';
+
+      if (failedDetails.length > 0 || opdFailed) {
+        console.error('Some operations failed', { failedDetails, opdFailed, results });
+        if (failedDetails.length > 0 && opdFailed) {
+          alert('✅ Bill created, but failed to create OPD visit and one or more bill details. Check console.');
+        } else if (failedDetails.length > 0) {
+          alert('✅ Bill created, but failed to create one or more bill details. Check console.');
+        } else {
+          alert('✅ Bill created, but failed to create OPD visit. Check console.');
         }
-        alert("✅ Bill created successfully!");
-      } catch (dErr) {
-        console.error('Error creating bill details:', dErr);
-        alert('✅ Bill created, but failed to create one or more bill details. Check console for details.');
-        setSelectedPatient(null);
-        return;
+      } else {
+        if (!isConsultation) {
+          alert('✅ Bill created successfully. OPD creation skipped because Bill Type is not "Consultation".');
+        } else {
+          alert('✅ Bill created successfully!');
+        }
       }
+
+      setSelectedPatient(null);
+      navigate('/Dashboard');
+    } catch (err) {
+      console.error('Error creating bill details or OPD:', err);
+      alert('✅ Bill created, but failed to create one or more follow-up records. Check console.');
+      setSelectedPatient(null);
+      return;
     }
   }
+ 
   const handleConfirmYes =() => {
     setOpenDialog(false);
     billMasterSubmit();
-    setSelectedPatient(null);
+    //setSelectedPatient(null);
   };
   const handleInputChange = (index, field, value) => {
     setTableRows(prev =>
@@ -1414,7 +1485,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 variant="contained"
                 color="primary"
                 onClick={handleSubmit}
-                disabled={isViewMode}
+                disabled={isViewMode || isSaving}
                 sx={{
                   backgroundColor: "#578EE5",
                   borderRadius: 2,
@@ -1422,7 +1493,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   px: 3,
                 }}
               >
-                Submit
+                {isSaving ? 'Saving...' : 'Submit'}
               </Button>
             </Box>
           </Paper>
@@ -1444,8 +1515,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             onClick={handleConfirmYes}
             color="primary"
             variant="contained"
+            disabled={isSaving}
           >
-            Yes
+            {isSaving ? 'Saving...' : 'Yes'}
           </Button>
         </DialogActions>
       </Dialog>
