@@ -23,6 +23,7 @@ import RateListMaster from "./Master/BillingMaster/RateListMaster";
 import PartyMaster from "./Master/BillingMaster/PartyMaster";
 import PackageMaster from "./Master/BillingMaster/PackageMaster";
 import OPDSchedule from "./Master/ScheduleMaster/OPDSchedule";
+import BillReceipt from "./pages/BillReceipt";
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
                   />
                 }
               />
+              <Route path="/BillReceipt" element={<BillReceipt />} />
             </Route>
           </Routes>
         </Box>
