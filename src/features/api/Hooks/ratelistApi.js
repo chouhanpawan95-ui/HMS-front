@@ -64,13 +64,12 @@ export const rateListApi = createApi({
     }), 
     // Rate list master
     getRateList: builder.query({
-      // query: () => "ratelistmaster",
-      // providesTags: ["RateList"],
-      // transformResponse: (res) => res.data || [],
       query: () => ({
         url: '/ratelistmaster',
         method: 'GET',
       }),
+      providesTags: ["RateList"],
+      transformResponse: (res) => (Array.isArray(res) ? res : res?.data ?? []),
     }),
     createRateList: builder.mutation({
       query: (rateList) => ({
@@ -78,6 +77,7 @@ export const rateListApi = createApi({
         method: "POST",
         body: rateList,
       }),
+      invalidatesTags: ["RateList"],
     }),
     updateRateList: builder.mutation({
       query: ({ id, payload }) => ({
@@ -86,6 +86,13 @@ export const rateListApi = createApi({
         body: payload,
       }),
       invalidatesTags: ["RateList"],
+    }),
+    deleteRateList: builder.mutation({
+      query: (id) => ({
+        url: `ratelistmaster/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: ["RateList", "RateListDetail"],
     }), 
   }),
 });
@@ -94,6 +101,7 @@ export const {
   useGetRateListQuery,
   useCreateRateListMutation,
   useUpdateRateListMutation,
+  useDeleteRateListMutation,
   useGetRateListDetailQuery,
   useCreateRateListDetailMutation,
   useGetRatelistDetailsQuery,
