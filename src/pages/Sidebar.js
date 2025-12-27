@@ -349,12 +349,12 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                       <ListItemText primary="Appointment Manager" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
                   </List>
-                  <List component='div' disablePadding>
+                  {/* <List component='div' disablePadding>
                     <ListItemButton sx={{pl:6}} component={Link} to='/OPDappointment' onClick={handleMenuClick}>
                       <ListItemIcon sx={{minWidth:30}}/>
                       <ListItemText primary="Appointment" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
-                  </List>
+                  </List> */}
                 </Collapse>
 
               </List>
