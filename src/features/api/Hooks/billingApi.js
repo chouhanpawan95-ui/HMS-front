@@ -39,6 +39,20 @@ export const billingApi = createApi({
                 body: patient,
             }),
         }),
+        createReceiptMaster: builder.mutation({
+            query: (payload) => ({
+                url: '/receiptmasters',
+                method: 'POST',
+                body: payload,
+            }),
+        }),
+        createReceiptAdjustmentDetail: builder.mutation({
+            query: (payload) => ({
+                url: '/receiptadjustmentdetail',
+                method: 'POST',
+                body: payload,
+            }),
+        }),
         getBillDetail: builder.query({
             query: () => ({
                 url: '/billdetails',
@@ -96,6 +110,8 @@ export const {
 
     useCreateBillMutation,
     useCreateBilldetailsMutation,
+    useCreateReceiptMasterMutation,
+    useCreateReceiptAdjustmentDetailMutation,
 
     useGetBillMasterQuery,
     useGetBillDetailQuery,
