@@ -13,8 +13,8 @@ const baseQuery = fetchBaseQuery({
 });
 
 // Create the API slice
-export const partyApi = createApi({
-  reducerPath: "partyApi",
+export const packageApi = createApi({
+  reducerPath: "packageApi",
   baseQuery,
   tagTypes: [
     "ServiceDepartmentMaster",
@@ -89,4 +89,4 @@ export const {
    useUpdatePackageDetailMutation,
    useDeletePackageDetailMutation,
    useUpdatePackageMasterMutation,
-} = partyApi;
+} = packageApi;

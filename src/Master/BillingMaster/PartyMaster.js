@@ -2,21 +2,23 @@ import { Paper, Typography, Box, TextField, Button, Grid } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
 import { useGetCitiesQuery } from "../../features/api/locationApi";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import Loader from "../../component/Loader";
-import {
-  useCreatePartyMasterMutation,
-} from "../../features/api/Hooks/partyApi";
-import {
-  useGetRateListQuery,
-} from "../../features/api/Hooks/ratelistApi";
+import { useCreatePartyMasterMutation } from "../../features/api/Hooks/partyApi";
+import { useGetRateListQuery } from "../../features/api/Hooks/ratelistApi";
+import { DatePicker, TimePicker } from "@mui/x-date-pickers";
+import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
+
 const PartyMaster = () => {
   const {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors },
-  } = useForm();
+  } = useForm({ defaultValues: { startdate: null } });
 
   const [selectedCity, setSelectedCity] = useState("");
   const { data: cityResponse, isLoading: isCityLoading } = useGetCitiesQuery();
@@ -26,7 +28,9 @@ const PartyMaster = () => {
   const { data: rateListResponse, isLoading: isRateListLoading } =
     useGetRateListQuery();
   // Normalize API response to an array (accept either an array or an object with `.data`)
-  const rateList = Array.isArray(rateListResponse) ? rateListResponse : rateListResponse?.data ?? [];
+  const rateList = Array.isArray(rateListResponse)
+    ? rateListResponse
+    : rateListResponse?.data ?? [];
   console.log("RateList Response:", rateListResponse);
   console.log("RateList Data:", rateList);
 
@@ -37,22 +41,25 @@ const PartyMaster = () => {
 
   const onSubmit = async (data) => {
     try {
+      console.log("Submitting PartyMaster:", data);
       await createPartyMaster({
-        PartyName: data.partyname,
-        ShortName: data.shortname,
-        PartyType: data.partytype,
-        StartDate: data.startdate,
-        FK_CityId: data.cityname,
-        ContactPerson: data.contactperson,
-        ContactNoMob: data.contactnomod,
-        EmailId: data.emailid,
-        FK_RateListId: data.rateListId,
-        Remarks: data.remarks,
-        FreeDays: data.freedays,
-        NoofVisit: data.noofvisit,
+        PartyName: data.partyname ?? "",
+        ShortName: data.shortname ?? "",
+        PartyType: data.partytype ?? "",
+        // format StartDate as YYYY-MM-DD if provided (DatePicker returns a Dayjs object)
+        StartDate: data.startdate ? dayjs(data.startdate).format("YYYY-MM-DD") : null,
+        FK_CityId: data.cityname ?? null,
+        ContactPerson: data.contactperson ?? "",
+        // use the registered field names
+        ContactNoMob: data.contactno ?? "",
+        EmailId: data.email ?? "",
+        FK_RateListId: data.rateListId ?? null,
+        Remarks: data.remark ?? "",
+        FreeDays: data.freedays ?? 0,
+        NoofVisit: data.noofvisit ?? 0,
       }).unwrap();
     } catch (err) {
-      console.error("Error: ", err.data);
+      console.error("Error creating party master: ", err);
     }
   };
 
@@ -69,224 +76,237 @@ const PartyMaster = () => {
   if (isLoading) return <Loader />;
 
   return (
-    <Box
-      sx={{
-        p: { xs: 2, sm: 3, md: 4 },
-        backgroundColor: "#f4f6f8",
-        minHeight: "100vh",
-      }}
-    >
-      <Paper
-        elevation={3}
+    <LocalizationProvider dateAdapter={AdapterDayjs}>
+      <Box
         sx={{
-          maxWidth: { xs: "100%", md: 1000 },
-          mx: "auto",
-          borderRadius: 3,
           p: { xs: 2, sm: 3, md: 4 },
-          backgroundColor: "white",
-          mt: { xs: 6, sm: 8 },
-          overflow: "hidden",
+          backgroundColor: "#f4f6f8",
+          minHeight: "100vh",
         }}
       >
-        <Box>
-          <Typography variant="h5" fontWeight={600} className={style.header}>
-            Party Master
-          </Typography>
-        </Box>
+        <Paper
+          elevation={3}
+          sx={{
+            maxWidth: { xs: "100%", md: 1000 },
+            mx: "auto",
+            borderRadius: 3,
+            p: { xs: 2, sm: 3, md: 4 },
+            backgroundColor: "white",
+            mt: { xs: 6, sm: 8 },
+            overflow: "hidden",
+          }}
+        >
+          <Box>
+            <Typography variant="h5" fontWeight={600} className={style.header}>
+              Party Master
+            </Typography>
+          </Box>
 
-        <Box p={{ xs: 2, sm: 3, md: 4 }}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Grid container spacing={3}>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Party Name"
-                  fullWidth
-                  {...register("partyname", {
-                    required: "Party Name is required",
-                  })}
-                  error={!!errors.partyname}
-                  helperText={errors.partyname?.message}
-                  size="medium"
-                />
+          <Box p={{ xs: 2, sm: 3, md: 4 }}>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Party Name"
+                    fullWidth
+                    {...register("partyname", {
+                      required: "Party Name is required",
+                    })}
+                    error={!!errors.partyname}
+                    helperText={errors.partyname?.message}
+                    size="medium"
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Party Type"
+                    SelectProps={{ native: true }}
+                    {...register("partytype", {
+                      required: "Party Type is required",
+                    })}
+                    error={!!errors.partytype}
+                    helperText={errors.partytype?.message}
+                  >
+                    <option value=""></option>
+                    {partyType.map((p) => (
+                      <option key={p} value={p}>
+                        {p}
+                      </option>
+                    ))}
+                  </TextField>
+                </Grid>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Short Name"
+                    fullWidth
+                    {...register("shortname", {
+                      required: "Short Name is required",
+                    })}
+                    error={!!errors.shortname}
+                    helperText={errors.shortname?.message}
+                  />
+                </Grid>
               </Grid>
 
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Party Type"
-                  SelectProps={{ native: true }}
-                  {...register("partytype", {
-                    required: "Party Type is required",
-                  })}
-                  error={!!errors.partytype}
-                  helperText={errors.partytype?.message}
+              <Grid container spacing={3} mt={1}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <Controller
+                    name="startdate"
+                    control={control}
+                    rules={{ required: "Start Date is required" }}
+                    defaultValue={null}
+                    render={({ field }) => (
+                      <DatePicker
+                        {...field}
+                        label="Start Date"
+                        value={field.value ?? null}
+                        minDate={dayjs()}
+                        onChange={(val) => field.onChange(val)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            error: !!errors.startdate,
+                            helperText: errors.startdate?.message,
+                          },
+                        }}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="City"
+                    SelectProps={{ native: true }}
+                    {...register("cityname", { required: "City is required" })}
+                    error={!!errors.cityname}
+                    helperText={errors.cityname?.message}
+                  >
+                    <option value=""></option>
+                    {city.map((c) => (
+                      <option key={c.CityId} value={c.CityId}>
+                        {c.CityName}
+                      </option>
+                    ))}
+                  </TextField>
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    select
+                    fullWidth
+                    label="Rate List"
+                    SelectProps={{ native: true }}
+                    {...register("rateListId", {
+                      required: "Rate List is required",
+                    })}
+                    error={!!errors.rateListId}
+                    helperText={errors.rateListId?.message}
+                  >
+                    <option value=""></option>
+                    {rateList.map((r) => (
+                      <option key={r.rateListId} value={r.rateListId}>
+                        {r.RateListName}
+                      </option>
+                    ))}
+                  </TextField>
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={3} mt={1}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Contact Person"
+                    fullWidth
+                    {...register("contactperson", {
+                      required: "Contact Person is required",
+                    })}
+                    error={!!errors.contactperson}
+                    helperText={errors.contactperson?.message}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Contact No"
+                    fullWidth
+                    type="number"
+                    {...register("contactno", {
+                      required: "Contact No is required",
+                    })}
+                    error={!!errors.contactno}
+                    helperText={errors.contactno?.message}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Email"
+                    fullWidth
+                    type="email"
+                    {...register("email", { required: "Email is required" })}
+                    error={!!errors.email}
+                    helperText={errors.email?.message}
+                  />
+                </Grid>
+              </Grid>
+
+              <Grid container spacing={3} mt={1}>
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Remarks"
+                    fullWidth
+                    {...register("remark", { required: "Remark is required" })}
+                    error={!!errors.remark}
+                    helperText={errors.remark?.message}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="Free Days"
+                    fullWidth
+                    {...register("freedays", {
+                      required: "Free Days is required",
+                    })}
+                    error={!!errors.freedays}
+                    helperText={errors.freedays?.message}
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <TextField
+                    label="No of Visits"
+                    fullWidth
+                    {...register("noofvisit", {
+                      required: "No of Visit is required",
+                    })}
+                    error={!!errors.noofvisit}
+                    helperText={errors.noofvisit?.message}
+                  />
+                </Grid>
+              </Grid>
+              {/* Submit Button */}
+              <Grid item xs={12} display="flex" justifyContent="center" mt={2}>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  size="large"
+                  sx={{ minWidth: 200 }}
                 >
-                  <option value=""></option>
-                  {partyType.map((p) => (
-                    <option key={p} value={p}>
-                      {p}
-                    </option>
-                  ))}
-                </TextField>
+                  Save
+                </Button>
               </Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Short Name"
-                  fullWidth
-                  {...register("shortname", {
-                    required: "Short Name is required",
-                  })}
-                  error={!!errors.shortname}
-                  helperText={errors.shortname?.message}
-                />
-              </Grid>
-            </Grid>
-
-            <Grid container spacing={3} mt={1}>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  type="date"
-                  label="Start Date"
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                  {...register("startdate", {
-                    required: "Start Date is required",
-                  })}
-                  error={!!errors.startdate}
-                  helperText={errors.startdate?.message}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  select
-                  fullWidth
-                  label="City"
-                  SelectProps={{ native: true }}
-                  {...register("cityname", { required: "City is required" })}
-                  error={!!errors.cityname}
-                  helperText={errors.cityname?.message}
-                >
-                  <option value=""></option>
-                  {city.map((c) => (
-                    <option key={c.CityId} value={c.CityId}>
-                      {c.CityName}
-                    </option>
-                  ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  select
-                  fullWidth
-                  label="Rate List"
-                  SelectProps={{ native: true }}
-                  {...register("rateListId", {
-                    required: "Rate List is required",
-                  })}
-                  error={!!errors.rateListId}
-                  helperText={errors.rateListId?.message}
-                >
-                  <option value=""></option>
-                  {rateList.map((r) => (
-                    <option key={r.rateListId} value={r.rateListId}>
-                      {r.RateListName}
-                    </option>
-                  ))}
-                </TextField>
-              </Grid>
-            </Grid>
-
-            <Grid container spacing={3} mt={1}>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Contact Person"
-                  fullWidth
-                  {...register("contactperson", {
-                    required: "Contact Person is required",
-                  })}
-                  error={!!errors.contactperson}
-                  helperText={errors.contactperson?.message}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Contact No"
-                  fullWidth
-                  type="number"
-                  {...register("contactno", {
-                    required: "Contact No is required",
-                  })}
-                  error={!!errors.contactno}
-                  helperText={errors.contactno?.message}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Email"
-                  fullWidth
-                  type="email"
-                  {...register("email", { required: "Email is required" })}
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                />
-              </Grid>
-            </Grid>
-
-            <Grid container spacing={3} mt={1}>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Remarks"
-                  fullWidth
-                  {...register("remark", { required: "Remark is required" })}
-                  error={!!errors.remark}
-                  helperText={errors.remark?.message}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="Free Days"
-                  fullWidth
-                  {...register("freedays", {
-                    required: "Free Days is required",
-                  })}
-                  error={!!errors.freedays}
-                  helperText={errors.freedays?.message}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField
-                  label="No of Visits"
-                  fullWidth
-                  {...register("noofvisit", {
-                    required: "No of Visit is required",
-                  })}
-                  error={!!errors.noofvisit}
-                  helperText={errors.noofvisit?.message}
-                />
-              </Grid>
-            </Grid>
-            {/* Submit Button */}
-            <Grid item xs={12} display="flex" justifyContent="center" mt={2}>
-              <Button
-                type="submit"
-                variant="contained"
-                size="large"
-                sx={{ minWidth: 200 }}
-              >
-                Save
-              </Button>
-            </Grid>
-          </form>
-        </Box>
-      </Paper>
-    </Box>
+            </form>
+          </Box>
+        </Paper>
+      </Box>
+    </LocalizationProvider>
   );
 };
 export default PartyMaster;
