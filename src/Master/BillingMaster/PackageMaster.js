@@ -271,6 +271,8 @@ const PackageMaster = () => {
     };
   });
 
+  console.log("meged Data",mergedData);
+
   // if editing, prefill the package master form with master data
 
   useEffect(() => {
@@ -366,18 +368,6 @@ const PackageMaster = () => {
       console.log('Update failed: '+ (error?.data?.message || error?.message || 'unknow error'))
     }
   };
-
-  // combaine loading states
-  const isLoading =
-    isPackageMasterLoading ||
-    isPackageDetailLoading ||
-    isCreatePackageMasterLoading ||
-    isCreatePackageDetailLoading ||
-    isUpdatePackageDetailLoading ||
-    isDeletePackageDetailLoading ||
-    isUpdatePackageMasterLoading;
-
-  if (isLoading) return <Loader />;
 
   const addRow = () => {
     setRow((prev) => [
@@ -519,6 +509,18 @@ const PackageMaster = () => {
     "CmbPartyType",
   ];
 
+    // combaine loading states
+  const isLoading =
+    isPackageMasterLoading ||
+    isPackageDetailLoading ||
+    isCreatePackageMasterLoading ||
+    isCreatePackageDetailLoading ||
+    isUpdatePackageDetailLoading ||
+    isDeletePackageDetailLoading ||
+    isUpdatePackageMasterLoading;
+
+  if (isLoading) return <Loader />;
+
   return (
     <Box
       sx={{
@@ -530,9 +532,6 @@ const PackageMaster = () => {
       <Tabs
         value={activeTab}
         onChange={(e, v) => setActiveTab(v)}
-        variant="scrollable"
-        scrollButtons="auto"
-        allowScrollButtonsMobile
         centered
         sx={{ mb: 3 }}
       >
