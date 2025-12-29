@@ -25,6 +25,7 @@ import PackageMaster from "./Master/BillingMaster/PackageMaster";
 import OPDSchedule from "./Master/ScheduleMaster/OPDSchedule";
 import AppointmentManager from "./Master/ScheduleMaster/AppointmentManager";
 import OPDappointment from "./Master/ScheduleMaster/OPDappointment";
+import BillReceipt from "./pages/BillReceipt";
 
 function App() {
   return (
@@ -76,6 +77,7 @@ function App() {
                   />
                 }
               />
+              <Route path="/BillReceipt" element={<BillReceipt />} />
             </Route>
           </Routes>
         </Box>

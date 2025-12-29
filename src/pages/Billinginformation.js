@@ -1475,6 +1475,15 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             >
               <Button
                 variant="outlined"
+                color="primary"
+                onClick={() => navigate('/BillReceipt', { state: { billDetails, tableRows, selectedPatient } })}
+                sx={{ borderRadius: 2, textTransform: "none", px: 3, mr: 1 }}
+              >
+                Receipt & Payment
+              </Button>
+
+              <Button
+                variant="outlined"
                 color="secondary"
                 onClick={handleBack}
                 sx={{ borderRadius: 2, textTransform: "none", px: 3 }}
