@@ -16,8 +16,9 @@ import {
   TableHead,
   TableRow,
   Divider,
+  MenuItem,
 } from "@mui/material";
-import { useCreateReceiptMasterMutation, useCreateReceiptAdjustmentDetailMutation } from '../features/api/Hooks/billingApi.js';
+import { useCreateReceiptMasterMutation, useCreateReceiptAdjustmentDetailMutation, useLazyGetBillDetailByBillIdQuery, useLazyGetReceiptAdjustmentsByAdjustedBillIdQuery } from '../features/api/Hooks/billingApi.js';
 
 const BillReceipt = () => {
   const location = useLocation();
@@ -70,6 +71,98 @@ const BillReceipt = () => {
   const [createReceiptAdjustmentDetail] = useCreateReceiptAdjustmentDetailMutation();
   const [posting, setPosting] = React.useState(false);
 
+  // Payments: allow splitting net bill into multiple payment rows
+  const [payments, setPayments] = React.useState([]);
+
+  // Initialize a default single payment that equals net amount when totals change
+  React.useEffect(() => {
+    const net = Number(totals.totalNet) || 0;
+    if ((payments?.length || 0) === 0 && net > 0) {
+      setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: net, reference: '' }]);
+    }
+    // do not overwrite if user already adjusted payments
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totals.totalNet, billDetails?.FK_PaytypeID]);
+
+  const addPaymentRow = () => setPayments((p) => [...(p || []), { method: 'CASH', amount: 0, reference: '' }]);
+  const removePaymentRow = (idx) => setPayments((p) => (p || []).filter((_, i) => i !== idx));
+  const updatePaymentRow = (idx, changes) => setPayments((p) => (p || []).map((r, i) => (i === idx ? { ...r, ...changes } : r)));
+
+  // Insert a new payment row after the given index
+  const addPaymentRowAt = (idx) => setPayments((p) => {
+    const arr = (p || []).slice();
+    arr.splice(idx + 1, 0, { method: arr[idx]?.method || 'CASH', amount: 0, reference: '' });
+    return arr;
+  });
+
+  const paymentsSum = (payments || []).reduce((s, r) => s + Math.max(0, Number(r.amount) || 0), 0);
+
+  // Lazy queries to fetch bill details and existing adjustments for an adjusted bill id
+  const [fetchBillDetail] = useLazyGetBillDetailByBillIdQuery();
+  const [fetchReceiptAdjustments] = useLazyGetReceiptAdjustmentsByAdjustedBillIdQuery();
+
+  // Fetch current payable amount for a referenced bill (fkAdjustedBillId)
+  const handleFetchAdjDetails = async (idx, billId) => {
+    if (!billId || String(billId).trim() === '') {
+      // clear existing computed fields
+      updatePaymentRow(idx, { adjustedBillPayable: undefined, adjustedBillFound: undefined });
+      return;
+    }
+
+    updatePaymentRow(idx, { adjLoading: true, adjustedBillFound: undefined });
+
+    let billResp = null;
+    let adjList = [];
+    try {
+      billResp = await fetchBillDetail(billId).unwrap();
+    } catch (err) {
+      // ignore - bill may not exist
+      billResp = null;
+    }
+
+    try {
+      adjList = await fetchReceiptAdjustments(billId).unwrap() || [];
+    } catch (err) {
+      adjList = [];
+    }
+
+    // determine net amount from bill response
+    const netAmount = Number(billResp?.NetBillAmt || billResp?.NetBill || billResp?.TotalAmt || 0) || 0;
+
+    const adjustedSum = (adjList || []).reduce((s, a) => s + Number(a.adjustedAmount || a.adjustedAmt || 0), 0);
+
+    const currentPayable = Math.max(0, netAmount - adjustedSum);
+
+    updatePaymentRow(idx, { adjustedBillPayable: currentPayable, adjustedBillAdjustCount: (adjList || []).length, adjustedBillFound: Boolean(billResp), adjLoading: false });
+  };
+
+  // On mount or when payments change, auto-fetch adjusted-bill payable for rows that have an adjustedBillId but no cached payable
+  React.useEffect(() => {
+    (payments || []).forEach((p, idx) => {
+      if (p?.adjustedBillId && p.adjustedBillPayable === undefined && !p.adjLoading) {
+        handleFetchAdjDetails(idx, p.adjustedBillId);
+      }
+    });
+    // only when payments array identity changes
+  }, [payments]);
+
+  // Helper to render adjustment status for a payment row
+  const renderAdjStatus = (row) => {
+    if (row.adjusted) return <Checkbox checked disabled />;
+    if (row.adjustedBillId) {
+      if (row.adjLoading) return <Typography variant="caption" color="text.secondary">Checking…</Typography>;
+      if (row.adjustedBillFound === false) return <Typography variant="caption" color="error">Bill not found</Typography>;
+      if (row.adjustedBillPayable !== undefined) {
+        if (row.adjustedBillPayable <= 0) {
+          return <Typography variant="caption" color="success.main">Adjusted{row.adjustedBillAdjustCount ? ` (${row.adjustedBillAdjustCount})` : ''}</Typography>;
+        }
+        return <Typography variant="caption" color="warning.main">Outstanding: {row.adjustedBillPayable}{row.adjustedBillAdjustCount ? ` (${row.adjustedBillAdjustCount})` : ''}</Typography>;
+      }
+      return <Typography variant="caption" color="warning.main">Pending</Typography>;
+    }
+    return <Typography variant="caption" color="text.secondary">Outstanding</Typography>;
+  };
+
   const handleReceiptSubmit = async () => {
     if (posting) return;
     setPosting(true);
@@ -78,6 +171,18 @@ const BillReceipt = () => {
       const paymentDate = billDetails?.BillDate ? billDetails.BillDate.split('T')[0] : new Date().toISOString().slice(0,10);
       const paymentTime = billDetails?.BillTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
       const currencyAmount = Number(totals.totalNet) || 0;
+
+      // Validate payments: allow partial payments (sum <= net) but disallow > net or zero
+      if ((paymentsSum || 0) <= 0) {
+        alert('Add at least one payment with an amount greater than 0.');
+        setPosting(false);
+        return;
+      }
+      if (paymentsSum > currencyAmount + 0.001) {
+        alert('Payments total exceeds Net Amount. Reduce payment amounts or adjust bill.');
+        setPosting(false);
+        return;
+      }
 
       const receiptPayload = {
         fkBillingCompanyId: billDetails?.FK_BillingCompanyId || 'BC001',
@@ -101,27 +206,72 @@ const BillReceipt = () => {
         userRemarks: billDetails?.Remarks || '',
         counterName: billDetails?.counterName || 'Front Desk',
         fkAppointmentID: billDetails?.FK_AppointmentID || billDetails?.FK_AppointmentId || selectedPatient?.appointmentId || '',
+        // include granular payment lines
+        paymentDetails: (payments || []).map((p) => ({ method: p.method, amount: Number(p.amount) || 0, reference: p.reference || '' })),
       };
 
-      const receiptResp = await createReceiptMaster(receiptPayload).unwrap();
-      const receiptId = receiptResp?.receiptId || receiptResp?.id || receiptResp?.PK_ReceiptId || receiptResp?.ReceiptId || `R${Date.now()}`;
+      // Create one receipt per payment row
+      for (let i = 0; i < (payments || []).length; i++) {
+        const p = payments[i];
+        const amt = Number(p.amount) || 0;
+        const pPayload = {
+          ...receiptPayload,
+          currencyAmount: amt,
+          amountINR: amt,
+          fkPayTypeId: p.method || receiptPayload.fkPayTypeId,
+          userRemarks: p.reference || receiptPayload.userRemarks,
+          paymentDate: p.payDate || paymentDate,
+        };
 
-      // Build adjustment payload
-      const adjustmentPayload = {
-        fkReceiptId: receiptId,
-        fkAdjustedBillId: billDetails?.PK_BillId || billDetails?.BillNo || '',
-        adjustedAmount: Number(currencyAmount) || 0,
-        amountTDS: 0,
-        amountDiscount: Number(totals.totalDiscount) || 0,
-        amountDisAllow: 0,
-        amountST: 0,
-        fkAdjustedById: billDetails?.FK_CreatedById || 1,
-        adjustedDatetime: new Date().toISOString(),
-      };
+        let receiptResp;
+        try {
+          receiptResp = await createReceiptMaster(pPayload).unwrap();
+        } catch (err) {
+          console.error('Failed to create receipt for row', i, err);
+          alert(`Failed to create receipt for payment row ${i + 1}: ${err?.data?.message || err?.message || ''}`);
+          setPosting(false);
+          return;
+        }
 
-      await createReceiptAdjustmentDetail(adjustmentPayload).unwrap();
+        const rid = receiptResp?.receiptId || receiptResp?.id || receiptResp?.PK_ReceiptId || receiptResp?.ReceiptId || `R${Date.now()}`;
 
-      alert('Receipt and adjustment saved successfully');
+        // If the payment row specifies an adjusted bill, create an adjustment detail for this receipt
+        if (p.adjustedBillId && String(p.adjustedBillId).trim() !== '') {
+          const adjPayload = {
+            fkReceiptId: rid,
+            fkAdjustedBillId: p.adjustedBillId,
+            adjustedAmount: amt,
+            amountTDS: 0,
+            amountDiscount: 0,
+            amountDisAllow: 0,
+            amountST: 0,
+            fkAdjustedById: billDetails?.FK_CreatedById || 1,
+            adjustedDatetime: new Date().toISOString(),
+          };
+
+          try {
+            await createReceiptAdjustmentDetail(adjPayload).unwrap();
+            // mark payment as adjusted and decrement cached payable and increment adjust-count if present
+            setPayments((prev) => prev.map((r, idx) => (idx === i ? { ...r, receiptId: rid, adjusted: true, adjustedBillPayable: Math.max(0, (r.adjustedBillPayable || 0) - amt), adjustedBillAdjustCount: (r.adjustedBillAdjustCount || 0) + 1 } : r)));
+          } catch (err) {
+            console.error('Failed to create adjustment for', rid, err);
+            alert(`Receipt ${rid} was created but adjustment failed: ${err?.data?.message || err?.message || ''}`);
+            setPayments((prev) => prev.map((r, idx) => (idx === i ? { ...r, receiptId: rid, adjusted: false } : r)));
+            setPosting(false);
+            return;
+          }
+        } else {
+          // no adjustment for this row (outstanding)
+          setPayments((prev) => prev.map((r, idx) => (idx === i ? { ...r, receiptId: rid, adjusted: false } : r)));
+        }
+      }
+
+      const outstanding = Number(currencyAmount) - Number(paymentsSum);
+      if (outstanding > 0.001) {
+        alert(`Receipt(s) saved. Outstanding amount: ${outstanding}`);
+      } else {
+        alert('Receipt(s) and adjustments saved successfully');
+      }
     } catch (err) {
       console.error('Failed to post receipt:', err);
       alert('Failed to save receipt. See console for details.');
@@ -226,26 +376,82 @@ const BillReceipt = () => {
                 <TableCell>Party Name</TableCell>
                 <TableCell>Deposit Type</TableCell>
                 <TableCell>Co-Pay</TableCell>
+                <TableCell>Adj Bill</TableCell>
                 <TableCell>Adjusted</TableCell>
+                <TableCell>Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              <TableRow>
-                <TableCell>{receiptNo}</TableCell>
-                <TableCell>{receiptDateTime}</TableCell>
-                <TableCell>{totals.totalAmount}</TableCell>
-                <TableCell>0</TableCell>
-                <TableCell>{totals.totalNet}</TableCell>
-                <TableCell>{payType}</TableCell>
-                <TableCell>{partyName}</TableCell>
-                <TableCell>{billDetails?.FK_BillSerieseId || ''}</TableCell>
-                <TableCell>
-                  <Checkbox />
-                </TableCell>
-                <TableCell>
-                  <Checkbox checked />
-                </TableCell>
-              </TableRow>
+              {(payments || []).map((p, i) => {
+                // Render all payment rows (including zero/empty amounts) so Add Row shows immediately
+                return (
+                  <TableRow key={i}>
+                    <TableCell>{p.receiptId || 'Pending'}</TableCell>
+                    <TableCell>{p.payDate || receiptDateTime}</TableCell>
+                    <TableCell>
+                      <TextField size="small" type="number" inputProps={{ min: 0, step: 0.01 }} value={p.amount} onChange={(e) => updatePaymentRow(i, { amount: Number(e.target.value) })} />
+                    </TableCell>
+                    <TableCell>0</TableCell>
+                    <TableCell>{p.amount}</TableCell>
+                    <TableCell>
+                      <TextField select size="small" value={p.method} onChange={(e) => updatePaymentRow(i, { method: e.target.value })}>
+                        {['CASH','CREDIT_CARD','UPI','CHEQUE','OTHER'].map((m) => (
+                          <MenuItem key={m} value={m}>{m.replace('_',' ')}</MenuItem>
+                        ))}
+                      </TextField>
+                    </TableCell>
+                    <TableCell>{partyName}</TableCell>
+                    <TableCell>{billDetails?.FK_BillSerieseId || ''}</TableCell>
+                    <TableCell>
+                      <Checkbox checked={Boolean(p.isCoPay)} onChange={(e) => updatePaymentRow(i, { isCoPay: e.target.checked })} />
+                    </TableCell>
+                    <TableCell>
+                      <Box>
+                        <TextField size="small" value={p.adjustedBillId || ''} onChange={(e) => updatePaymentRow(i, { adjustedBillId: e.target.value })} onBlur={(e) => handleFetchAdjDetails(i, e.target.value)} placeholder="Bill ID" />
+                        <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
+                          {p.adjLoading ? (
+                            <Typography variant="caption" color="text.secondary">Checking…</Typography>
+                          ) : (p.adjustedBillFound === false ? (
+                            <Typography variant="caption" color="error">Bill not found</Typography>
+                          ) : null)}
+                          {p.adjustedBillAdjustCount ? (
+                            <Typography variant="caption" color="text.secondary">Adjustments: {p.adjustedBillAdjustCount}</Typography>
+                          ) : null}
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {renderAdjStatus(p)}
+                        <Button size="small" variant="outlined" onClick={() => addPaymentRowAt(i)}>Add</Button>
+                        <Button size="small" color="error" variant="outlined" onClick={() => { if (window.confirm('Delete this payment row?')) removePaymentRow(i); }}>Delete</Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+
+              {/* Empty state: show original single row when no payments configured */}
+              {(!payments || payments.length === 0) && (
+                <TableRow>
+                  <TableCell>{receiptNo}</TableCell>
+                  <TableCell>{receiptDateTime}</TableCell>
+                  <TableCell>{totals.totalAmount}</TableCell>
+                  <TableCell>0</TableCell>
+                  <TableCell>{totals.totalNet}</TableCell>
+                  <TableCell>{payType}</TableCell>
+                  <TableCell>{partyName}</TableCell>
+                  <TableCell>{billDetails?.FK_BillSerieseId || ''}</TableCell>
+                  <TableCell><Checkbox /></TableCell>
+                  <TableCell></TableCell>
+                  <TableCell><Checkbox checked /></TableCell>
+                  <TableCell>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Button size="small" variant="outlined" onClick={() => setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: Number(totals.totalNet) || 0, reference: '' }])}>Add Row</Button>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </TableContainer>
@@ -297,12 +503,24 @@ const BillReceipt = () => {
           </Grid>
         </Box>
 
+        {/* Compact payment controls (Add/Reset) — no separate split section */}
+        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Button size="small" variant="outlined" onClick={addPaymentRow}>Add Payment</Button>
+          <Button size="small" variant="text" onClick={() => setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: Number(totals.totalNet) || 0, reference: '' }])}>Reset To Full</Button>
+          <Box sx={{ ml: 2 }}>
+            <Typography>Total Payments: <strong>{paymentsSum}</strong></Typography>
+          </Box>
+          <Box sx={{ ml: 2 }}>
+            {paymentsSum !== Number(totals.totalNet) ? <Typography color="error">Remaining: {Number(totals.totalNet) - paymentsSum}</Typography> : <Typography color="success.main">Fully allocated</Typography>}
+          </Box>
+        </Box>
+
         {/* ================= FOOTER ================= */}
         <Box sx={{ mt: 1, backgroundColor: "#f8caca", p: 1 }}>
           <Grid container alignItems="center">
             <Grid item xs={6}>
               <Typography fontWeight="bold">
-                Balance Amount : {totals.totalNet}
+                Balance Amount : {Number(totals.totalNet) - paymentsSum}
               </Typography>
             </Grid>
             <Grid item xs={6} textAlign="right">

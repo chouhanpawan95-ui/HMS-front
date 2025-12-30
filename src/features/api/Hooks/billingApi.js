@@ -86,6 +86,14 @@ export const billingApi = createApi({
             }),
             transformResponse: (res) => res.data || res || {},
         }),
+        // Fetch receipt adjustment details referencing a particular adjusted bill (fkAdjustedBillId)
+        getReceiptAdjustmentsByAdjustedBillId: builder.query({
+            query: (billid) => ({
+                url: `/receiptadjustmentdetail?fkAdjustedBillId=${encodeURIComponent(billid)}`,
+                method: 'GET',
+            }),
+            transformResponse: (res) => res.data || res || [],
+        }),
         getBillId: builder.query({
             // args is an object with optional query params
             query: (args = {}) => {
@@ -106,6 +114,10 @@ export const {
     useGetBillMasterByIdQuery,
     useGetBillDetailByIdQuery,
     useGetBillDetailByBillIdQuery,
+    useLazyGetBillDetailByBillIdQuery,
+
+    useGetReceiptAdjustmentsByAdjustedBillIdQuery,
+    useLazyGetReceiptAdjustmentsByAdjustedBillIdQuery,
 
     useCreateBillMutation,
     useCreateBilldetailsMutation,
