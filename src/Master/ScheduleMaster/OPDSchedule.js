@@ -1,4 +1,4 @@
-import { useForm, Controller, Watch } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import {
   Box,
   Paper,
@@ -106,8 +106,9 @@ const OPDSchedule = () => {
                   select
                   {...register("fkBranchId", { required: true })}
                 >
+                  <MenuItem value="">Select</MenuItem>
                   {BranchName.map((bn) => (
-                    <MenuItem key={bn.id}>{bn.BranchName}</MenuItem>
+                    <MenuItem key={bn.id} value={bn.id}>{bn.BranchName}</MenuItem>
                   ))}
                 </TextField>
               </Grid>
@@ -119,9 +120,11 @@ const OPDSchedule = () => {
                   select
                   size="small"
                   fullWidth
+                  {...register('fkScheduleTypeId',{required:true})}
                 >
+                  <MenuItem value="">Select</MenuItem>
                   {scheduleType.map((st) => (
-                    <MenuItem key={st}>{st}</MenuItem>
+                    <MenuItem key={st} value={st}>{st}</MenuItem>
                   ))}
                 </TextField>
               </Grid>
@@ -136,6 +139,7 @@ const OPDSchedule = () => {
                   defaultValue=""
                   {...register("fkDoctorId", { required: true })}
                 >
+                  <MenuItem value="">Select</MenuItem>
                   {DoctorList.map((d) => (
                     <MenuItem key={d.id} value={d.id}>
                       {d.name}
@@ -162,6 +166,7 @@ const OPDSchedule = () => {
                   name="fromDate"
                   control={control}
                   defaultValue={null}
+                  rules={{required:'form date'}}
                   render={({ field }) => (
                     <DatePicker 
                       label="From Date" 
@@ -177,6 +182,7 @@ const OPDSchedule = () => {
                   name="toDate"
                   control={control}
                   defaultValue={null}
+                  rules={{required:true}}
                   render={({ field }) => (
                     <DatePicker 
                     label="To Date" 
@@ -193,6 +199,7 @@ const OPDSchedule = () => {
                 <Controller
                   name="fromApptTime"
                   control={control}
+                  rules={{required:true}}
                   defaultValue={null}
                   render={({ field }) => (
                     <TimePicker 
@@ -210,6 +217,7 @@ const OPDSchedule = () => {
                 <Controller
                   name="toApptTime"
                   control={control}
+                  rules={{required:true}}
                   defaultValue={null}
                   render={({ field }) => (
                     <TimePicker 
@@ -228,7 +236,7 @@ const OPDSchedule = () => {
                   label="Interval (minutes)"
                   type="number"
                   fullWidth
-                  {...register("intervalMinuit")}
+                  {...register("intervalMinuit",{required:true})}
                 />
               </Grid>
 
@@ -238,7 +246,7 @@ const OPDSchedule = () => {
                   label="Slot Limit"
                   type="number"
                   fullWidth
-                  {...register("maxLimitSlot")}
+                  {...register("maxLimitSlot",{required:true})}
                 />
               </Grid>
             </Grid>

@@ -17,18 +17,39 @@ import {
   Dialog,
 } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
-import { useGetOPDScheduleQuery } from "../../features/api/scheduleApi";
+import {
+  useGetOPDScheduleQuery,
+  useGetOPDAppointmentQuery,
+} from "../../features/api/scheduleApi";
 import DoctorList from "../../Comman/DoctorList";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import dayjs from "dayjs";
 import OPDAppointment from "./OPDappointment";
 import Loader from "../../component/Loader";
 
 const AppointmentManager = () => {
-  const { data: opdScheduleResponse, isLoading } = useGetOPDScheduleQuery();
+  const { data: opdScheduleResponse, isLoading: isScheduleLoading } =
+    useGetOPDScheduleQuery();
 
   const [selectedDoctor, setSelectedDoctor] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
+
+  const { data: appointmentsResponse, isLoading: isAppointmentLoading } =
+    useGetOPDAppointmentQuery(
+      {
+        doctorId: selectedDoctor,
+        date: selectedDate,
+      },
+      { skip: !selectedDoctor || !selectedDate }
+    );
+  console.log("Appointment API response:", appointmentsResponse);
+
+  // normatize appointment
+  const appointments = Array.isArray(appointmentsResponse)
+    ? appointmentsResponse
+    : Array.isArray(appointmentsResponse?.data)
+    ? appointmentsResponse.data
+    : [];
 
   const [openAppointment, setOpenAppointment] = useState(false);
   const [selectSlot, setSelectSlot] = useState(null);
@@ -87,6 +108,19 @@ const AppointmentManager = () => {
     setOpenAppointment(true);
   };
 
+  const bookedSlots = useMemo(() => {
+    const map = new Map();
+
+    appointments.forEach((appt) => {
+      if (!appt?.apptTime) return;
+
+      const timekey = dayjs(appt.apptTime, "HH:mm").format("hh:mm A");
+      map.set(timekey, appt);
+    });
+    return map;
+  }, [appointments]);
+
+  const isLoading = isAppointmentLoading || isScheduleLoading;
   if (isLoading) return <Loader />;
 
   return (
@@ -170,23 +204,40 @@ const AppointmentManager = () => {
                 </TableRow>
               )}
               {availableSchedule &&
-                timeSlots.map((slot) => (
-                  <TableRow key={slot}>
-                    <TableCell
-                      onClick={() => handleSlotClick(slot)}
-                      sx={{ cursor: "pointer" }}
+                timeSlots.map((slot) => {
+                  const bookedAppt = bookedSlots.get(slot);
+                  return (
+                    <TableRow key={slot}
+                      sx={{
+                        backgroundColor:bookedAppt ? '#e8f5e9' : 'inherit'
+                      }}
                     >
-                      {slot}
-                    </TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                ))}
+                      <TableCell
+                        onClick={
+                          bookedAppt ? undefined : () => handleSlotClick(slot)
+                        }
+                        sx={{
+                          cursor: bookedAppt ? "not-allowed" : "pointer",
+                          color: bookedAppt ? "#2e7d32" : "inherit",
+                          fontWeight: bookedAppt ? "bold" : "normal",
+                        }}
+                      >
+                        {slot}
+                      </TableCell>
+                      <TableCell>{bookedAppt?.appointmentId ?? "-"}</TableCell>
+                      <TableCell>
+                        {bookedAppt
+                          ? `${bookedAppt.firstName} ${bookedAppt.lastName}`
+                          : "--"}
+                      </TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  );
+                })}
             </TableBody>
           </Table>
         </TableContainer>
@@ -201,6 +252,7 @@ const AppointmentManager = () => {
           doctorId={selectedDoctor}
           appointmentDate={selectedDate}
           appointmentTime={selectSlot}
+          appointments = {appointments}
           onClose={() => setOpenAppointment(false)}
         />
       </Dialog>
