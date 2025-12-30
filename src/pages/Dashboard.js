@@ -111,20 +111,27 @@ console.log("getopdvisit", getOpd);
 
   // Prefer total count from OPD response; fall back to patients response
   const opdTotal = getOpd?.total || getOpd?.totalCount || getOpd?.meta?.total || null;
-  const total = opdTotal ?? (
+  const serverTotal = opdTotal ?? (
     patientsResp?.total || patientsResp?.totalCount || patientsResp?.meta?.total || null
   );
 
-  const totalPages = total ? Math.ceil(total / limit) : null;
-  // hasMore should reflect which list we're showing (OPD by default)
-  const hasMore = totalPages ? page < totalPages : (opdList.length === limit);
+  // If date or text filters are active we operate in client-filtered mode
+  const isFiltered = Boolean(selectedDate || (searchQuery && searchQuery.trim() !== ""));
+  const displayTotal = isFiltered ? filteredOpd.length : (serverTotal ?? filteredOpd.length);
+  const displayTotalPages = displayTotal ? Math.ceil(displayTotal / limit) : null;
+
+  // When filtered, use client-side pagination (slice the filtered array); otherwise rely on server-side pages
+  const hasMore = displayTotalPages ? page < displayTotalPages : (opdList.length === limit && !isFiltered);
 
   // Sync filtered patients when API data changes
   useEffect(() => {
     if (patientsResp) {
       setFilteredPatients(patients);
     }
-  }, [patientsResp]);
+    // reset to first page when user changes filters (text/date) so paging remains intuitive
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientsResp, selectedDate, searchQuery]);
 
   // Show loader if patients or OPD are loading
   if (isLoading || getOpdLoading) return <Loader />;
@@ -284,7 +291,8 @@ console.log("getopdvisit", getOpd);
 
             <TableBody>
               {filteredOpd.length > 0 ? (
-                filteredOpd?.map((row, i) => {
+                // When filters are active, show a page-slice of the filtered results, otherwise the server has provided a page
+                (isFiltered ? filteredOpd.slice((page - 1) * limit, page * limit) : filteredOpd)?.map((row, i) => {
                   // Try to find patient details for display
                   const patient = (patients || []).find((p) =>
                     String(p.patientId) === String(row.fkRegId) ||
@@ -466,7 +474,7 @@ console.log("getopdvisit", getOpd);
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Total Records: {opdTotal ?? filteredOpd.length}
+            Total Records: {displayTotal}
           </Typography>
 
           {/* Pagination Controls */}
@@ -501,7 +509,7 @@ console.log("getopdvisit", getOpd);
 
               <Typography variant="body2">
                 Page {page}
-                {totalPages ? ` / ${totalPages}` : ""}
+                {displayTotalPages ? ` / ${displayTotalPages}` : ""}
               </Typography>
 
               <Button
