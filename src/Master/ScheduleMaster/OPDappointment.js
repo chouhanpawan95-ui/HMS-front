@@ -49,28 +49,36 @@ const OPDAppointment = ({
     handleSubmit,
     control,
     watch,
-    // formState={errors},
     reset,
-  } = useForm();
+  } = useForm({
+    defaultValues:{
+      fkBranchId:'',
+      fkRegId:'',
+      bookingDate:null,
+    }
+  });
 
   const title = ["Mr.", "Mrs.", "Miss"];
 
   useEffect(() => {
     if (appointmentDate && appointmentTime) {
       reset({
-        fkConsultantId: doctorId,
-        apptDate: dayjs(appointmentDate),
-        apptTime: dayjs(appointmentTime, "hh:mm A"),
+        fkConsultantId: doctorId ?? '',
+        apptDate: appointmentDate ? dayjs(appointmentDate, "YYYY-MM-DD") : null,
+        apptTime: appointmentTime ?dayjs(appointmentTime, "HH:mm"): null,
       });
     }
+    console.log(appointmentDate, appointmentTime);
   }, [appointmentDate, appointmentTime, doctorId, reset]);
 
   const onSubmitOPDAppointment = async (data) => {
     const selectedTime = dayjs(data.apptTime).format("HH:mm");
+    const selectedDate = dayjs(data.apptDate).format("YYYY-MM-DD");
     const alreadyBooked = appointments.some((a) => {
       return (
         String(a.fkRegId) === String(data.fkRegId) &&
-        dayjs(a.apptDate).isSame(dayjs(data.apptDate), "day") &&
+        // dayjs(a.apptDate).isSame(dayjs(data.apptDate), "day") &&
+        dayjs(a.apptDate).format("YYYY-MM-DD") === selectedDate &&
         dayjs(a.apptTime, "HH:mm").format("HH:mm") === selectedTime
       );
     });
@@ -83,8 +91,8 @@ const OPDAppointment = ({
       await createOPDAppointment({
         fkBranchId: data.fkBranchId,
         fkRegId: data.fkRegId,
-        bookingDate: dayjs(data.bookingDate).format("YYYY:MM:DD"),
-        apptDate: dayjs(data.apptDate).format("YYYY:MM:DD"),
+        bookingDate: dayjs(data.bookingDate).format("YYYY-MM-DD"),
+        apptDate: dayjs(data.apptDate).format("YYYY-MM-DD"),
         apptTime: dayjs(data.apptTime).format("HH:mm"),
         contactNo: data.contactNo,
         initial: data.initial,
@@ -101,8 +109,6 @@ const OPDAppointment = ({
       }).unwrap();
       alert("Appointment Scheduled!!");
       reset();
-      // refetch();
-      
       onClose();
     } catch (err) {
       console.error(err);
@@ -173,13 +179,12 @@ const OPDAppointment = ({
                 <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
                   <Controller
                     name="apptDate"
-                    size="small"
                     control={control}
+                    defaultValue={null}
                     render={({ field }) => (
                       <DatePicker
-                        disabled
                         label="Date of Appointment"
-                        minDate={watch("bookingDate")}
+                        disabled
                         {...field}
                       />
                     )}
@@ -191,17 +196,12 @@ const OPDAppointment = ({
                 <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
                   <Controller
                     name="apptTime"
-                    size="small"
                     control={control}
+                    defaultValue={null}
                     render={({ field }) => (
                       <TimePicker
-                        disabled
                         label="Time of Appointment"
-                        minTime={
-                          dayjs(watch("apptDate")).isSame(dayjs(), "day")
-                            ? dayjs()
-                            : null
-                        }
+                        disabled
                         {...field}
                       />
                     )}
@@ -355,14 +355,15 @@ const OPDAppointment = ({
                     size="small"
                     fullWidth
                     SelectProps={{ native: true }}
-                    value={selectedCity}
-                    onChange={(e) => setSelectedCity(e.target.value)}
+                    {...register("fkCityId")}
+                    // value={selectedCity}
+                    // onChange={(e) => setSelectedCity(e.target.value)}
                   >
                     <option value="" disabled></option>
                     {Array.isArray(cities) &&
-                      cities.map((d) => (
-                        <option key={d._id} value={d._id}>
-                          {d.CityName}
+                      cities.map((c) => (
+                        <option key={c.cityId} value={c.cityId}>
+                          {c.CityName}
                         </option>
                       ))}
                   </TextField>
