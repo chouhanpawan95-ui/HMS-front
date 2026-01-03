@@ -25,11 +25,13 @@ import style from "../BillingMaster/RateListMaster.module.css";
 import {
   useGetOPDScheduleQuery,
   useGetOPDAppointmentQuery,
+  useGetOPDAppointmentBlockDetailQuery
 } from "../../features/api/scheduleApi";
 
 import OPDAppointment from "./OPDappointment";
 import Loader from "../../component/Loader";
 import DoctorList from "../../Comman/DoctorList";
+import BlockAppointment from "./BlockAppointment";
 
 dayjs.extend(utc);
 
@@ -45,6 +47,8 @@ const AppointmentManager = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [openAppointment, setOpenAppointment] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [openBlock,setOpenBlock]=useState(false);
+  const [blockSlot,setBlockSlot]=useState(null);
 
   /* -------------------- APIs -------------------- */
   const { data: opdScheduleResponse, isLoading: isScheduleLoading } =
@@ -55,6 +59,11 @@ const AppointmentManager = () => {
       { doctorId: selectedDoctor, date: selectedDate },
       { skip: !selectedDoctor || !selectedDate }
     );
+
+  const { data: blockDetailsResponse, isLoading: isBlockDetailsLoading } = useGetOPDAppointmentBlockDetailQuery(
+    {doctorId:selectedDoctor, date:selectedDate},
+    {skip:!selectedDoctor || !selectedDate}
+  );
 
   /* -------------------- Normalize Responses -------------------- */
   const opdSchedules = useMemo(() => {
@@ -70,6 +79,12 @@ const AppointmentManager = () => {
       return appointmentsResponse.data;
     return [];
   }, [appointmentsResponse]);
+
+  const blockedList = useMemo(() => {
+    if(Array.isArray(blockDetailsResponse)) return blockDetailsResponse;
+    if(Array.isArray(blockDetailsResponse?.data)) return blockDetailsResponse.data;
+    return [];
+  },[blockDetailsResponse]);
 
   /* -------------------- Filter Appointments -------------------- */
   const appointments = useMemo(() => {
@@ -105,8 +120,19 @@ const AppointmentManager = () => {
       map.set(parsed.format("HH:mm"), appt);
     });
 
+    blockedList.forEach((block) => {
+      const date = normalizeDate(block.apptDate);
+      if(date !== selectedDate) return;
+
+      map.set(block.apptTime,{
+        ...block,
+        isBlocked:true
+      });
+    })
+
     return map;
   }, [appointments]);
+
 
   /* -------------------- Doctor Schedule -------------------- */
   const availableSchedule = useMemo(() => {
@@ -154,8 +180,22 @@ const AppointmentManager = () => {
     setSelectedSlot(null);
   };
 
+  // const handleSlotClick = (slot) => {
+  //   if (bookedSlots.has(slot)) return;
+  //   setSelectedSlot(slot);
+  //   setOpenAppointment(true);
+  // };
   const handleSlotClick = (slot) => {
-    if (bookedSlots.has(slot)) return;
+    const appt = bookedSlots.get(slot);
+
+    if (appt && !appt.isBlocked){
+      setBlockSlot(appt);
+      setOpenBlock(true);
+      return;
+    }
+
+    if(appt?.isBlocked) return;
+    if(appt) return;
     setSelectedSlot(slot);
     setOpenAppointment(true);
   };
@@ -241,6 +281,7 @@ const AppointmentManager = () => {
               {availableSchedule &&
                 timeSlots.map((slot) => {
                   const booked = bookedSlots.get(slot);
+                  const isBloked = booked?.isBlocked;
 
                   return (
                     <TableRow
@@ -248,9 +289,13 @@ const AppointmentManager = () => {
                       hover={!booked}
                       onClick={() => handleSlotClick(slot)}
                       sx={{
-                        backgroundColor: booked ? "#e8f5e9" : "inherit",
-                        cursor: booked ? "not-allowed" : "pointer",
+                        backgroundColor: isBloked ? '#ffebee' : booked ? '#e8f5e9' :'inherit',
+                        cursor: booked ? 'not-allowed' : 'pointer',
                       }}
+                      // sx={{
+                      //   backgroundColor: booked ? "#e8f5e9" : "inherit",
+                      //   cursor: booked ? "not-allowed" : "pointer",
+                      // }}
                     >
                       <TableCell sx={{ fontWeight: booked ? "bold" : "normal" }}>
                         {slot}
@@ -265,7 +310,7 @@ const AppointmentManager = () => {
                       <TableCell>{booked?.apptType ?? "--"}</TableCell>
                       <TableCell>{booked?.contactNo ?? "--"}</TableCell>
                       <TableCell>{booked?.referredBy ?? "--"}</TableCell>
-                      <TableCell>{booked?.remarks ?? "--"}</TableCell>
+                      <TableCell>{isBloked ? booked.blockReason : booked?.remarks ?? "--"}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -283,6 +328,16 @@ const AppointmentManager = () => {
           appointments={appointments}
           onClose={closeDialog}
         />
+      </Dialog>
+      <Dialog open={openBlock} onClose={() => setOpenBlock(false)} maxWidth="md" fullWidth>
+        <BlockAppointment
+          branchId={blockSlot?.fkBranchId}
+          doctorId={blockSlot?.fkConsultantId}
+          appointmentDate={normalizeDate(blockSlot?.apptDate)}
+          appointmentTime={blockSlot?.apptTime}
+          appointmentId={blockSlot?.appointmentId}
+        />
+
       </Dialog>
     </Box>
   );
