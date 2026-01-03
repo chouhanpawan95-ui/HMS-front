@@ -42,30 +42,42 @@ const OPDAppointment = ({
   const { data: districts = [] } = useGetDistrictsQuery(selectedState);
 
   const [selectedCity, setSelectedCity] = useState("");
-  const { data: cities = [] } = useGetCitiesQuery(selectedDistrict);
+  const { data: cityResponse} = useGetCitiesQuery(selectedDistrict);
 
-  const {
-    register,
-    handleSubmit,
-    control,
-    watch,
-    reset,
-  } = useForm({
-    defaultValues:{
-      fkBranchId:'',
-      fkRegId:'',
-      bookingDate:null,
-    }
+  const cities = Array.isArray(cityResponse)
+    ? cityResponse
+    : cityResponse?.data ?? [];
+
+  console.log('city',cities);
+
+  const { register, handleSubmit, control, formState:{errors}, reset } = useForm({
+    defaultValues: {
+      fkConsultantId:'',
+      fkBranchId: "",
+      fkRegId: "",
+      bookingDate: null,
+    },
   });
 
   const title = ["Mr.", "Mrs.", "Miss"];
 
   useEffect(() => {
+    setSelectedState("");
+    setSelectedDistrict("");
+    reset((v) => ({ ...v, fkCityId: "" }));
+  }, [selectedCountry]);
+
+  useEffect(() => {
+    setSelectedDistrict("");
+    reset((v) => ({ ...v, fkCityId: "" }));
+  }, [selectedState]);
+
+  useEffect(() => {
     if (appointmentDate && appointmentTime) {
       reset({
-        fkConsultantId: doctorId ?? '',
+        fkConsultantId: doctorId ?? "",
         apptDate: appointmentDate ? dayjs(appointmentDate, "YYYY-MM-DD") : null,
-        apptTime: appointmentTime ?dayjs(appointmentTime, "HH:mm"): null,
+        apptTime: appointmentTime ? dayjs(appointmentTime, "HH:mm") : null,
       });
     }
     console.log(appointmentDate, appointmentTime);
@@ -99,13 +111,13 @@ const OPDAppointment = ({
         lastName: data.lastName,
         firstName: data.firstName,
         dob: data.dob,
-        sex: data.sex,
-        address: data.address,
+        // sex: data.sex,
+        // address: data.address,
         emailAddress: data.emailAddress,
         fkCityId: data.fkCityId,
         fkConsultantId: data.fkConsultantId,
         isVIP: false,
-        fkServiceId: data.fkServiceId,
+        // fkServiceId: data.fkServiceId,
       }).unwrap();
       alert("Appointment Scheduled!!");
       reset();
@@ -169,6 +181,9 @@ const OPDAppointment = ({
                         label="Booking Date"
                         minDate={dayjs()}
                         {...field}
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
                       />
                     )}
                     slotProps={{
@@ -184,13 +199,13 @@ const OPDAppointment = ({
                     render={({ field }) => (
                       <DatePicker
                         label="Date of Appointment"
-                        disabled
+                        readOnly
                         {...field}
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
                       />
                     )}
-                    slotProps={{
-                      textField: { size: "small", fullWidth: true },
-                    }}
                   />
                 </Grid>
                 <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
@@ -201,13 +216,13 @@ const OPDAppointment = ({
                     render={({ field }) => (
                       <TimePicker
                         label="Time of Appointment"
-                        disabled
+                        readOnly
                         {...field}
+                        slotProps={{
+                          textField: { size: "small", fullWidth: true },
+                        }}
                       />
                     )}
-                    slotProps={{
-                      textField: { size: "small", fullWidth: true },
-                    }}
                   />
                 </Grid>
               </Grid>
@@ -269,12 +284,16 @@ const OPDAppointment = ({
                 </Grid>
                 <Grid sx={{ width: { xs: "45%", md: "18%" } }}>
                   <TextField
-                    type="number"
+                    type="tel"
                     fullWidth
                     size="small"
                     label="Contact No"
                     {...register("contactNo", {
                       required: true,
+                      pattern: {
+                        value: /^[0-9]{10}$/,
+                        message: "Contact number must be 10 digits",
+                      },
                     })}
                   />
                 </Grid>
@@ -284,7 +303,12 @@ const OPDAppointment = ({
                     size="small"
                     label="Email"
                     fullWidth
-                    {...register("emailAddress")}
+                    {...register("emailAddress", {
+                      pattern: {
+                        value: /^[^\s@]+@[^\s@]+.\[^\s@]+$/,
+                        message: "Invalid email address",
+                      },
+                    })}
                   />
                 </Grid>
               </Grid>
@@ -350,23 +374,30 @@ const OPDAppointment = ({
                 </Grid>
                 <Grid sx={{ width: { xs: "25%", md: "10%" } }}>
                   <TextField
-                    select
-                    label="City"
-                    size="small"
-                    fullWidth
-                    SelectProps={{ native: true }}
-                    {...register("fkCityId")}
-                    // value={selectedCity}
-                    // onChange={(e) => setSelectedCity(e.target.value)}
-                  >
-                    <option value="" disabled></option>
-                    {Array.isArray(cities) &&
-                      cities.map((c) => (
-                        <option key={c.cityId} value={c.cityId}>
-                          {c.CityName}
-                        </option>
-                      ))}
-                  </TextField>
+  select
+  label="City"
+  size="small"
+  fullWidth
+  error={!!errors.fkCityId}
+  helperText={errors.fkCityId?.message}
+  SelectProps={{ native: true }}
+  {...register("fkCityId", {
+    required: "City is required",
+  })}
+>
+  <option value=""></option>
+
+  {cities.length === 0 ? (
+    <option disabled>No cities available</option>
+  ) : (
+    cities.map((c) => (
+      <option key={c.cityId} value={c.cityId}>
+        {c.CityName}
+      </option>
+    ))
+  )}
+</TextField>
+
                 </Grid>
               </Grid>
 
