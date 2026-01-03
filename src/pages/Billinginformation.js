@@ -28,8 +28,9 @@ import { Radio, RadioGroup, FormControl } from "@mui/material";
 import { useGetPatientsQuery, useCreateOpdVisitMutation } from "../features/api/patientsApi";
 import { useGetRateListQuery, useGetRatelistDetailsQuery } from '../features/api/Hooks/ratelistApi'
 import { useGetPartyNameQuery } from '../features/api/Hooks/partyApi.js';
-import { useCreateBillMutation, useCreateBilldetailsMutation, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery } from '../features/api/Hooks/billingApi.js';
+import { useCreateBillMutation, useCreateBilldetailsMutation, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery, useCreateReceiptMasterMutation, useCreateReceiptAdjustmentDetailMutation } from '../features/api/Hooks/billingApi.js';
 import { useGetServiceQuery } from '../features/api/Hooks/serviceApi';
+import { renderReceiptHtml } from './BillReceiptPrint';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -58,6 +59,9 @@ const PartyName = [
 ];
 const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
   const navigate = useNavigate();
+  const [createReceiptMaster] = useCreateReceiptMasterMutation();
+  const [createReceiptAdjustmentDetail] = useCreateReceiptAdjustmentDetailMutation();
+  const [submittingWithReceipt, setSubmittingWithReceipt] = useState(false);
   const routerLocation = useLocation();
   const { bill, patient } = routerLocation.state || {};
   const [pkbillId, setpkbillId] = useState(bill?.billId);
@@ -118,8 +122,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [partyName, setPartyName] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
   const [billingRemarks, setBillingRemarks] = useState("");
-  // First API response (RateList)
-  const rateList = GetRatelistResponse?.data || [];
+  // First API response (RateList) — handle both top-level array and { data: [] } shapes
+  const rateList = Array.isArray(GetRatelistResponse) ? GetRatelistResponse : (GetRatelistResponse?.data || []);
 
   // Second API response (RateListDetails)
   const rateListDetails = GetRatedetails?.data || [];
@@ -268,13 +272,19 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
 
   // When API loads → set default value automatically
   useEffect(() => {
-    if (
-      GetRatelistResponse?.data &&
-      GetRatelistResponse.data.length > 0
-    ) {
-      setSelectedRateListId(GetRatelistResponse.data[0].rateListId);
+    console.log('RateListResponse changed', GetRatelistResponse);
+    if (Array.isArray(rateList) && rateList.length > 0) {
+      const first = rateList[0];
+      const id = first.rateListId || first._id || first.id || '';
+      setSelectedRateListId(id);
+      setBillDetails(prev => ({
+        ...prev,
+        RateType: first.RateListName || first.RateList || first.name || '',
+      }));
+    } else {
+      setSelectedRateListId('');
     }
-  }, [GetRatelistResponse]);
+  }, [rateList, GetRatelistResponse]);
   // If navigated with a bill in location.state, populate bill and rows
   useEffect(() => {
     const bill = location?.state?.bill;
@@ -332,7 +342,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     }
   }, [bill?.billId,getBillDetail, services]);
 
-  const billMasterSubmit = async () => {
+  const billMasterSubmit = async (skipNavigate = false) => {
     let billMasterPayload;
     try {
       const totals = calculateBillTotals();
@@ -391,13 +401,26 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       }    
       const billMasterResp = await createBill(billMasterPayload).unwrap();    
       setpkbillId(billMasterResp?.billId)
+      // Ensure billDetails state has the primary key for later receipt/adjustment
+      const newBillId = billMasterResp?.billId || billMasterResp?.PK_BillId || billMasterResp?.id || billMasterResp?.PK_BillId || null;
+      if (newBillId) {
+        setBillDetails((prev) => ({ ...prev, PK_BillId: newBillId }));
+      }
 
       setIsSaving(true);
       try {
-        await billDeailSubmit(billMasterResp?.billId);
+        try {
+          await billDeailSubmit(billMasterResp?.billId);
+        } catch (err) {
+          // Non-fatal: bill details failed but bill master was created — continue to receipt step
+          console.error('Failed to create bill details (non-fatal):', err);
+          alert('Bill created, but some bill details failed to save. Proceeding to create receipt.');
+        }
       } finally {
         setIsSaving(false);
-      }  
+      }
+      // return normalized response with guaranteed id where possible
+      return { ...(billMasterResp || {}), normalizedBillId: newBillId || null };
      
     } catch (err) {
       console.error("Error creating bill:", err);
@@ -494,8 +517,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         }
       }
 
-      setSelectedPatient(null);
-      navigate('/Dashboard');
+      // setSelectedPatient(null);
+      // navigate('/Dashboard');
     } catch (err) {
       console.error('Error creating bill details or OPD:', err);
       alert('✅ Bill created, but failed to create one or more follow-up records. Check console.');
@@ -508,6 +531,147 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     setOpenDialog(false);
     billMasterSubmit();
     //setSelectedPatient(null);
+  };
+
+  const handleSubmitWithReceipt = async () => {
+    if (submittingWithReceipt) return;
+    setSubmittingWithReceipt(true);
+
+    // Open print window immediately to avoid popup blockers (must be opened in direct user click)
+    let printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (printWindow) {
+      try {
+        printWindow.document.open();
+        printWindow.document.write('<html><head><title>Preparing receipt...</title></head><body><p>Preparing receipt...</p></body></html>');
+        printWindow.document.close();
+      } catch (e) {
+        // ignore write errors
+      }
+    } else {
+      alert('Popup blocked — allow popups for this site to enable automatic printing. Receipt will still be created.');
+    }
+
+    try {
+      // Create bill but don't navigate yet
+      const billResp = await billMasterSubmit(true);
+      if (!billResp) throw new Error('Bill creation failed');
+
+      // Compute totals
+      const totals = calculateBillTotals();
+      const paymentDate = billDetails?.BillDate ? billDetails.BillDate.split('T')[0] : new Date().toISOString().slice(0,10);
+      const paymentTime = billDetails?.BillTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      const currencyAmount = Number(totals.totalNetAmount || totals.totalNet || totals.totalNetAmount) || Number(totals.totalNet) || 0;
+
+      const receiptPayload = {
+        fkBillingCompanyId: billDetails?.FK_BillingCompanyId || 1,
+        fkBranchId: billDetails?.FK_BranchId || 1,
+        fkFinyearId: billDetails?.FK_FinYearId || 1,
+        fkRegId: selectedPatient?.patientId || billDetails?.FK_RegId || '',
+        fkDepositHeadId: billDetails?.FK_DepositHeadId || 0,
+        receiptNo: billDetails?.BillNo || `REC-${Date.now()}`,
+        paymentDate,
+        paymentTime,
+        fkDoctorId: billDetails?.FK_DoctorId || selectedPatient?.doctorId || 0,
+        fkCurrencyId: 'INR',
+        currencyAmount,
+        convertRatio: 1,
+        amountINR: currencyAmount,
+        fkPayTypeId: billDetails?.FK_PaytypeID || 'CASH',
+        fkDepositTypeId: billDetails?.FK_DepositTypeId || 'OPD',
+        isCoPayment: billDetails?.isCoPayment || false,
+        fkPartyId: billDetails?.FK_PartyId || selectedPatient?.partyId || selectedPatient?.patientId || '',
+        fkCreatedById: billDetails?.FK_CreatedById || 1,
+        userRemarks: billDetails?.Remarks || '',
+        counterName: billDetails?.counterName || 'Front Desk',
+        fkAppointmentID: billDetails?.FK_AppointmentID || billDetails?.FK_AppointmentId || selectedPatient?.appointmentId || '',
+      };
+
+      console.log('billResp for Submit & Receipt', billResp);
+      console.log('Computed totals for receipt', totals);
+      console.log('Receipt payload to send:', receiptPayload);
+
+      // Validate we have a bill id to adjust
+      const adjustedBillId = billResp?.normalizedBillId || billResp?.billId || billResp?.PK_BillId || billDetails?.PK_BillId || billDetails?.BillNo || null;
+      console.log('Resolved adjustedBillId:', adjustedBillId);
+      if (!adjustedBillId) {
+        const msg = 'Could not determine created bill id; aborting receipt creation.';
+        console.error(msg, { billResp, billDetails });
+        alert(msg);
+        throw new Error(msg);
+      }
+
+      let receiptResp;
+      try {
+        receiptResp = await createReceiptMaster(receiptPayload).unwrap();
+        console.log('Receipt create response:', receiptResp);
+      } catch (err) {
+        console.error('createReceiptMaster failed:', err);
+        const errMsg = err?.data?.message || err?.error || err?.message || JSON.stringify(err);
+        alert(`Receipt create failed: ${errMsg}`);
+        throw err; // bubble to outer catch to stop further steps
+      }
+      const receiptId = receiptResp?.receiptId || receiptResp?.id || receiptResp?.PK_ReceiptId || receiptResp?.ReceiptId || `R${Date.now()}`;
+
+      const adjustmentPayload = {
+        fkReceiptId: receiptId,
+        fkAdjustedBillId: adjustedBillId,
+        adjustedAmount: Number(currencyAmount) || 0,
+        amountTDS: 0,
+        amountDiscount: Number(totals.totalDiscount) || 0,
+        amountDisAllow: 0,
+        amountST: 0,
+        fkAdjustedById: billDetails?.FK_CreatedById || 1,
+        adjustedDatetime: new Date().toISOString(),
+      };
+      console.log('Adjustment payload to send:', adjustmentPayload);
+      try {
+        const adjResp = await createReceiptAdjustmentDetail(adjustmentPayload).unwrap();
+        console.log('Adjustment create response:', adjResp);
+      } catch (err) {
+        console.error('createReceiptAdjustmentDetail failed:', err);
+        const errMsg = err?.data?.message || err?.error || err?.message || JSON.stringify(err);
+        alert(`Adjustment create failed: ${errMsg}`);
+        throw err;
+      }
+
+      // Print using renderReceiptHtml
+      try {
+        const receiptNo = receiptPayload.receiptNo;
+        const receiptDateTime = `${paymentDate} ${paymentTime}`;
+        const partyName = selectedPatient ? `${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}` : billDetails?.PartyName || 'Patient';
+          const html = renderReceiptHtml({ receiptNo, receiptDateTime, partyName, selectedPatient, totals, payType: billDetails?.FK_PaytypeID || 'CASH', billDetails });
+        // Reuse printWindow opened at the start to avoid popup blocking; try to open again if missing
+        if (!printWindow) {
+          printWindow = window.open('', '_blank', 'width=900,height=700');
+        }
+        if (!printWindow) {
+          alert('Popup blocked — allow popups for this site to print. You can still view the receipt by navigating to Receipt & Payment.');
+        } else {
+          try {
+            printWindow.document.open();
+            printWindow.document.write(html);
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => printWindow.print(), 300);
+          } catch (err) {
+            console.error('Failed to write to print window', err);
+            alert('Unable to open print window. Please enable popups or use the Receipt & Payment preview to print.');
+          }
+        }
+      } catch (err) {
+        console.error('Print after submit failed', err);
+      }
+
+      alert('Bill, receipt and adjustment saved successfully');
+      // After all done, go back
+      // setSelectedPatient(null);
+      // navigate('/Dashboard');
+    } catch (err) {
+      console.error('Submit & Receipt failed', err);
+      alert('Submit & Receipt failed. See console for details.');
+    } finally {
+      setSubmittingWithReceipt(false);
+    }
   };
   const handleInputChange = (index, field, value) => {
     setTableRows(prev =>
@@ -1104,11 +1268,13 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       }}
                      disabled={isViewMode}
                       onChange={(e) => {
-                        const value = e.target.value;                      
+                        const value = e.target.value;
                         setSelectedRateListId(value);
+                        const sel = (rateList || []).find(i => String(i.rateListId) === String(value) || String(i._id) === String(value) || String(i.id) === String(value));
+                        const name = sel?.RateListName || sel?.RateList || sel?.name || '';
                         setBillDetails(prev => ({
                           ...prev,
-                          RateType: value
+                          RateType: name,
                         }));
                         setSelectedServices([]);
 
@@ -1117,11 +1283,18 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                         }
                       }}
                     >
-                      {GetRatelistResponse?.data?.map((item) => (
-                        <MenuItem key={item._id} value={item.rateListId}>
-                          {item.RateListName}
-                        </MenuItem>
-                      ))}
+                      <MenuItem value=""><em>Select Rate Type</em></MenuItem>
+                      {(rateList || []).length === 0 ? (
+                        <MenuItem value="" disabled>No Rate Types available</MenuItem>
+                      ) : (
+                        (rateList || []).map((item) => {
+                          const val = item.rateListId || item._id || item.id;
+                          const label = item.RateListName || item.RateList || item.name || 'Unnamed Rate';
+                          return (
+                            <MenuItem key={val} value={val}>{label}</MenuItem>
+                          );
+                        })
+                      )}
                     </TextField>
 
                   </Grid>
@@ -1490,6 +1663,22 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
               >
                 Back
               </Button>
+
+              <Button
+                variant="contained"
+                color="success"
+                onClick={handleSubmitWithReceipt}
+                disabled={isViewMode || isSaving || submittingWithReceipt}
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "none",
+                  px: 3,
+                  mr: 1,
+                }}
+              >
+                {submittingWithReceipt ? 'Saving & Printing...' : 'Submit & Receipt'}
+              </Button>
+
               <Button
                 variant="contained"
                 color="primary"
