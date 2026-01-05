@@ -84,7 +84,7 @@ const OPDSchedule = () => {
       <Box
         sx={{
           p: 3,
-          mt: 4,
+          mt: 10,
           width: "100%",
         }}
       >
