@@ -7,32 +7,29 @@ import Loader from "../../component/Loader";
 
 const DistrictMaster = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
-  const {data:countries=[]} = useGetCountryQuery();
+  const {data:countries} = useGetCountryQuery();
   console.log("Countries from API:", countries);
 
   const [selectedState, setSelectedState] = useState("");
-  const {data:states=[]} = useGetStatesQuery(selectedCountry);
+  const {data:states} = useGetStatesQuery(selectedCountry);
   console.log("States from API:", states);
 
   const{data:districts,isLoading,refetch} = useGetDistrictsQuery(selectedState);
   const [createDistrict] = useCreateDistrictMutation();
 
-  // const [countries, setCountries] = useState([]);
-  // const [states, setStates] = useState([]);
+ // normaize country data
+  const countryList = Array.isArray(countries)
+    ? countries
+    : Array.isArray(countries?.data)
+    ? countries.data
+    :[];
 
-  // const [locationData, setLocationData] = useState({});
-
-  // useEffect(() => {
-  //   const stored = JSON.parse(localStorage.getItem("locationData")) || {};
-  //   setLocationData(stored);
-  //   setCountries(Object.keys(stored));
-  // }, []);
-
-  // useEffect(() => {
-  //   if (selectedCountry) {
-  //     setStates(locationData[selectedCountry]?.states || []);
-  //   }
-  // }, [selectedCountry, locationData]);
+  // normaize state data
+  const stateList = Array.isArray(states)
+    ? states
+    : Array.isArray(states?.data)
+    ? states.data
+    :[];
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm();
 
@@ -49,29 +46,7 @@ const DistrictMaster = () => {
       console.log('Api validation error message:', err.data);
       alert("backend error"+JSON.stringify(err.data));
     }
-    // const country = locationData[selectedCountry];
-    // const oldDistricts = country?.districts || {};
 
-    // const updated = {
-    //   ...locationData,
-
-    //   [selectedCountry]: {
-    //     ...country,
-    //     states: country.states || [],
-    //     districts: {
-    //       ...oldDistricts,
-    //       [selectedState]: [
-    //         ...(oldDistricts[selectedState] || []),
-    //         data.district
-    //       ]
-    //     },
-    //     cities: country.cities || {}
-    //   }
-    // };
-
-    // localStorage.setItem("locationData", JSON.stringify(updated));
-    // alert("District Added!");
-    // reset();
   };
   if(isLoading) return <Loader></Loader>
 
@@ -89,7 +64,7 @@ const DistrictMaster = () => {
           sx={{ width: "100%" }}
         >
           <option value="" disabled></option>
-          {countries.map((c) => <option key={c._id} value={c._id}>{c.CountryName}</option>)}
+          {countryList.map((c) => <option key={c.countryId} value={c.countryId}>{c.CountryName}</option>)}
         </TextField>
 
         <TextField
@@ -101,7 +76,7 @@ const DistrictMaster = () => {
           sx={{ width: "100%", mt: 2 }}
         >
           <option value="" disabled></option>
-          {Array.isArray(states) && states.map((s) => (<option key={s._id} value={s._id}>{s.StateName}</option>))}
+          {Array.isArray(stateList) && stateList.map((s) => (<option key={s.stateId} value={s.stateId}>{s.StateName}</option>))}
         </TextField>
 
         <TextField

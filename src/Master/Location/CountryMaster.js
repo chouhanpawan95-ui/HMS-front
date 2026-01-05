@@ -31,6 +31,7 @@ export default function CountryMaster() {
 
       reset();
       refetch();
+      alert("Country added successfully");
     }catch(err){
       console.error("Failed to add country: ", err);
       console.log('Api validation error message:', err.data);

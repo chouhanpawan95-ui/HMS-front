@@ -87,7 +87,7 @@ export default function Header() {
 
           {/* RIGHT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
-            <IconButton
+            {/* <IconButton
               color="inherit"
             >
               <Badge color="warning" variant="dot">
@@ -109,7 +109,7 @@ export default function Header() {
 
             <IconButton color="inherit">
               <SettingsIcon />
-            </IconButton>
+            </IconButton> */}
 
             <Tooltip title="Profile">
               <IconButton onClick={(e) => setAnchorElProfile(e.currentTarget)}>

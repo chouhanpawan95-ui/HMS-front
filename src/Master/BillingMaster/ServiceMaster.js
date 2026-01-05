@@ -112,7 +112,7 @@ const ServiceMaster = () => {
 
         <Box p={{ xs: 2, sm: 3, md: 4 }}>
           <form onSubmit={handleSubmit(onSubmitService)}>
-            <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid container spacing={3}>
               {/* <Grid
                 item
                 xs={12}
@@ -137,7 +137,7 @@ const ServiceMaster = () => {
                   ))}
                 </TextField>
               </Grid> */}
-              <Grid item xs={12} sm={6} md={4}>
+              <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
                   fullWidth
                   value={selectedCategory}
@@ -147,13 +147,7 @@ const ServiceMaster = () => {
 
               </Grid>
 
-              <Grid
-                item
-                xs={12}
-                sm={6}
-                md={4}
-                sx={{ height: "50%", width: "40%" }}
-              >
+              <Grid item xs={12} sm={6}  sx={{ height: "50%", width: "40%" }}       >
                 <TextField
                   label="Service Name"
                   fullWidth
@@ -161,7 +155,7 @@ const ServiceMaster = () => {
                   {...register("ServiceName")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} mb={4} sx={{ width: "70%" }}>
+              <Grid item xs={12} sm={6}  sx={{ width: "83%" }}>
                 <TextField
                   label="Description"
                   {...register("ServiceDescription")}
@@ -171,7 +165,7 @@ const ServiceMaster = () => {
                   multiline
                 />
               </Grid>
-              <Grid item xs={12} sm={6} mb={4} sx={{ height: "50%", width: "40%" }}>
+              <Grid item xs={12} sm={6}  sx={{ height: "53%", width: "43%" }}>
                 <TextField
                   label="Service Code"
                   // type="number"
@@ -180,7 +174,7 @@ const ServiceMaster = () => {
                   {...register("ServiceCode")}
                 />
               </Grid>
-              <Grid item xs={12} sm={6} mb={4} sx={{ height: "50%", width: "30%" }}>
+              <Grid item xs={12} sm={6}  sx={{ height: "53%", width: "33%" }}>
                 <Controller
                   name="ServiceTime"
                   control={control}
@@ -211,7 +205,7 @@ const ServiceMaster = () => {
                   {...register("ServiceTime")}
                 /> */}
               </Grid>
-              <Grid item xs={12} sm={6} mb={4} sx={{width:'30%'}}>
+              <Grid item xs={12} sm={6} sx={{width:'30%'}}>
                 <Button type="Submit" variant="contained" sx={{alignItems:'center'}}>
                   Submit
                 </Button>
