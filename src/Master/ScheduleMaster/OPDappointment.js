@@ -9,6 +9,8 @@ import {
   TextField,
   Button,
   MenuItem,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
 import {
@@ -22,6 +24,31 @@ import { DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+
+// sex
+const getSexFromInitial = (initial) => {
+  if (!initial) return null;
+
+  const normaized = initial.toLowerCase();
+  if (["miss", "ms", "mrs"].includes(normaized)) return "Female";
+  else return "Male";
+};
+
+// age buy year
+const calculateAge = (dob) => {
+  if (!dob) return null;
+
+  const birthDate = dayjs(dob);
+  if (!birthDate.isVaid()) return null;
+
+  const today = dayjs();
+  let age = today.year() - birthDate.year();
+
+  if (today.isBefore(birthDate.add(age, "year"))) {
+    age -= 1;
+  }
+  return age;
+};
 
 const OPDAppointment = ({
   doctorId,
@@ -41,25 +68,30 @@ const OPDAppointment = ({
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const { data: districts = [] } = useGetDistrictsQuery(selectedState);
 
-  const [selectedCity, setSelectedCity] = useState("");
-  const { data: cityResponse} = useGetCitiesQuery(selectedDistrict);
+  const { data: cityResponse } = useGetCitiesQuery(selectedDistrict);
 
   const cities = Array.isArray(cityResponse)
     ? cityResponse
     : cityResponse?.data ?? [];
 
-  console.log('city',cities);
+  console.log("city", cities);
 
-  const { register, handleSubmit, control, formState:{errors}, reset } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    formState: { errors },
+    reset,
+  } = useForm({
     defaultValues: {
-      fkConsultantId:'',
+      fkConsultantId: "",
       fkBranchId: "",
       fkRegId: "",
       bookingDate: null,
     },
   });
 
-  const title = ["Mr.", "Mrs.", "Miss"];
+  const title = ["Mr.", "Mrs.", "Miss", "Ms"];
 
   useEffect(() => {
     setSelectedState("");
@@ -89,7 +121,6 @@ const OPDAppointment = ({
     const alreadyBooked = appointments.some((a) => {
       return (
         String(a.fkRegId) === String(data.fkRegId) &&
-        // dayjs(a.apptDate).isSame(dayjs(data.apptDate), "day") &&
         dayjs(a.apptDate).format("YYYY-MM-DD") === selectedDate &&
         dayjs(a.apptTime, "HH:mm").format("HH:mm") === selectedTime
       );
@@ -100,6 +131,9 @@ const OPDAppointment = ({
     }
 
     try {
+      const sex = getSexFromInitial(data.initial);
+      const ageYear = calculateAge(data.dob);
+
       await createOPDAppointment({
         fkBranchId: data.fkBranchId,
         fkRegId: data.fkRegId,
@@ -111,12 +145,13 @@ const OPDAppointment = ({
         lastName: data.lastName,
         firstName: data.firstName,
         dob: data.dob,
-        // sex: data.sex,
-        // address: data.address,
+        ageYear: ageYear,
+        sex: sex,
         emailAddress: data.emailAddress,
         fkCityId: data.fkCityId,
         fkConsultantId: data.fkConsultantId,
         isVIP: false,
+        address: data.address,
         // fkServiceId: data.fkServiceId,
       }).unwrap();
       alert("Appointment Scheduled!!");
@@ -314,7 +349,7 @@ const OPDAppointment = ({
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "25%", md: "10%" } }}>
+                <Grid sx={{ width: { xs: "30%", md: "15%" } }}>
                   <TextField
                     label="Country"
                     select
@@ -353,7 +388,7 @@ const OPDAppointment = ({
                   </TextField>
                 </Grid>
 
-                <Grid sx={{ width: { xs: "25%", md: "10%" } }}>
+                <Grid sx={{ width: { xs: "30%", md: "15%" } }}>
                   <TextField
                     select
                     label="District"
@@ -372,32 +407,55 @@ const OPDAppointment = ({
                       ))}
                   </TextField>
                 </Grid>
-                <Grid sx={{ width: { xs: "25%", md: "10%" } }}>
+
+                <Grid sx={{ width: { xs: "25.2%", md: "10.2%" } }}>
                   <TextField
-  select
-  label="City"
-  size="small"
-  fullWidth
-  error={!!errors.fkCityId}
-  helperText={errors.fkCityId?.message}
-  SelectProps={{ native: true }}
-  {...register("fkCityId", {
-    required: "City is required",
-  })}
->
-  <option value=""></option>
+                    select
+                    label="City"
+                    size="small"
+                    fullWidth
+                    error={!!errors.fkCityId}
+                    helperText={errors.fkCityId?.message}
+                    SelectProps={{ native: true }}
+                    {...register("fkCityId", {
+                      required: "City is required",
+                    })}
+                  >
+                    <option value=""></option>
 
-  {cities.length === 0 ? (
-    <option disabled>No cities available</option>
-  ) : (
-    cities.map((c) => (
-      <option key={c.cityId} value={c.cityId}>
-        {c.CityName}
-      </option>
-    ))
-  )}
-</TextField>
+                    {cities.length === 0 ? (
+                      <option disabled>No cities available</option>
+                    ) : (
+                      cities.map((c) => (
+                        <option key={c.cityId} value={c.cityId}>
+                          {c.CityName}
+                        </option>
+                      ))
+                    )}
+                  </TextField>
+                </Grid>
+              </Grid>
 
+              <Grid container spacing={2} mt={2}>
+                <Grid sx={{ width: { xs: "100%", md: "100%" } }}>
+                  <TextField
+                    label="Address"
+                    size="small"
+                    fullWidth
+                    multiline
+                    rows={2}
+                    {...register("address")}
+                  />
+                </Grid>
+                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        name="isVIP"
+                      />
+                    }
+                    label="Is VIP"
+                  />
                 </Grid>
               </Grid>
 

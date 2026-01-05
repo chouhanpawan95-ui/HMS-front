@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateOPDAppointmentBlockDetailMutation } from "../../features/api/scheduleApi";
-import { Paper, TextField, Typography, Grid, Box,Button } from "@mui/material";
+import { Paper, TextField, Typography, Grid, Box, Button } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
 
 const BlockAppointment = ({
@@ -48,16 +48,34 @@ const BlockAppointment = ({
         <Box>
           <form onSubmit={handleSubmit(onSubmitOPDAppointmentBlockDetail)}>
             <Grid container spacing={2} mt={2}>
-              <Grid sx={{ width: { xs: "45%", md: "25%" } }}>
-                <TextField label="Appointment" value={appointmentId} fullWidth disabled size="small" />
+              <Grid sx={{ width: { xs: "46%", md: "26%" } }}>
+                <TextField
+                  label="Appointment"
+                  value={appointmentId}
+                  fullWidth
+                  disabled
+                  size="small"
+                />
               </Grid>
 
-              <Grid sx={{ width: { xs: "45%", md: "25%" } }}>
-                <TextField label="Branch" value={branchId} fullWidth disabled size="small" />
+              <Grid sx={{ width: { xs: "46%", md: "26%" } }}>
+                <TextField
+                  label="Branch"
+                  value={branchId}
+                  fullWidth
+                  disabled
+                  size="small"
+                />
               </Grid>
 
-              <Grid sx={{ width: { xs: "45%", md: "25%" } }}>
-                <TextField label="Doctor" value={doctorId} fullWidth disabled size="small" />
+              <Grid sx={{ width: { xs: "46%", md: "26%" } }}>
+                <TextField
+                  label="Doctor"
+                  value={doctorId}
+                  fullWidth
+                  disabled
+                  size="small"
+                />
               </Grid>
             </Grid>
 
@@ -84,21 +102,22 @@ const BlockAppointment = ({
             </Grid>
 
             <Grid container spacing={2} mt={2}>
-              <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+              <Grid sx={{ width: { xs: "100%", md: "82%" } }}>
                 <TextField
                   label="Reason for Blocking"
                   fullWidth
+                  rows={4}
+                  sx={{ width: "100%" }}
                   multiline
-                  size="small"
                   {...register("blockReason", { required: true })}
                 />
               </Grid>
             </Grid>
             <Box>
-                <Button type="submit" variant="contained" sx={{ mt: 3 }}>
-                  Blocked Appointment
-                </Button>
-              </Box>
+              <Button type="submit" variant="contained" sx={{ mt: 3 }}>
+                Blocked Appointment
+              </Button>
+            </Box>
           </form>
         </Box>
       </Paper>

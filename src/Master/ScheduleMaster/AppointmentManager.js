@@ -41,6 +41,7 @@ const normalizeDate = (dateValue) => {
   return dayjs(dateValue).utc().format("YYYY-MM-DD");
 };
 
+
 /* -------------------- Component -------------------- */
 const AppointmentManager = () => {
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -100,6 +101,14 @@ const AppointmentManager = () => {
 
   console.log('appointment',appointments);
 
+  const appointmentByIdMap = useMemo (() => {
+    const map = new Map();
+    appointmentList.forEach((appt) => {
+      map.set(appt.appointmentId, appt);
+    });
+    return map;
+  },[appointmentList]);
+
   /* -------------------- Booked Slot Map -------------------- */
   const bookedSlots = useMemo(() => {
     const map = new Map();
@@ -124,14 +133,17 @@ const AppointmentManager = () => {
       const date = normalizeDate(block.apptDate);
       if(date !== selectedDate) return;
 
+      const linkedAppointment = appointmentByIdMap.get(block.fkCreatedById) || null;
+
       map.set(block.apptTime,{
         ...block,
-        isBlocked:true
+        isBlocked:true,
+        linkedAppointment,
       });
     })
 
     return map;
-  }, [appointments]);
+  }, [appointments,blockedList,selectedDate,appointmentByIdMap]);
 
 
   /* -------------------- Doctor Schedule -------------------- */
@@ -180,11 +192,6 @@ const AppointmentManager = () => {
     setSelectedSlot(null);
   };
 
-  // const handleSlotClick = (slot) => {
-  //   if (bookedSlots.has(slot)) return;
-  //   setSelectedSlot(slot);
-  //   setOpenAppointment(true);
-  // };
   const handleSlotClick = (slot) => {
     const appt = bookedSlots.get(slot);
 
@@ -282,6 +289,7 @@ const AppointmentManager = () => {
                 timeSlots.map((slot) => {
                   const booked = bookedSlots.get(slot);
                   const isBloked = booked?.isBlocked;
+                  const linked = booked?.linkedAppointment;
 
                   return (
                     <TableRow
@@ -292,25 +300,19 @@ const AppointmentManager = () => {
                         backgroundColor: isBloked ? '#ffebee' : booked ? '#e8f5e9' :'inherit',
                         cursor: booked ? 'not-allowed' : 'pointer',
                       }}
-                      // sx={{
-                      //   backgroundColor: booked ? "#e8f5e9" : "inherit",
-                      //   cursor: booked ? "not-allowed" : "pointer",
-                      // }}
                     >
                       <TableCell sx={{ fontWeight: booked ? "bold" : "normal" }}>
                         {slot}
                       </TableCell>
-                      <TableCell>{booked?.appointmentId ?? "-"}</TableCell>
+                      <TableCell>{(isBloked ? linked?.appointmentId : booked?.appointmentId) ?? "-"}</TableCell>
                       <TableCell>
-                        {booked
-                          ? `${booked.firstName} ${booked.lastName}`
-                          : "--"}
+                        {(isBloked ? linked ? `${linked.firstName} ${linked.lastName}` : "--" : booked ? `${booked.firstName} ${booked.lastName}` : "--") ?? "--"}
                       </TableCell>
-                      <TableCell>{booked?.age ?? "--"}</TableCell>
-                      <TableCell>{booked?.apptType ?? "--"}</TableCell>
-                      <TableCell>{booked?.contactNo ?? "--"}</TableCell>
+                      <TableCell>{(isBloked ? linked?.age ?? "--" : booked?.age ?? "--")}</TableCell>
+                      <TableCell>{(isBloked ? linked?.apptType ??'--' : booked?.apptType ?? "--")}</TableCell>
+                      <TableCell>{(isBloked ? linked?.contactNo : booked?.contactNo) ?? "--"}</TableCell>
                       <TableCell>{booked?.referredBy ?? "--"}</TableCell>
-                      <TableCell>{isBloked ? booked.blockReason : booked?.remarks ?? "--"}</TableCell>
+                      <TableCell>{(isBloked ? booked.blockReason : booked?.remarks) ?? "--"}</TableCell>
                     </TableRow>
                   );
                 })}
