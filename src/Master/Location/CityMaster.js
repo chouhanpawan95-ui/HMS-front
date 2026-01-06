@@ -7,13 +7,34 @@ import Loader from "../../component/Loader";
 
 const CityMaster = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
-  const {data:countries=[]} = useGetCountryQuery();
+  const {data:countries} = useGetCountryQuery();
 
   const [selectedState, setSelectedState] = useState("");
-  const {data:states=[]} = useGetStatesQuery(selectedCountry);
+  const {data:states} = useGetStatesQuery(selectedCountry);
 
   const [selectedDistrict, setSelectedDistrict] = useState("");
-  const {data:districts=[]} = useGetDistrictsQuery(selectedState);
+  const {data:districts} = useGetDistrictsQuery(selectedState);
+
+  // normaize country data
+  const countryList = Array.isArray(countries)
+    ? countries
+    : Array.isArray(countries?.data)
+    ? countries.data
+    :[];
+
+  // normaize state data
+  const stateList = Array.isArray(states)
+    ? states
+    : Array.isArray(states?.data)
+    ? states.data
+    :[];
+
+  // normaize district data
+  const districtList = Array.isArray(districts)
+    ? districts
+    : Array.isArray(districts?.data)
+    ? districts.data
+    :[];
 
   const {data:CityMaster,isLoading,refetch} = useGetCitiesQuery(selectedDistrict);
   const [createCity] = useCreateCityMutation();
@@ -28,6 +49,7 @@ const CityMaster = () => {
       }).unwrap();
       reset();
       refetch();
+      alert("City added successfully");
     }catch(err){
       console.error("Failed to add city: ", err);
       console.log('Api validation error message:', err.data);
@@ -51,7 +73,7 @@ const CityMaster = () => {
           sx={{ width: "100%" }}
         >
           <option value="" disabled></option>
-          {countries.map((c) => <option key={c._id} value={c._id}>{c.CountryName}</option>)}
+          {countryList.map((c) => <option key={c.countryId} value={c.countryId}>{c.CountryName}</option>)}
         </TextField>
 
         <TextField
@@ -63,7 +85,7 @@ const CityMaster = () => {
           sx={{ width: "100%", mt: 2 }}
         >
           <option value="" disabled></option>
-          {Array.isArray(states) && states.map((s) => (<option key={s._id} value={s._id}>{s.StateName}</option>))}
+          {Array.isArray(stateList) && stateList.map((s) => (<option key={s.stateId} value={s.stateId}>{s.StateName}</option>))}
         </TextField>
 
         <TextField
@@ -75,7 +97,7 @@ const CityMaster = () => {
           sx={{ width: "100%", mt: 2 }}
         >
           <option value="" disabled></option>
-          {Array.isArray(districts) && districts.map((d) => (<option key={d._id} value={d._id}>{d.DistrictName}</option>))}
+          {Array.isArray(districtList) && districtList.map((d) => (<option key={d.districtId} value={d.districtId}>{d.DistrictName}</option>))}
         </TextField>
 
         <TextField

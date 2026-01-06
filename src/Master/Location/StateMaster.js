@@ -11,10 +11,17 @@ import Loader from "../../component/Loader";
 
 const StateMaster = () => {
   const [selectedCountry, setSelectedCountry] = useState("");
-  const { data: countries = [] } = useGetCountryQuery();
+  const { data: countries } = useGetCountryQuery();
 
   const { data: state, isLoading, refetch } = useGetStatesQuery(selectedCountry);
   const [createState] = useCreateStateMutation();
+
+  // normaize country data
+  const countryList = Array.isArray(countries)
+    ? countries
+    : Array.isArray(countries?.data)
+    ? countries.data
+    : [];
 
   const {
     register,
@@ -32,6 +39,7 @@ const StateMaster = () => {
 
       reset();
       refetch();
+      alert("State added successfully");
     } catch (err) {
       console.error("Failed to add state: ", err);
       console.log("Api validation error message:", err.data);
@@ -60,8 +68,8 @@ const StateMaster = () => {
             Select Country
           </option>
 
-          {countries.map((c) => (
-            <option key={c._id} value={c._id}>
+          {countryList.map((c) => (
+            <option key={c.countryId} value={c.countryId}>
               {c.CountryName}
             </option>
           ))}
