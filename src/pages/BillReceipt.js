@@ -74,15 +74,7 @@ const BillReceipt = () => {
   // Payments: allow splitting net bill into multiple payment rows
   const [payments, setPayments] = React.useState([]);
 
-  // Initialize a default single payment that equals net amount when totals change
-  React.useEffect(() => {
-    const net = Number(totals.totalNet) || 0;
-    if ((payments?.length || 0) === 0 && net > 0) {
-      setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: net, reference: '' }]);
-    }
-    // do not overwrite if user already adjusted payments
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [totals.totalNet, billDetails?.FK_PaytypeID]);
+
 
   // Fetch existing receipt adjustments for this bill (displayed read-only)
   const [adjListLoading, setAdjListLoading] = React.useState(false);
@@ -123,16 +115,28 @@ const BillReceipt = () => {
       .finally(() => setAdjListLoading(false));
   }, [billDetails?.BillNo]);
 
-  const addPaymentRow = () => setPayments((p) => [...(p || []), { method: 'CASH', amount: 0, reference: '' }]);
+  const addPaymentRow = () => {
+    if ((currentPayable || 0) <= 0) {
+      alert('Bill fully adjusted — cannot add more payment rows.');
+      return;
+    }
+    setPayments((p) => [...(p || []), { method: 'CASH', amount: 0, reference: '', adjustedBillId: billDetails?.BillNo }]);
+  };
   const removePaymentRow = (idx) => setPayments((p) => (p || []).filter((_, i) => i !== idx));
   const updatePaymentRow = (idx, changes) => setPayments((p) => (p || []).map((r, i) => (i === idx ? { ...r, ...changes } : r)));
 
   // Insert a new payment row after the given index
-  const addPaymentRowAt = (idx) => setPayments((p) => {
-    const arr = (p || []).slice();
-    arr.splice(idx + 1, 0, { method: arr[idx]?.method || 'CASH', amount: 0, reference: '' });
-    return arr;
-  });
+  const addPaymentRowAt = (idx) => {
+    if ((currentPayable || 0) <= 0) {
+      alert('Bill fully adjusted — cannot add more payment rows.');
+      return;
+    }
+    setPayments((p) => {
+      const arr = (p || []).slice();
+      arr.splice(idx + 1, 0, { method: arr[idx]?.method || 'CASH', amount: 0, reference: '', adjustedBillId: arr[idx]?.adjustedBillId || billDetails?.BillNo });
+      return arr;
+    });
+  };
 
   const paymentsSum = (payments || []).reduce((s, r) => s + Math.max(0, Number(r.amount) || 0), 0);
 
@@ -140,9 +144,21 @@ const BillReceipt = () => {
   const currentAdjustedSum = (fetchedAdjustments || []).reduce((s, r) => s + Number(r.amount || 0), 0);
   const currentPayable = Math.max(0, Number(totals.totalNet) - currentAdjustedSum);
 
+  // Sum of **new** (editable) payment rows only — used for validation and Remaining display
+  const newPaymentsSum = (payments || []).filter(p => !p.fetched).reduce((s, r) => s + Math.max(0, Number(r.amount) || 0), 0);
+
   // Lazy queries to fetch bill details and existing adjustments for an adjusted bill id
   const [fetchBillDetail] = useLazyGetBillDetailByBillIdQuery();
   const [fetchReceiptAdjustments] = useLazyGetReceiptAdjustmentsByAdjustedBillIdQuery();
+
+  // Initialize a default payment equal to the current payable (if any)
+  React.useEffect(() => {
+    const net = Number(currentPayable) || 0;
+    if ((payments?.length || 0) === 0 && net > 0) {
+      setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: net, reference: '', adjustedBillId: billDetails?.BillNo }]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPayable, billDetails?.FK_PaytypeID]);
 
   // Fetch current payable amount for a referenced bill (fkAdjustedBillId)
   const handleFetchAdjDetails = async (idx, billId) => {
@@ -215,14 +231,19 @@ const BillReceipt = () => {
       const paymentTime = billDetails?.BillTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
       const currencyAmount = Number(totals.totalNet) || 0;
 
-      // Validate payments: allow partial payments (sum <= net) but disallow > net or zero
-      if ((paymentsSum || 0) <= 0) {
-        alert('Add at least one payment with an amount greater than 0.');
+      // Validate payments: only create receipts for new editable rows and ensure they change payable
+      const newRows = (payments || []).filter((r) => !r.fetched && Number(r.amount) > 0);
+      const newPaymentsSumLocal = (newRows || []).reduce((s, r) => s + Number(r.amount || 0), 0);
+
+      if (newPaymentsSumLocal <= 0) {
+        alert('No new payment rows to save. Add or edit a payment amount to save.');
         setPosting(false);
         return;
       }
-      if (paymentsSum > currencyAmount + 0.001) {
-        alert('Payments total exceeds Net Amount. Reduce payment amounts or adjust bill.');
+
+      // ensure total adjusted after saving won't exceed net bill
+      if (currentAdjustedSum + newPaymentsSumLocal > Number(totals.totalNet) + 0.001) {
+        alert('Payments total exceeds current payable. Reduce payment amounts or adjust bill.');
         setPosting(false);
         return;
       }
@@ -253,10 +274,61 @@ const BillReceipt = () => {
         paymentDetails: (payments || []).map((p) => ({ method: p.method, amount: Number(p.amount) || 0, reference: p.reference || '' })),
       };
 
-      // Create one receipt per payment row
+      // If some payment rows target other bills for adjustment, ensure amounts do not exceed those bills' current payable
+      const fetchAdjustedPayable = async (bid) => {
+        let billResp = null;
+        let adjList = [];
+        try {
+          billResp = await fetchBillDetail(bid).unwrap();
+        } catch (err) {
+          billResp = null;
+        }
+        try {
+          adjList = await fetchReceiptAdjustments(bid).unwrap() || [];
+        } catch (err) {
+          adjList = [];
+        }
+        const netAmount = Number(billResp?.NetBillAmt || billResp?.NetBill || billResp?.TotalAmt || 0) || 0;
+        const adjustedSum = (adjList || []).reduce((s, a) => s + Number(a.adjustedAmount || a.adjustedAmt || 0), 0);
+        return Math.max(0, netAmount - adjustedSum);
+      };
+
+      // Verify per-row adjusted amounts before creating receipts
       for (let i = 0; i < (payments || []).length; i++) {
         const p = payments[i];
         const amt = Number(p.amount) || 0;
+        if (p.fetched || amt <= 0) continue; // skip already-existing fetched rows and zero amounts
+
+        if (p.adjustedBillId && String(p.adjustedBillId).trim() !== '') {
+          const adjId = String(p.adjustedBillId).trim();
+          let payable;
+
+          // If the row refers to the same bill as the current bill, use the already-computed currentPayable
+          if (adjId === (billDetails?.BillNo || '')) {
+            payable = currentPayable;
+            updatePaymentRow(i, { adjustedBillPayable: payable });
+          } else {
+            payable = p.adjustedBillPayable;
+            if (payable === undefined) {
+              payable = await fetchAdjustedPayable(adjId);
+              updatePaymentRow(i, { adjustedBillPayable: payable });
+            }
+          }
+
+          if (amt > (Number(payable) || 0) + 0.001) {
+            alert(`Payment amount ${amt} exceeds payable for Bill ${p.adjustedBillId} (${payable}). Adjust the amount and try again.`);
+            setPosting(false);
+            return;
+          }
+        }
+      }
+
+      // Create receipts only for new editable rows
+      for (let i = 0; i < (payments || []).length; i++) {
+        const p = payments[i];
+        const amt = Number(p.amount) || 0;
+        if (p.fetched || amt <= 0) continue; // skip existing fetched rows and zero amounts
+
         const pPayload = {
           ...receiptPayload,
           currencyAmount: amt,
@@ -477,16 +549,16 @@ const BillReceipt = () => {
                           ) : (p.adjustedBillFound === false ? (
                             <Typography variant="caption" color="error">Bill not found</Typography>
                           ) : null)}
-                          {p.adjustedBillAdjustCount ? (
+                          {/* {p.adjustedBillAdjustCount ? (
                             <Typography variant="caption" color="text.secondary">Adjustments: {p.adjustedBillAdjustCount}</Typography>
-                          ) : null}
+                          ) : null} */}
                         </Box>
                       </Box>
                     </TableCell>
                     <TableCell>
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {renderAdjStatus(p)}
-                        <Button size="small" variant="outlined" onClick={() => addPaymentRowAt(i)}>Add</Button>
+                        <Button size="small" variant="outlined" onClick={() => addPaymentRowAt(i)} disabled={(currentPayable || 0) <= 0}>Add</Button>
                           <Button size="small" color="error" variant="outlined" onClick={() => { if (!p.fetched && window.confirm('Delete this payment row?')) removePaymentRow(i); }} disabled={p.fetched}>Delete</Button>
                       </Box>
                     </TableCell>
@@ -510,7 +582,7 @@ const BillReceipt = () => {
                   <TableCell><Checkbox checked /></TableCell>
                   <TableCell>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Button size="small" variant="outlined" onClick={() => setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: Number(totals.totalNet) || 0, reference: '' }])}>Add Row</Button>
+                      <Button size="small" variant="outlined" onClick={() => setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: Number(totals.totalNet) || 0, reference: '', adjustedBillId: billDetails?.BillNo }])}>Add Row</Button>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -550,7 +622,7 @@ const BillReceipt = () => {
                   ["Service Charge", totals.totalServiceCharge],
                   ["Less Discount", totals.totalDiscount],
                   ["Net Bill Amount", totals.totalNet],
-                  ["Current Payable", 0],
+                  ["Current Payable", currentPayable],
                 ].map(([label, value]) => (
                   <Grid item xs={12} key={label}>
                     <TextField
@@ -568,13 +640,13 @@ const BillReceipt = () => {
 
         {/* Compact payment controls (Add/Reset) — no separate split section */}
         <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Button size="small" variant="outlined" onClick={addPaymentRow}>Add Payment</Button>
-          <Button size="small" variant="text" onClick={() => setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: Number(totals.totalNet) || 0, reference: '' }])}>Reset To Full</Button>
+          <Button size="small" variant="outlined" onClick={addPaymentRow} disabled={(currentPayable || 0) <= 0}>Add Payment</Button>
+          <Button size="small" variant="text" onClick={() => { if ((currentPayable || 0) <= 0) { alert('Bill fully adjusted — nothing to reset.'); return; } setPayments([{ method: billDetails?.FK_PaytypeID || 'CASH', amount: Number(currentPayable) || 0, reference: '', adjustedBillId: billDetails?.BillNo }]); }} disabled={(currentPayable || 0) <= 0}>Reset To Full</Button>
           <Box sx={{ ml: 2 }}>
             <Typography>Total Payments: <strong>{paymentsSum}</strong></Typography>
           </Box>
           <Box sx={{ ml: 2 }}>
-            {paymentsSum !== Number(totals.totalNet) ? <Typography color="error">Remaining: {Number(totals.totalNet) - paymentsSum}</Typography> : <Typography color="success.main">Fully allocated</Typography>}
+            {(currentPayable - newPaymentsSum) > 0.001 ? <Typography color="error">Remaining: {currentPayable - newPaymentsSum}</Typography> : <Typography color="success.main">Fully allocated</Typography>}
           </Box>
         </Box>
 
@@ -583,7 +655,7 @@ const BillReceipt = () => {
           <Grid container alignItems="center">
             <Grid item xs={6}>
               <Typography fontWeight="bold">
-                Balance Amount : {Number(totals.totalNet) - paymentsSum}
+                Balance Amount : {currentPayable - newPaymentsSum}
               </Typography>
             </Grid>
             <Grid item xs={6} textAlign="right">
