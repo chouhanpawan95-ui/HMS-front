@@ -1,5 +1,6 @@
-﻿// Dashboard.jsx
-import React, { useEffect, useState } from "react";
+﻿/* eslint-disable unicode-bom */
+// Dashboard.jsx
+import React, { useEffect, useState, useMemo } from "react";
 import {
   Box,
   Typography,
@@ -14,22 +15,19 @@ import {
   MenuItem,
   TableContainer,
   Paper,
-  useTheme,
   Alert,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Tooltip,
 } from "@mui/material";
 
-import SearchBar from "../component/SearchBar";
 import Loader from "../component/Loader";
 import { useGetPatientsQuery,useGetopdVisitQuery } from "../features/api/patientsApi";
 import {useGetBillMasterQuery} from '../features/api/Hooks/billingApi';
 import { Link } from 'react-router-dom';
 export default function Dashboard() {
-  const theme = useTheme();
+
   // Pagination / search state
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
@@ -42,11 +40,15 @@ export default function Dashboard() {
   const { data: billdetails } = useGetBillMasterQuery();
 
   // Query OPD visits with pagination and optional search
-  const { data: getOpd, error: getOpdError, isLoading: getOpdLoading, isError: getOpdIsError } = useGetopdVisitQuery({ page, limit, q: searchQuery });
+  const { data: getOpd, isLoading: getOpdLoading } = useGetopdVisitQuery({ page, limit, q: searchQuery });
   console.log("billdetails",billdetails);
   const [openBillsDialog, setOpenBillsDialog] = useState(false);
   const [selectedPatientForBills, setSelectedPatientForBills] = useState(null);
   const [billsFilterText, setBillsFilterText] = useState("");
+
+  // Date filter: default to today in YYYY-MM-DD format to show today's visits by default
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
+
   console.log("filteredPatients",filteredPatients);
   // API call
   const {
@@ -55,9 +57,17 @@ export default function Dashboard() {
     isLoading,
     isError,
   } = useGetPatientsQuery({ page, limit, q: searchQuery });
-  console.log("seepatient",patientsResp);
-console.log("getopdvisit", getOpd);
 
+  // Extract array from API response (memoized to avoid changing identity every render)
+  const patients = useMemo(() => {
+    return Array.isArray(patientsResp)
+      ? patientsResp
+      : patientsResp?.data && Array.isArray(patientsResp.data)
+      ? patientsResp.data
+      : [];
+  }, [patientsResp]);
+
+  // Now handle OPD updates and apply filters
   useEffect(() => {
     const rows = Array.isArray(getOpd?.data)
       ? getOpd.data
@@ -65,31 +75,63 @@ console.log("getopdvisit", getOpd);
       ? getOpd
       : [];
     setOpdList(rows);
-    setFilteredOpd(rows);
-  }, [getOpd]);
-  // Extract array from API response
-  const patients = Array.isArray(patientsResp)
-    ? patientsResp
-    : patientsResp?.data && Array.isArray(patientsResp.data)
-    ? patientsResp.data
-    : [];
+    // Apply current filters when new OPD data arrives
+    // (date filter defaults to today via selectedDate state)
+    const applyFilters = () => {
+      const dateMatches = (row) => {
+        if (!selectedDate) return true;
+        const raw = row.visitDate || row.visitDateTime || row.dateTime || row.VisitDate || row.visitDateTimeUTC || row.visitdate || '';
+        if (!raw) return false; // no date on record
+        const parsed = new Date(raw);
+        if (!isNaN(parsed)) {
+          return parsed.toISOString().slice(0,10) === selectedDate;
+        }
+        // fallback: string-based compare
+        return String(raw).slice(0,10) === selectedDate;
+      };
+
+      const textMatches = (row) => {
+        if (!searchQuery) return true;
+        const lower = searchQuery.toLowerCase();
+        const fk = String(row.fkRegId || "").toLowerCase();
+        const vid = String(row.pkVisitId || row._id || "").toLowerCase();
+        const pname = (patients || []).find(p => String(p.patientId) === String(row.fkRegId) || String(p.id) === String(row.fkRegId));
+        const name = pname ? `${pname.firstName || ""} ${pname.lastName || ""}`.toLowerCase() : (String(row.patientName || "").toLowerCase());
+        return fk.includes(lower) || vid.includes(lower) || name.includes(lower);
+      };
+
+      const filtered = rows.filter(r => dateMatches(r) && textMatches(r));
+      setFilteredOpd(filtered);
+    };
+
+    applyFilters();
+  }, [getOpd, selectedDate, searchQuery, patients]);
+  console.log("seepatient",patientsResp);
+console.log("getopdvisit", getOpd);
 
   // Prefer total count from OPD response; fall back to patients response
   const opdTotal = getOpd?.total || getOpd?.totalCount || getOpd?.meta?.total || null;
-  const total = opdTotal ?? (
+  const serverTotal = opdTotal ?? (
     patientsResp?.total || patientsResp?.totalCount || patientsResp?.meta?.total || null
   );
 
-  const totalPages = total ? Math.ceil(total / limit) : null;
-  // hasMore should reflect which list we're showing (OPD by default)
-  const hasMore = totalPages ? page < totalPages : (opdList.length === limit);
+  // If date or text filters are active we operate in client-filtered mode
+  const isFiltered = Boolean(selectedDate || (searchQuery && searchQuery.trim() !== ""));
+  const displayTotal = isFiltered ? filteredOpd.length : (serverTotal ?? filteredOpd.length);
+  const displayTotalPages = displayTotal ? Math.ceil(displayTotal / limit) : null;
+
+  // When filtered, use client-side pagination (slice the filtered array); otherwise rely on server-side pages
+  const hasMore = displayTotalPages ? page < displayTotalPages : (opdList.length === limit && !isFiltered);
 
   // Sync filtered patients when API data changes
   useEffect(() => {
     if (patientsResp) {
       setFilteredPatients(patients);
     }
-  }, [patientsResp]);
+    // reset to first page when user changes filters (text/date) so paging remains intuitive
+    setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [patientsResp, selectedDate, searchQuery]);
 
   // Show loader if patients or OPD are loading
   if (isLoading || getOpdLoading) return <Loader />;
@@ -114,35 +156,42 @@ console.log("getopdvisit", getOpd);
         gap={2}
         mb={2}
       >
-        <TextField
-          size="small"
-          placeholder="Search visits (visit id, reg id, name)"
-          value={searchQuery}
-          onChange={(e) => {
-            const q = e.target.value;
-            setSearchQuery(q);
+        <Box display="flex" gap={2} alignItems="center">
 
-            // Client-side filter for immediate responsiveness while the API fetch runs
-            const lower = q.toLowerCase();
-            if (!lower) {
-              setFilteredOpd(opdList);
-              return;
-            }
-            setFilteredOpd(
-              (opdList || []).filter((o) => {
-                const fk = String(o.fkRegId || "").toLowerCase();
-                const vid = String(o.pkVisitId || o._id || "").toLowerCase();
-                const pname = (patients || []).find(p => String(p.patientId) === String(o.fkRegId) || String(p.id) === String(o.fkRegId));
-                const name = pname ? `${pname.firstName || ""} ${pname.lastName || ""}`.toLowerCase() : (String(o.patientName || "").toLowerCase());
-                return fk.includes(lower) || vid.includes(lower) || name.includes(lower);
-              })
-            );
-          }}
-          sx={{ width: 360 }}
-        />
+
+          {/* Search box (text) */}
+          <TextField
+            size="small"
+            placeholder="Search visits (visit id, reg id, name)"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            sx={{ width: 360 }}
+          />
+        </Box>
+
+
       </Box>
 
       {/* TABLE SECTION */}
+      {/* Compact date picker above the table (aligned over 'Seq') */}
+      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-start' }}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <TextField
+            type="date"
+            size="small"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+            InputLabelProps={{ shrink: true }}
+            sx={{ width: 160 }}
+          />
+          <Button size="small" variant="outlined" onClick={() => setSelectedDate(new Date().toISOString().slice(0,10))} sx={{ ml: 1 }}>
+            Today
+          </Button>
+          <Button size="small" variant="text" onClick={() => setSelectedDate("")} sx={{ ml: 1 }}>
+            Clear Date
+          </Button>
+        </Box>
+      </Box>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <TableContainer
           className="table-container"
@@ -242,7 +291,8 @@ console.log("getopdvisit", getOpd);
 
             <TableBody>
               {filteredOpd.length > 0 ? (
-                filteredOpd?.map((row, i) => {
+                // When filters are active, show a page-slice of the filtered results, otherwise the server has provided a page
+                (isFiltered ? filteredOpd.slice((page - 1) * limit, page * limit) : filteredOpd)?.map((row, i) => {
                   // Try to find patient details for display
                   const patient = (patients || []).find((p) =>
                     String(p.patientId) === String(row.fkRegId) ||
@@ -424,7 +474,7 @@ console.log("getopdvisit", getOpd);
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            Total Records: {opdTotal ?? filteredOpd.length}
+            Total Records: {displayTotal}
           </Typography>
 
           {/* Pagination Controls */}
@@ -459,7 +509,7 @@ console.log("getopdvisit", getOpd);
 
               <Typography variant="body2">
                 Page {page}
-                {totalPages ? ` / ${totalPages}` : ""}
+                {displayTotalPages ? ` / ${displayTotalPages}` : ""}
               </Typography>
 
               <Button

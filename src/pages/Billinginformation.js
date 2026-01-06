@@ -31,6 +31,7 @@ import { useGetPartyNameQuery } from '../features/api/Hooks/partyApi.js';
 import { useCreateBillMutation, useCreateBilldetailsMutation, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery, useCreateReceiptMasterMutation, useCreateReceiptAdjustmentDetailMutation } from '../features/api/Hooks/billingApi.js';
 import { useGetServiceQuery } from '../features/api/Hooks/serviceApi';
 import { renderReceiptHtml } from './BillReceiptPrint';
+import { renderBillHtml } from './BillPrint';
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -765,6 +766,43 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   };
   const handleDeleteRow = (index) => {
     setTableRows((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // Print current bill using BillPrint.renderBillHtml
+  const handleBillPrint = () => {
+    try {
+      const totals = calculateBillTotals();
+      const paidAmount = Number(totals.totalNetAmount) || 0;
+      const billNoStr = billDetails?.BillNo || billNo || '';
+      const billDateTime = billDetails?.BillDate ? `${billDetails.BillDate} ${billDetails.BillTime || ''}` : new Date().toLocaleString();
+      const patientNameStr = selectedPatient ? `${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}` : (patient?.firstName || patient?.name || '');
+
+      const html = renderBillHtml({
+        billNo: billNoStr,
+        billDateTime,
+        patientName: patientNameStr,
+        patient: selectedPatient || patient,
+        totals: { totalAmount: totals.totalGross, totalDiscount: totals.totalDiscount, totalServiceCharge: totals.totalServiceCharge, totalNet: totals.totalNetAmount },
+        tableRows,
+        paidAmount,
+        billDetails,
+      });
+
+      const printWindow = window.open('', '_blank', 'width=1000,height=800');
+      if (!printWindow) {
+        alert('Popup blocked — allow popups for this site to print.');
+        return;
+      }
+
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      printWindow.focus();
+      setTimeout(() => printWindow.print(), 300);
+    } catch (err) {
+      console.error('Bill print failed', err);
+      alert('Print failed, check console.');
+    }
   };
 
   const [rows, setRows] = useState([]);
@@ -1649,11 +1687,20 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
               <Button
                 variant="outlined"
                 color="primary"
+                onClick={handleBillPrint}
+                sx={{ borderRadius: 2, textTransform: "none", px: 3, mr: 1 }}
+              >
+                Print
+              </Button>
+
+              {billDetails.BillNo &&<Button
+                variant="outlined"
+                color="primary"
                 onClick={() => navigate('/BillReceipt', { state: { billDetails, tableRows, selectedPatient } })}
                 sx={{ borderRadius: 2, textTransform: "none", px: 3, mr: 1 }}
               >
                 Receipt & Payment
-              </Button>
+              </Button>}
 
               <Button
                 variant="outlined"
