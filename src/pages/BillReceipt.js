@@ -81,39 +81,65 @@ const BillReceipt = () => {
   const [fetchedAdjustments, setFetchedAdjustments] = React.useState([]);
 
   React.useEffect(() => {
-    const billId = billDetails?.BillNo || billDetails?.BillId || billDetails?.BillNo;
-    if (!billId) return;
+    const candidates = [
+      billDetails?.BillNo,
+      billDetails?.BillId,
+      billDetails?.PK_BillId,
+      // also try numeric version of BillNo (strip non-digits)
+      (typeof billDetails?.BillNo === 'string' ? billDetails.BillNo.replace(/[^0-9]/g, '') : undefined),
+    ].filter(v => v !== undefined && v !== null && String(v).trim() !== "");
+
+    if (!candidates.length) return;
     setAdjListLoading(true);
-    fetchReceiptAdjustments(billId).unwrap()
-      .then((list) => {
-        const rows = (list || []).map((a) => ({
-          fetched: true,
-          receiptId: a.PK_ReceiptId || a.receiptId || a.receiptNo || a.ReceiptNo || a.fkReceiptId || `R${Date.now()}`,
-          payDate: a.paymentDate || a.adjustedDatetime || a.createdDate || a.payDate || '',
-          amount: Number(a.adjustedAmount || a.adjustedAmt || a.amount || a.currencyAmount || 0),
-          method: a.fkPayTypeId || a.payType || 'CASH',
-          reference: a.userRemarks || a.remarks || a.reference || '',
-          partyName: a.partyName || partyName,
-          isCoPay: Boolean(a.isCoPayment || a.isCoPay),
-          adjustedBillId: a.fkAdjustedBillId || billDetails?.BillNo,
-          adjusted: true,
-        }));
-        setFetchedAdjustments(rows);
-        setPayments((prev) => {
-          const userRows = (prev || []).filter(p => !p.fetched);
-          // merge, avoid duplicates by receiptId
-          const seen = new Set();
-          const merged = [];
-          rows.forEach(r => { if (!seen.has(r.receiptId)) { merged.push(r); seen.add(r.receiptId); } });
-          userRows.forEach(u => { merged.push(u); });
-          return merged;
-        });
-      })
-      .catch((err) => {
-        console.error('Failed to fetch receipt adjustments for bill', billId, err);
-      })
-      .finally(() => setAdjListLoading(false));
-  }, [billDetails?.BillNo]);
+
+    const tryFetch = async () => {
+      for (let i = 0; i < candidates.length; i++) {
+        const bid = String(candidates[i]);
+        try {
+          console.log('Attempting fetchReceiptAdjustments for', bid);
+          const list = await fetchReceiptAdjustments(bid).unwrap() || [];
+          // filter server response to only items that reference this exact adjusted id (normalize to strings)
+          const filteredList = (list || []).filter(a => String(a?.fkAdjustedBillId ?? a?.fkAdjustedBillId) === String(bid));
+          if (filteredList.length > 0) {
+            console.log('Found adjustments for', bid, filteredList);
+            const rows = filteredList.map((a) => ({
+              fetched: true,
+              receiptId: a.PK_ReceiptId || a.receiptId || a.receiptNo || a.ReceiptNo || a.fkReceiptId || `R${Date.now()}`,
+              payDate: a.paymentDate || a.adjustedDatetime || a.createdDate || a.payDate || '',
+              amount: Number(a.adjustedAmount || a.adjustedAmt || a.amount || a.currencyAmount || 0),
+              method: a.fkPayTypeId || a.payType || 'CASH',
+              reference: a.userRemarks || a.remarks || a.reference || '',
+              partyName: a.partyName || partyName,
+              isCoPay: Boolean(a.isCoPayment || a.isCoPay),
+              adjustedBillId: a.fkAdjustedBillId || bid,
+              adjusted: true,
+            }));
+            setFetchedAdjustments(rows);
+            setPayments((prev) => {
+              const userRows = (prev || []).filter(p => !p.fetched);
+              // merge, avoid duplicates by receiptId
+              const seen = new Set();
+              const merged = [];
+              rows.forEach(r => { if (!seen.has(r.receiptId)) { merged.push(r); seen.add(r.receiptId); } });
+              userRows.forEach(u => { merged.push(u); });
+              return merged;
+            });
+            setAdjListLoading(false);
+            return;
+          }
+        } catch (err) {
+          console.warn('fetchReceiptAdjustments failed for', bid, err);
+        }
+      }
+
+      // No adjustments matched for any candidate — clear states but don't error
+      setFetchedAdjustments([]);
+      setPayments((prev) => (prev || []).filter(p => !p.fetched));
+      setAdjListLoading(false);
+    };
+
+    tryFetch();
+  }, [billDetails?.BillNo, billDetails?.BillId, billDetails?.PK_BillId]);
 
   const addPaymentRow = () => {
     if ((currentPayable || 0) <= 0) {
@@ -180,7 +206,20 @@ const BillReceipt = () => {
     }
 
     try {
+      // try direct fetch first
       adjList = await fetchReceiptAdjustments(billId).unwrap() || [];
+      // if nothing returned and billId is not numeric, try numeric-only variant (some APIs store fk as numeric id)
+      if ((!adjList || adjList.length === 0) && typeof billId === 'string') {
+        const numeric = billId.replace(/[^0-9]/g, '');
+        if (numeric && numeric !== billId) {
+          try {
+            console.log('Retrying fetchReceiptAdjustments with numeric id:', numeric);
+            adjList = await fetchReceiptAdjustments(numeric).unwrap() || [];
+          } catch (err2) {
+            // ignore
+          }
+        }
+      }
     } catch (err) {
       adjList = [];
     }
@@ -517,9 +556,14 @@ const BillReceipt = () => {
                   <TableCell colSpan={12}><Typography variant="caption">Loading existing receipts/adjustments…</Typography></TableCell>
                 </TableRow>
               )}
-              {(payments || []).map((p, i) => {
-                // Render all payment rows (including zero/empty amounts) so Add Row shows immediately
-                return (
+              {(() => {
+                // hide user-added pending rows when there's nothing payable
+                const visiblePayments = (payments || []).filter((p) => {
+                  const isPending = !p.receiptId && !p.fetched;
+                  return !(Number(currentPayable) <= 0 && isPending);
+                });
+
+                return (visiblePayments || []).map((p, i) => (
                   <TableRow key={i}>
                     <TableCell>{p.receiptId || 'Pending'}</TableCell>
                     <TableCell>{p.payDate || receiptDateTime}</TableCell>
@@ -559,15 +603,15 @@ const BillReceipt = () => {
                       <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                         {renderAdjStatus(p)}
                         <Button size="small" variant="outlined" onClick={() => addPaymentRowAt(i)} disabled={(currentPayable || 0) <= 0}>Add</Button>
-                          <Button size="small" color="error" variant="outlined" onClick={() => { if (!p.fetched && window.confirm('Delete this payment row?')) removePaymentRow(i); }} disabled={p.fetched}>Delete</Button>
+                        <Button size="small" color="error" variant="outlined" onClick={() => { if (!p.fetched && window.confirm('Delete this payment row?')) removePaymentRow(i); }} disabled={p.fetched}>Delete</Button>
                       </Box>
                     </TableCell>
                   </TableRow>
-                );
-              })}
+                ));
+              })()}}
 
-              {/* Empty state: show original single row when no payments configured */}
-              {(!payments || payments.length === 0) && (
+              {/* Empty state: show original single row when no visible payments configured */}
+              {((!payments || payments.length === 0) || ((payments || []).filter((p) => { const isPending = !p.receiptId && !p.fetched; return !(Number(currentPayable) <= 0 && isPending); }).length === 0)) && (
                 <TableRow>
                   <TableCell>{receiptNo}</TableCell>
                   <TableCell>{receiptDateTime}</TableCell>
