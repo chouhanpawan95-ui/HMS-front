@@ -116,7 +116,8 @@ const BillReceipt = () => {
             }));
             setFetchedAdjustments(rows);
             setPayments((prev) => {
-              const userRows = (prev || []).filter(p => !p.fetched);
+              // Remove any default pending row that is just the full net amount for this bill
+              const userRows = (prev || []).filter(p => !p.fetched && !(Number(p.amount) === Number(totals.totalNet) && String(p.adjustedBillId || '') === String(billDetails?.BillNo)));
               // merge, avoid duplicates by receiptId
               const seen = new Set();
               const merged = [];
@@ -608,7 +609,7 @@ const BillReceipt = () => {
                     </TableCell>
                   </TableRow>
                 ));
-              })()}}
+              })()}
 
               {/* Empty state: show original single row when no visible payments configured */}
               {((!payments || payments.length === 0) || ((payments || []).filter((p) => { const isPending = !p.receiptId && !p.fetched; return !(Number(currentPayable) <= 0 && isPending); }).length === 0)) && (
