@@ -475,7 +475,7 @@ const BillReceipt = () => {
 
   return (
     <Box sx={{ p: 1, backgroundColor: "#eaeaea" }}>
-      <Paper sx={{ p: 1 }}>
+      <Paper sx={{ p: 1,mt:8,ml:3 }}>
         {/* ================= HEADER ================= */}
         <Grid container spacing={1}>
           <Grid item xs={3}>
@@ -535,7 +535,7 @@ const BillReceipt = () => {
         {/* ================= RECEIPT TABLE ================= */}
         <TableContainer component={Paper} sx={{ mt: 1 }}>
           <Table size="small">
-            <TableHead sx={{ backgroundColor: "#c8f7c5" }}>
+            <TableHead sx={{ backgroundColor: "#cad0dfff"}}>
               <TableRow>
                 <TableCell>Receipt No</TableCell>
                 <TableCell>Pay Date</TableCell>
@@ -548,28 +548,19 @@ const BillReceipt = () => {
                 <TableCell>Co-Pay</TableCell>
                 <TableCell>Adj Bill</TableCell>
                 <TableCell>Adjusted</TableCell>
-                <TableCell>Actions</TableCell>
+                <TableCell >Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {adjListLoading && (
-                <TableRow>
-                  <TableCell colSpan={12}><Typography variant="caption">Loading existing receipts/adjustments…</Typography></TableCell>
-                </TableRow>
-              )}
-              {(() => {
-                // hide user-added pending rows when there's nothing payable
-                const visiblePayments = (payments || []).filter((p) => {
-                  const isPending = !p.receiptId && !p.fetched;
-                  return !(Number(currentPayable) <= 0 && isPending);
-                });
-
-                return (visiblePayments || []).map((p, i) => (
+              {(payments || []).map((p, i) => {    
+                console.log('Rendering payment row', billDetails);     
+                // Render all payment rows (including zero/empty amounts) so Add Row shows immediately
+                return (
                   <TableRow key={i}>
                     <TableCell>{p.receiptId || 'Pending'}</TableCell>
                     <TableCell>{p.payDate || receiptDateTime}</TableCell>
                     <TableCell>
-                      <TextField size="small" type="number" inputProps={{ min: 0, step: 0.01 }} value={p.amount} disabled={p.fetched} onChange={(e) => updatePaymentRow(i, { amount: Number(e.target.value) })} />
+                      <TextField sx={{width:80}}  size="small" type="number" inputProps={{ min: 0, step: 0.01 }} value={p.amount} onChange={(e) => updatePaymentRow(i, { amount: Number(e.target.value) })} />
                     </TableCell>
                     <TableCell>0</TableCell>
                     <TableCell>{p.amount}</TableCell>
@@ -587,7 +578,7 @@ const BillReceipt = () => {
                     </TableCell>
                     <TableCell>
                       <Box>
-                        <TextField size="small" value={p.adjustedBillId || ''} disabled={p.fetched} onChange={(e) => { if (!p.fetched) updatePaymentRow(i, { adjustedBillId: e.target.value }); }} onBlur={(e) => { if (!p.fetched) handleFetchAdjDetails(i, e.target.value); }} placeholder="Bill ID" />
+                        <TextField size="small" value={billDetails?.BillNo || ''} onChange={(e) => updatePaymentRow(i, { adjustedBillId: e.target.value })} onBlur={(e) => handleFetchAdjDetails(i, e.target.value)} placeholder="Bill ID" sx={{width:80}} />
                         <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
                           {p.adjLoading ? (
                             <Typography variant="caption" color="text.secondary">Checking…</Typography>
@@ -600,8 +591,23 @@ const BillReceipt = () => {
                         </Box>
                       </Box>
                     </TableCell>
-                    <TableCell>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <TableCell
+                          align="center"
+                          sx={{
+                            width: 150,
+                            minWidth: 150,
+                            maxWidth: 150,
+                            verticalAlign: 'middle'
+                          }}
+                        >
+                        <Box
+                          sx={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: 1,ml:7
+                          }}
+                        >
                         {renderAdjStatus(p)}
                         <Button size="small" variant="outlined" onClick={() => addPaymentRowAt(i)} disabled={(currentPayable || 0) <= 0}>Add</Button>
                         <Button size="small" color="error" variant="outlined" onClick={() => { if (!p.fetched && window.confirm('Delete this payment row?')) removePaymentRow(i); }} disabled={p.fetched}>Delete</Button>
