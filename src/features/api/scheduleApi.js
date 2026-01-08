@@ -5,7 +5,7 @@ export const scheduleApi = createApi ({
   reducerPath : "scheduleApi",
   baseQuery:fetchBaseQuery({baseUrl:BASE_URL}),
   tagTypes:[
-    'OPDSchedule','OPDScheduleTimeDetail', 'OPDAppointment'
+    'OPDSchedule','OPDScheduleTimeDetail', 'OPDAppointment', 'OPDAppointmentBlockDetail'
   ],
   endpoints:(builder)=>({
 
@@ -77,6 +77,33 @@ export const scheduleApi = createApi ({
       }),invalidatesTags:['OPDAppointment']
     }),
 
+    // opd appointment block detail
+    getOPDAppointmentBlockDetail:builder.query({
+      query:() => 'opdappointmentblockdetail',
+      providesTags:['OPDAppointmentBlockDetail'],
+      transformResponse:(res) => (res.data ||[]),
+    }),
+    createOPDAppointmentBlockDetail:builder.mutation({
+      query:(opdappointmentblockdetail) => ({
+        url:'opdappointmentblockdetail',
+        method:'POST',
+        body:opdappointmentblockdetail,
+      }), invalidatesTags:['OPDAppointmentBlockDetail'],
+    }),
+    updateOPDAppointmentBlockDetail:builder.mutation({
+      query:({id,payload}) => ({
+        url:`opdappointmentblockdetail/${id}`,
+        method:'PUT',
+        body:payload,
+      }),invalidatesTags:['OPDAppointmentBlockDetail'],
+    }),
+    deleteOPDAppointmentBlockDetail:builder.mutation({
+      query:({id}) => ({
+        method:'DELETE',
+        url:`opdappointmentblockdetail/${id}`,
+      }),invalidatesTags:['OPDAppointmentBlockDetail']
+    })
+
   })
 });
 export const {
@@ -93,5 +120,9 @@ export const {
   useUpdateOPDAppointmentMutation,
   useDeleteOPDAppointmentMutation,
 
+  useGetOPDAppointmentBlockDetailQuery,
+  useCreateOPDAppointmentBlockDetailMutation,
+  useUpdateOPDAppointmentBlockDetailMutation,
+  useDeleteOPDAppointmentBlockDetailMutation
 
 } = scheduleApi;

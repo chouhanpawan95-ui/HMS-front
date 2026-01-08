@@ -24,7 +24,7 @@ import {
 
 import Loader from "../component/Loader";
 import { useGetPatientsQuery,useGetopdVisitQuery } from "../features/api/patientsApi";
-import {useGetBillMasterQuery} from '../features/api/Hooks/billingApi';
+import { useGetBillMasterQuery, useLazyGetBillMasterByRegIdQuery } from '../features/api/Hooks/billingApi';
 import { Link } from 'react-router-dom';
 export default function Dashboard() {
 
@@ -38,6 +38,8 @@ export default function Dashboard() {
   const [opdList, setOpdList] = useState([]);
   const [filteredOpd, setFilteredOpd] = useState([]);
   const { data: billdetails } = useGetBillMasterQuery();
+  const [fetchBillsByRegId, { data: billsByReg, isLoading: billsByRegLoading, isError: billsByRegError }] = useLazyGetBillMasterByRegIdQuery();
+  const [lastRequestedRegId, setLastRequestedRegId] = useState(null);
 
   // Query OPD visits with pagination and optional search
   const { data: getOpd, isLoading: getOpdLoading } = useGetopdVisitQuery({ page, limit, q: searchQuery });
@@ -132,6 +134,13 @@ console.log("getopdvisit", getOpd);
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientsResp, selectedDate, searchQuery]);
+
+  // Log when regid fetch returns data for debugging
+  useEffect(() => {
+    if (Array.isArray(billsByReg)) {
+      console.log('billsByReg changed:', billsByReg, 'lastRequestedRegId:', lastRequestedRegId);
+    }
+  }, [billsByReg, lastRequestedRegId]);
 
   // Show loader if patients or OPD are loading
   if (isLoading || getOpdLoading) return <Loader />;
@@ -335,12 +344,18 @@ console.log("getopdvisit", getOpd);
                           size="small"
                           variant="outlined"
                           onClick={() => {
-                            setSelectedPatientForBills(patient || { patientId: row.fkRegId, PK_RegId: row.fkRegId, oldNo: row.oldRegId });
+                            const candidate = patient || { patientId: row.fkRegId, PK_RegId: row.fkRegId, oldNo: row.oldRegId, displayRegId: row.fkRegId };
+                            setSelectedPatientForBills(candidate);
+                            setBillsFilterText("");
                             setOpenBillsDialog(true);
+                            const resolvedRegId = String(row.fkRegId ?? candidate.patientId ?? candidate.PK_RegId ?? candidate.id ?? candidate.oldNo ?? '').trim();
+                            setLastRequestedRegId(resolvedRegId || null);
+                            console.log('View Bills clicked; fetching bills for regid:', resolvedRegId);
+                            if (resolvedRegId) fetchBillsByRegId(resolvedRegId);
                           }}
                         >
                           View Bills
-                        </Button>
+                        </Button> 
                       </TableCell>
                     </TableRow>
                   );
@@ -362,13 +377,17 @@ console.log("getopdvisit", getOpd);
           <DialogContent>
             {
               (() => {
-                const allBills = Array.isArray(billdetails?.data)
+                const allBills = Array.isArray(billsByReg?.data)
+                  ? billsByReg.data
+                  : Array.isArray(billsByReg)
+                  ? billsByReg
+                  : Array.isArray(billdetails?.data)
                   ? billdetails.data
                   : Array.isArray(billdetails)
                   ? billdetails
                   : [];
                 if (!selectedPatientForBills) return <Typography>No patient selected.</Typography>;
-            console.log("checkdata",billdetails?.data);
+                console.log("fetchedBills (billsByReg):", billsByReg, "fallback billdetails:", billdetails?.data);
                 // determine candidate registration ids (try multiple possibilities)
                 const candidateIds = [];
                 const addCandidate = (v) => {
@@ -387,11 +406,19 @@ console.log("getopdvisit", getOpd);
                 // normalize bills array
                 const allBillsArr = allBills || [];
 
-                // Filter bills matching any of candidate ids (numeric or string match)
-                let filtered = allBillsArr.filter((b) => {
-                  const billIdsToCheck = [b.FK_RegId, b.OLDRegID, b.OLDRegId, b.oldRegId, b.patientId, b.FK_RegId?.toString(), b.PK_BillId];
-                  return candidateIds.some((cid) => billIdsToCheck.some((x) => x !== undefined && x !== null && String(x) === String(cid)));
-                });
+                // If we requested bills by regid from the API, prefer that array as-is (it was already filtered server-side)
+                let filtered = [];
+                if (Array.isArray(billsByReg) && billsByReg.length > 0) {
+                  // Copy the array to avoid mutating read-only arrays returned by RTK Query
+                  filtered = Array.isArray(allBillsArr) ? allBillsArr.slice() : [];
+                } else {
+                  // Filter bills matching any of candidate ids (numeric or string match)
+                  filtered = (Array.isArray(allBillsArr) ? allBillsArr.slice() : []).filter((b) => {
+                    const billIdsToCheck = [b.FK_RegId, b.OLDRegID, b.OLDRegId, b.oldRegId, b.patientId, b.FK_RegId?.toString(), b.PK_BillId];
+                    return candidateIds.some((cid) => billIdsToCheck.some((x) => x !== undefined && x !== null && String(x) === String(cid)));
+                  });
+                }
+                console.log('allBillsArr.length=', allBillsArr.length, 'candidateIds=', candidateIds, 'filtered.length=', filtered.length);
 
                 // Apply simple text filter (search within BillNo or Remarks)
                 if (billsFilterText && billsFilterText.trim() !== '') {
@@ -399,12 +426,14 @@ console.log("getopdvisit", getOpd);
                   filtered = filtered.filter((b) => (String(b.BillNo || b.billId || b.PK_BillId || '') + ' ' + String(b.Remarks || '')).toLowerCase().includes(q));
                 }
 
-                // Sort by BillDate desc when possible
-                filtered.sort((a, b) => {
-                  const da = a.BillDate ? new Date(a.BillDate).getTime() : 0;
-                  const db = b.BillDate ? new Date(b.BillDate).getTime() : 0;
-                  return db - da;
-                });
+                // Sort by BillDate desc when possible (sort a shallow copy to avoid mutating input)
+                if (Array.isArray(filtered)) {
+                  filtered = filtered.slice().sort((a, b) => {
+                    const da = a.BillDate ? new Date(a.BillDate).getTime() : 0;
+                    const db = b.BillDate ? new Date(b.BillDate).getTime() : 0;
+                    return db - da;
+                  });
+                }
 
                 if (!filtered.length) return <Typography>No bills found for this patient.</Typography>;
 

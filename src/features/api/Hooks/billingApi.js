@@ -64,6 +64,14 @@ export const billingApi = createApi({
                 method: 'GET',
             }),
         }),
+        // Fetch bills for a specific registration id (regid)
+        getBillMasterByRegId: builder.query({
+            query: (regid) => ({
+                url: `/billmasters/regid/${encodeURIComponent(regid)}`,
+                method: 'GET',
+            }),
+            transformResponse: (res) => res.data || res || [],
+        }),
         // Fetch a single bill master by id (useful to load full bill details)
         getBillMasterById: builder.query({
             query: (id) => ({
@@ -124,6 +132,8 @@ export const {
     useCreateReceiptMasterMutation,
     useCreateReceiptAdjustmentDetailMutation,
 
+    useGetBillMasterByRegIdQuery,
+    useLazyGetBillMasterByRegIdQuery,
     useGetBillMasterQuery,
     useGetBillDetailQuery,
 
