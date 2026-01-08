@@ -13,12 +13,13 @@ import {
   FormControlLabel,
 } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
-import {
-  useGetCountryQuery,
-  useGetStatesQuery,
-  useGetDistrictsQuery,
-  useGetCitiesQuery,
-} from "../../features/api/locationApi";
+// import {
+//   useGetCountryQuery,
+//   useGetStateQuery,
+//   useGetDistrictsQuery,
+//   useGetCitiesQuery,
+// } from "../../features/api/locationApi";
+import { Country, State, City } from "country-state-city";
 import BranchName from "../../Comman/Branch";
 import { DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
@@ -30,8 +31,8 @@ const getSexFromInitial = (initial) => {
   if (!initial) return null;
 
   const normaized = initial.toLowerCase();
-  if (["miss", "ms", "mrs"].includes(normaized)) return "Female";
-  else return "Male";
+  if (["miss", "ms", "mrs"].includes(normaized)) return "F";
+  else return "M";
 };
 
 // age buy year
@@ -39,7 +40,7 @@ const calculateAge = (dob) => {
   if (!dob) return null;
 
   const birthDate = dayjs(dob);
-  if (!birthDate.isVaid()) return null;
+  if (!birthDate.isValid()) return null;
 
   const today = dayjs();
   let age = today.year() - birthDate.year();
@@ -59,27 +60,18 @@ const OPDAppointment = ({
 }) => {
   const [createOPDAppointment] = useCreateOPDAppointmentMutation();
 
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [cities, setCities] = useState([]);
+
   const [selectedCountry, setSelectedCountry] = useState("");
-  const { data: countries = [] } = useGetCountryQuery();
-
   const [selectedState, setSelectedState] = useState("");
-  const { data: states = [] } = useGetStatesQuery(selectedCountry);
-
-  const [selectedDistrict, setSelectedDistrict] = useState("");
-  const { data: districts = [] } = useGetDistrictsQuery(selectedState);
-
-  const { data: cityResponse } = useGetCitiesQuery(selectedDistrict);
-
-  const cities = Array.isArray(cityResponse)
-    ? cityResponse
-    : cityResponse?.data ?? [];
-
-  console.log("city", cities);
 
   const {
     register,
     handleSubmit,
     control,
+    watch,
     formState: { errors },
     reset,
   } = useForm({
@@ -87,6 +79,7 @@ const OPDAppointment = ({
       fkConsultantId: "",
       fkBranchId: "",
       fkRegId: "",
+      fkCityId: "",
       bookingDate: null,
     },
   });
@@ -94,15 +87,8 @@ const OPDAppointment = ({
   const title = ["Mr.", "Mrs.", "Miss", "Ms"];
 
   useEffect(() => {
-    setSelectedState("");
-    setSelectedDistrict("");
-    reset((v) => ({ ...v, fkCityId: "" }));
-  }, [selectedCountry]);
-
-  useEffect(() => {
-    setSelectedDistrict("");
-    reset((v) => ({ ...v, fkCityId: "" }));
-  }, [selectedState]);
+    setCountries(Country.getAllCountries());
+  }, []);
 
   useEffect(() => {
     if (appointmentDate && appointmentTime) {
@@ -115,16 +101,22 @@ const OPDAppointment = ({
     console.log(appointmentDate, appointmentTime);
   }, [appointmentDate, appointmentTime, doctorId, reset]);
 
+  useEffect(() => {
+    console.log("FORM ERRORS:", errors);
+  }, [errors]);
+
   const onSubmitOPDAppointment = async (data) => {
     const selectedTime = dayjs(data.apptTime).format("HH:mm");
     const selectedDate = dayjs(data.apptDate).format("YYYY-MM-DD");
-    const alreadyBooked = appointments.some((a) => {
-      return (
-        String(a.fkRegId) === String(data.fkRegId) &&
-        dayjs(a.apptDate).format("YYYY-MM-DD") === selectedDate &&
-        dayjs(a.apptTime, "HH:mm").format("HH:mm") === selectedTime
-      );
-    });
+    const alreadyBooked =
+      Array.isArray(appointments) &&
+      appointments.some((a) => {
+        return (
+          String(a.fkRegId) === String(data.fkRegId) &&
+          dayjs(a.apptDate).format("YYYY-MM-DD") === selectedDate &&
+          dayjs(a.apptTime, "HH:mm").format("HH:mm") === selectedTime
+        );
+      });
     if (alreadyBooked) {
       alert("This patient already has an appointment at this time");
       return;
@@ -144,23 +136,32 @@ const OPDAppointment = ({
         initial: data.initial,
         lastName: data.lastName,
         firstName: data.firstName,
-        dob: data.dob,
-        ageYear: ageYear,
-        sex: sex,
+        dob: dayjs(data.dob).format("YYYY-MM-DD"),
+        ageYear,
+        sex,
         emailAddress: data.emailAddress,
         fkCityId: data.fkCityId,
+        countryCode: selectedCountry,
+        stateCode: selectedState,
         fkConsultantId: data.fkConsultantId,
-        isVIP: false,
+        isVIP: data.isVIP ?? false,
         address: data.address,
         // fkServiceId: data.fkServiceId,
       }).unwrap();
       alert("Appointment Scheduled!!");
+      console.log("Appointment Data", data);
       reset();
       onClose();
     } catch (err) {
       console.error(err);
       alert("Appointment not scheduled!!!");
     }
+    console.log({
+      fkRegId: data.fkRegId,
+      selectedDate,
+      selectedTime,
+      appointments,
+    });
   };
 
   return (
@@ -175,18 +176,26 @@ const OPDAppointment = ({
           </Typography>
 
           <Box>
-            <form onSubmit={handleSubmit(onSubmitOPDAppointment)}>
+            <form
+              onSubmit={handleSubmit(onSubmitOPDAppointment, (formErrors) => {
+                console.log("SUBMIT BLOCKED BY:", formErrors);
+              })}
+            >
               <Grid container spacing={2}>
                 <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
                     label="Branch"
                     fullWidth
                     select
+                    defaultValue=""
+                    error={!!errors.fkBranchId}
+                    helperText={errors.fkBranchId?.message}
                     size="small"
                     {...register("fkBranchId", {
                       required: "Branch is required",
                     })}
                   >
+                    <MenuItem value=""></MenuItem>
                     {BranchName.map((bn) => (
                       <MenuItem key={bn.id} value={bn.id}>
                         {bn.BranchName}
@@ -199,7 +208,7 @@ const OPDAppointment = ({
                     label="RegId"
                     fullWidth
                     size="small"
-                    {...register("fkRedId")}
+                    {...register("fkRegId")}
                   />
                 </Grid>
               </Grid>
@@ -214,16 +223,19 @@ const OPDAppointment = ({
                     render={({ field }) => (
                       <DatePicker
                         label="Booking Date"
+                        format="DD/MM/YYYY"
                         minDate={dayjs()}
                         {...field}
                         slotProps={{
-                          textField: { size: "small", fullWidth: true },
+                          textField: {
+                            size: "small",
+                            fullWidth: true,
+                            error: !!errors.bookingDate,
+                            helperText: errors.bookingDate?.message,
+                          },
                         }}
                       />
                     )}
-                    slotProps={{
-                      textField: { size: "small", fullWidth: true },
-                    }}
                   />
                 </Grid>
                 <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
@@ -235,6 +247,8 @@ const OPDAppointment = ({
                       <DatePicker
                         label="Date of Appointment"
                         readOnly
+                        minDate={dayjs()}
+                        format="DD/MM/YYYY"
                         {...field}
                         slotProps={{
                           textField: { size: "small", fullWidth: true },
@@ -252,6 +266,11 @@ const OPDAppointment = ({
                       <TimePicker
                         label="Time of Appointment"
                         readOnly
+                        minTime={
+                          dayjs(watch("apptDate")).isSame(dayjs(), "day")
+                            ? dayjs()
+                            : null
+                        }
                         {...field}
                         slotProps={{
                           textField: { size: "small", fullWidth: true },
@@ -269,6 +288,8 @@ const OPDAppointment = ({
                     label="Title"
                     fullWidth
                     size="small"
+                    error={!!errors.initial}
+                    helperText={errors.initial?.message}
                     SelectProps={{ native: true }}
                     {...register("initial", {
                       required: true,
@@ -287,6 +308,8 @@ const OPDAppointment = ({
                     label="First Name"
                     size="small"
                     fullWidth
+                    error={!!errors.firstName}
+                    helperText={errors.firstName?.message}
                     {...register("firstName", {
                       required: "First name is required",
                     })}
@@ -297,6 +320,8 @@ const OPDAppointment = ({
                     label="Last Name"
                     size="small"
                     fullWidth
+                    helperText={errors.firstName?.message}
+                    error={!!errors.lastName}
                     {...register("lastName", {
                       required: "Last name is required",
                     })}
@@ -305,16 +330,29 @@ const OPDAppointment = ({
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "42%", md: "17%" } }}>
-                  <TextField
-                    type="date"
-                    label="DOB"
-                    fullWidth
-                    size="small"
-                    InputLabelProps={{ shrink: true }}
-                    {...register("dob", {
-                      required: true,
-                    })}
+                <Grid sx={{ width: { xs: "44.5%", md: "19.5%" } }}>
+                  <Controller
+                    name="dob"
+                    control={control}
+                    rules={{ required: "DOB is required" }}
+                    render={({ field }) => (
+                      <DatePicker
+                        label="Date of Birth"
+                        format="DD/MM/YYYY"
+                        maxDate={dayjs()}
+                        {...field}
+                        slotProps={{
+                          textField: {
+                            size: "small",
+                            fullWidth: true,
+                            error: !!errors.dob,
+                            helperText: errors.dob
+                              ? "Date of Birth is required"
+                              : "DD/MM/YYYY",
+                          },
+                        }}
+                      />
+                    )}
                   />
                 </Grid>
                 <Grid sx={{ width: { xs: "45%", md: "18%" } }}>
@@ -322,6 +360,8 @@ const OPDAppointment = ({
                     type="tel"
                     fullWidth
                     size="small"
+                    error={!!errors.contactNo}
+                    helperText={errors.contactNo?.message}
                     label="Contact No"
                     {...register("contactNo", {
                       required: true,
@@ -340,7 +380,7 @@ const OPDAppointment = ({
                     fullWidth
                     {...register("emailAddress", {
                       pattern: {
-                        value: /^[^\s@]+@[^\s@]+.\[^\s@]+$/,
+                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
                         message: "Invalid email address",
                       },
                     })}
@@ -349,7 +389,7 @@ const OPDAppointment = ({
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "30%", md: "15%" } }}>
+                <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
                   <TextField
                     label="Country"
                     select
@@ -357,58 +397,49 @@ const OPDAppointment = ({
                     fullWidth
                     SelectProps={{ native: true }}
                     value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
+                    onChange={(e) => {
+                      const countryCode = e.target.value;
+                      setSelectedCountry(countryCode);
+                      setStates(State.getStatesOfCountry(countryCode));
+                      setCities([]);
+                      setSelectedState("");
+                    }}
                   >
                     <option value=""></option>
                     {countries.map((c) => (
-                      <option key={c._id} value={c._id}>
-                        {c.CountryName}
+                      <option key={c.isoCode} value={c.isoCode}>
+                        {c.name}
                       </option>
                     ))}
                   </TextField>
                 </Grid>
 
-                <Grid sx={{ width: { xs: "25%", md: "10%" } }}>
+                <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
                   <TextField
                     SelectProps={{ native: true }}
                     value={selectedState}
-                    onChange={(e) => setSelectedState(e.target.value)}
                     label="State"
                     size="small"
                     fullWidth
                     select
+                    onChange={(e) => {
+                      const stateCode = e.target.value;
+                      setSelectedState(stateCode);
+                      setCities(
+                        City.getCitiesOfState(selectedCountry, stateCode)
+                      );
+                    }}
                   >
                     <option value=""></option>
-                    {Array.isArray(states) &&
-                      states.map((s) => (
-                        <option key={s._id} value={s._id}>
-                          {s.StateName}
-                        </option>
-                      ))}
+                    {states.map((s) => (
+                      <option key={s.isoCode} value={s.isoCode}>
+                        {s.name}
+                      </option>
+                    ))}
                   </TextField>
                 </Grid>
 
-                <Grid sx={{ width: { xs: "30%", md: "15%" } }}>
-                  <TextField
-                    select
-                    label="District"
-                    size="small"
-                    fullWidth
-                    SelectProps={{ native: true }}
-                    value={selectedDistrict}
-                    onChange={(e) => setSelectedDistrict(e.target.value)}
-                  >
-                    <option value="" disabled></option>
-                    {Array.isArray(districts) &&
-                      districts.map((d) => (
-                        <option key={d._id} value={d._id}>
-                          {d.DistrictName}
-                        </option>
-                      ))}
-                  </TextField>
-                </Grid>
-
-                <Grid sx={{ width: { xs: "25.2%", md: "10.2%" } }}>
+                <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
                   <TextField
                     select
                     label="City"
@@ -423,15 +454,11 @@ const OPDAppointment = ({
                   >
                     <option value=""></option>
 
-                    {cities.length === 0 ? (
-                      <option disabled>No cities available</option>
-                    ) : (
-                      cities.map((c) => (
-                        <option key={c.cityId} value={c.cityId}>
-                          {c.CityName}
-                        </option>
-                      ))
-                    )}
+                    {cities.map((c) => (
+                      <option key={c.name} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
                   </TextField>
                 </Grid>
               </Grid>
@@ -449,19 +476,23 @@ const OPDAppointment = ({
                 </Grid>
                 <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                   <FormControlLabel
-                    control={
-                      <Checkbox
-                        name="isVIP"
-                      />
-                    }
+                    control={<Checkbox {...register("isVIP")} />}
                     label="Is VIP"
                   />
                 </Grid>
               </Grid>
 
-              <Box>
+              <Box sx={{ display: "flex", gap: 2 }}>
                 <Button type="submit" variant="contained" sx={{ mt: 3 }}>
                   Save Appointment
+                </Button>
+                <Button
+                  type="button"
+                  variant="contained"
+                  sx={{ mt: 3 }}
+                  onClick={onClose}
+                >
+                  Cancel
                 </Button>
               </Box>
             </form>

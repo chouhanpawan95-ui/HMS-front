@@ -25,14 +25,13 @@ import style from "../BillingMaster/RateListMaster.module.css";
 import {
   useGetOPDScheduleQuery,
   useGetOPDAppointmentQuery,
-  useGetOPDAppointmentBlockDetailQuery
+  useGetOPDAppointmentBlockDetailQuery,
 } from "../../features/api/scheduleApi";
 
 import OPDAppointment from "./OPDappointment";
 import Loader from "../../component/Loader";
 import DoctorList from "../../Comman/DoctorList";
 import BlockAppointment from "./BlockAppointment";
-
 dayjs.extend(utc);
 
 /* -------------------- Utility -------------------- */
@@ -41,6 +40,8 @@ const normalizeDate = (dateValue) => {
   return dayjs(dateValue).utc().format("YYYY-MM-DD");
 };
 
+/* -------------------- Appt Type -------------------- */
+// const normalizeApptTyp
 
 /* -------------------- Component -------------------- */
 const AppointmentManager = () => {
@@ -48,8 +49,8 @@ const AppointmentManager = () => {
   const [selectedDate, setSelectedDate] = useState("");
   const [openAppointment, setOpenAppointment] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [openBlock,setOpenBlock]=useState(false);
-  const [blockSlot,setBlockSlot]=useState(null);
+  const [openBlock, setOpenBlock] = useState(false);
+  const [blockSlot, setBlockSlot] = useState(null);
 
   /* -------------------- APIs -------------------- */
   const { data: opdScheduleResponse, isLoading: isScheduleLoading } =
@@ -61,10 +62,11 @@ const AppointmentManager = () => {
       { skip: !selectedDoctor || !selectedDate }
     );
 
-  const { data: blockDetailsResponse, isLoading: isBlockDetailsLoading } = useGetOPDAppointmentBlockDetailQuery(
-    {doctorId:selectedDoctor, date:selectedDate},
-    {skip:!selectedDoctor || !selectedDate}
-  );
+  const { data: blockDetailsResponse, isLoading: isBlockDetailsLoading } =
+    useGetOPDAppointmentBlockDetailQuery(
+      { doctorId: selectedDoctor, date: selectedDate },
+      { skip: !selectedDoctor || !selectedDate }
+    );
 
   /* -------------------- Normalize Responses -------------------- */
   const opdSchedules = useMemo(() => {
@@ -82,10 +84,11 @@ const AppointmentManager = () => {
   }, [appointmentsResponse]);
 
   const blockedList = useMemo(() => {
-    if(Array.isArray(blockDetailsResponse)) return blockDetailsResponse;
-    if(Array.isArray(blockDetailsResponse?.data)) return blockDetailsResponse.data;
+    if (Array.isArray(blockDetailsResponse)) return blockDetailsResponse;
+    if (Array.isArray(blockDetailsResponse?.data))
+      return blockDetailsResponse.data;
     return [];
-  },[blockDetailsResponse]);
+  }, [blockDetailsResponse]);
 
   /* -------------------- Filter Appointments -------------------- */
   const appointments = useMemo(() => {
@@ -99,15 +102,18 @@ const AppointmentManager = () => {
     });
   }, [appointmentList, selectedDoctor, selectedDate]);
 
-  console.log('appointment',appointments);
+  console.log("appointment", appointments);
+  console.log("appointmentList", appointmentList);
 
-  const appointmentByIdMap = useMemo (() => {
+  const appointmentByIdMap = useMemo(() => {
     const map = new Map();
     appointmentList.forEach((appt) => {
       map.set(appt.appointmentId, appt);
     });
     return map;
-  },[appointmentList]);
+  }, [appointmentList]);
+
+  console.log("appointmentByIdMap", appointmentByIdMap);
 
   /* -------------------- Booked Slot Map -------------------- */
   const bookedSlots = useMemo(() => {
@@ -131,20 +137,20 @@ const AppointmentManager = () => {
 
     blockedList.forEach((block) => {
       const date = normalizeDate(block.apptDate);
-      if(date !== selectedDate) return;
+      if (date !== selectedDate) return;
 
-      const linkedAppointment = appointmentByIdMap.get(block.fkCreatedById) || null;
+      const linkedAppointment =
+        appointmentByIdMap.get(block.fkCreatedById) || null;
 
-      map.set(block.apptTime,{
+      map.set(block.apptTime, {
         ...block,
-        isBlocked:true,
+        isBlocked: true,
         linkedAppointment,
       });
-    })
+    });
 
     return map;
-  }, [appointments,blockedList,selectedDate,appointmentByIdMap]);
-
+  }, [appointments, blockedList, selectedDate, appointmentByIdMap]);
 
   /* -------------------- Doctor Schedule -------------------- */
   const availableSchedule = useMemo(() => {
@@ -195,20 +201,21 @@ const AppointmentManager = () => {
   const handleSlotClick = (slot) => {
     const appt = bookedSlots.get(slot);
 
-    if (appt && !appt.isBlocked){
+    if (appt && !appt.isBlocked) {
       setBlockSlot(appt);
       setOpenBlock(true);
       return;
     }
 
-    if(appt?.isBlocked) return;
-    if(appt) return;
+    if (appt?.isBlocked) return;
+    if (appt) return;
     setSelectedSlot(slot);
     setOpenAppointment(true);
   };
 
   /* -------------------- Loading -------------------- */
-  if (isScheduleLoading || isAppointmentLoading) return <Loader />;
+  if (isScheduleLoading || isAppointmentLoading || isBlockDetailsLoading)
+    return <Loader />;
 
   /* -------------------- Render -------------------- */
   return (
@@ -297,22 +304,52 @@ const AppointmentManager = () => {
                       hover={!booked}
                       onClick={() => handleSlotClick(slot)}
                       sx={{
-                        backgroundColor: isBloked ? '#ffebee' : booked ? '#e8f5e9' :'inherit',
-                        cursor: booked ? 'not-allowed' : 'pointer',
+                        backgroundColor: isBloked
+                          ? "#ffebee"
+                          : booked
+                          ? "#e8f5e9"
+                          : "inherit",
+                        cursor: booked ? "not-allowed" : "pointer",
                       }}
                     >
-                      <TableCell sx={{ fontWeight: booked ? "bold" : "normal" }}>
+                      <TableCell
+                        sx={{ fontWeight: booked ? "bold" : "normal" }}
+                      >
                         {slot}
                       </TableCell>
-                      <TableCell>{(isBloked ? linked?.appointmentId : booked?.appointmentId) ?? "-"}</TableCell>
                       <TableCell>
-                        {(isBloked ? linked ? `${linked.firstName} ${linked.lastName}` : "--" : booked ? `${booked.firstName} ${booked.lastName}` : "--") ?? "--"}
+                        {(isBloked
+                          ? linked?.appointmentId
+                          : booked?.appointmentId) ?? "-"}
                       </TableCell>
-                      <TableCell>{(isBloked ? linked?.age ?? "--" : booked?.age ?? "--")}</TableCell>
-                      <TableCell>{(isBloked ? linked?.apptType ??'--' : booked?.apptType ?? "--")}</TableCell>
-                      <TableCell>{(isBloked ? linked?.contactNo : booked?.contactNo) ?? "--"}</TableCell>
+                      <TableCell>
+                        {(isBloked
+                          ? linked
+                            ? `${linked.firstName} ${linked.lastName}`
+                            : "--"
+                          : booked
+                          ? `${booked.firstName} ${booked.lastName}`
+                          : "--") ?? "--"}
+                      </TableCell>
+                      <TableCell>
+                        {isBloked
+                          ? linked?.ageYear ?? "--"
+                          : booked?.ageYear ?? "--"}
+                      </TableCell>
+                      <TableCell>
+                        {isBloked
+                          ? linked?.apptType ?? "--"
+                          : booked?.apptType ?? "--"}
+                      </TableCell>
+                      <TableCell>
+                        {(isBloked ? linked?.contactNo : booked?.contactNo) ??
+                          "--"}
+                      </TableCell>
                       <TableCell>{booked?.referredBy ?? "--"}</TableCell>
-                      <TableCell>{(isBloked ? booked.blockReason : booked?.remarks) ?? "--"}</TableCell>
+                      <TableCell>
+                        {(isBloked ? booked.blockReason : booked?.remarks) ??
+                          "--"}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
@@ -322,7 +359,12 @@ const AppointmentManager = () => {
       </Paper>
 
       {/* -------------------- Dialog -------------------- */}
-      <Dialog open={openAppointment} onClose={closeDialog} maxWidth="md" fullWidth>
+      <Dialog
+        open={openAppointment}
+        onClose={closeDialog}
+        maxWidth="md"
+        fullWidth
+      >
         <OPDAppointment
           doctorId={selectedDoctor}
           appointmentDate={selectedDate}
@@ -331,7 +373,12 @@ const AppointmentManager = () => {
           onClose={closeDialog}
         />
       </Dialog>
-      <Dialog open={openBlock} onClose={() => setOpenBlock(false)} maxWidth="md" fullWidth>
+      <Dialog
+        open={openBlock}
+        onClose={() => setOpenBlock(false)}
+        maxWidth="md"
+        fullWidth
+      >
         <BlockAppointment
           branchId={blockSlot?.fkBranchId}
           doctorId={blockSlot?.fkConsultantId}
@@ -339,7 +386,6 @@ const AppointmentManager = () => {
           appointmentTime={blockSlot?.apptTime}
           appointmentId={blockSlot?.appointmentId}
         />
-
       </Dialog>
     </Box>
   );

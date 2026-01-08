@@ -21,7 +21,14 @@ dayjs.extend(isSameOrBefore);
 
 const OPDSchedule = () => {
   const [createSchedule] = useCreateOPDScheduleMutation();
-  const { register, handleSubmit, control, watch, reset } = useForm({
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm({
     defaultValues: {
       fkDoctorId: "",
       fromDate: null,
@@ -53,31 +60,29 @@ const OPDSchedule = () => {
         alert("Please select all dates and times");
         return;
       }
-      // const scheduleDates = generateScheduleDates(form.fromDate, form.toDate);
       let currentDate = dayjs(form.fromDate);
       const endDate = dayjs(form.toDate);
-      while(currentDate.valueOf() <= endDate.valueOf()){
-      await createSchedule({
-        fkBranchId: form.fkBranchId,
-        fkScheduleTypeId: form.fkScheduleTypeId,
-        fkDoctorId: form.fkDoctorId,
-        scheduleDate: currentDate.format("YYYY-MM-DD"),
-        fromApptTime: dayjs(form.fromApptTime).format("HH:mm"),
-        toApptTime: dayjs(form.toApptTime).format("HH:mm"),
-        intervalMinuit: Number(form.intervalMinuit),
-        maxLimitSlot: Number(form.maxLimitSlot),
-        isActive: true,
-        
-      }).unwrap();
-      currentDate = currentDate.add(1,"day");
-    }
+      while (currentDate.valueOf() <= endDate.valueOf()) {
+        await createSchedule({
+          fkBranchId: form.fkBranchId,
+          fkScheduleTypeId: form.fkScheduleTypeId,
+          fkDoctorId: form.fkDoctorId,
+          scheduleDate: currentDate.format("YYYY-MM-DD"),
+          fromApptTime: dayjs(form.fromApptTime).format("HH:mm"),
+          toApptTime: dayjs(form.toApptTime).format("HH:mm"),
+          intervalMinuit: Number(form.intervalMinuit),
+          maxLimitSlot: Number(form.maxLimitSlot),
+          isActive: true,
+        }).unwrap();
+        currentDate = currentDate.add(1, "day");
+      }
       reset();
       alert("Doctor Schedule Created");
     } catch (err) {
       console.error(err);
       alert("Failed to create");
     }
-  }; 
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -104,27 +109,34 @@ const OPDSchedule = () => {
                   size="small"
                   fullWidth
                   select
+                  error={!!errors.fkBranchId}
+                  helperText={errors.fkBranchId?.message}
                   {...register("fkBranchId", { required: true })}
                 >
                   <MenuItem value="">Select</MenuItem>
                   {BranchName.map((bn) => (
-                    <MenuItem key={bn.id} value={bn.id}>{bn.BranchName}</MenuItem>
+                    <MenuItem key={bn.id} value={bn.id}>
+                      {bn.BranchName}
+                    </MenuItem>
                   ))}
                 </TextField>
               </Grid>
 
               <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                
                 <TextField
                   label="Schedule Type"
                   select
                   size="small"
                   fullWidth
-                  {...register('fkScheduleTypeId',{required:true})}
+                  error={!!errors.fkScheduleTypeId}
+                  helperText={errors.fkScheduleTypeId?.message}
+                  {...register("fkScheduleTypeId", { required: true })}
                 >
                   <MenuItem value="">Select</MenuItem>
                   {scheduleType.map((st) => (
-                    <MenuItem key={st} value={st}>{st}</MenuItem>
+                    <MenuItem key={st} value={st}>
+                      {st}
+                    </MenuItem>
                   ))}
                 </TextField>
               </Grid>
@@ -137,6 +149,8 @@ const OPDSchedule = () => {
                   size="small"
                   fullWidth
                   defaultValue=""
+                  error={!!errors.fkDoctorId}
+                  helperText={errors.fkDoctorId?.message}
                   {...register("fkDoctorId", { required: true })}
                 >
                   <MenuItem value="">Select</MenuItem>
@@ -149,32 +163,27 @@ const OPDSchedule = () => {
               </Grid>
             </Grid>
             <Grid container spacing={2} mt={2}>
-              {/* <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                <Controller
-                  name="scheduleDate"
-                  size="small"
-                  control={control}
-                  render={({ field }) => (
-                    <DatePicker label="Schedule Date" {...field} />
-                  )}
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
-                />
-              </Grid> */}
-
               <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                 <Controller
                   name="fromDate"
                   control={control}
                   defaultValue={null}
-                  rules={{required:'form date'}}
+                  rules={{ required: "form date" }}
                   render={({ field }) => (
-                    <DatePicker 
-                      label="From Date" 
+                    <DatePicker
+                      label="From Date"
+                      format="DD/MM/YYYY"
                       minDate={dayjs()}
-                      {...field} 
-                      />
+                      {...field}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          helperText: "DD/MM/YYYY",
+                        },
+                      }}
+                    />
                   )}
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
                 />
               </Grid>
               <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
@@ -182,15 +191,24 @@ const OPDSchedule = () => {
                   name="toDate"
                   control={control}
                   defaultValue={null}
-                  rules={{required:true}}
+                  rules={{ required: true }}
+                  error={!!errors.toDate}
+                  helperText={errors.toDate}
                   render={({ field }) => (
-                    <DatePicker 
-                    label="To Date" 
-                    minDate={watch('fromDate')}
-                    {...field} 
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      label="To Date"
+                      minDate={watch("fromDate")}
+                      {...field}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          helperText: "DD/MM/YYYY",
+                        },
+                      }}
                     />
                   )}
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
                 />
               </Grid>
             </Grid>
@@ -199,17 +217,28 @@ const OPDSchedule = () => {
                 <Controller
                   name="fromApptTime"
                   control={control}
-                  rules={{required:true}}
+                  rules={{ required: true }}
                   defaultValue={null}
+                  helperText={errors.fromApptTime?.message}
+                  error={!!errors.fromApptTime}
                   render={({ field }) => (
-                    <TimePicker 
-                    label="From Time" 
-                    minTime={
-                      dayjs(watch('fromDate')).isSame(dayjs(),"day") ? dayjs() :null
-                    }
-                    {...field} />
+                    <TimePicker
+                      label="From Time"
+                      minTime={
+                        dayjs(watch("fromDate")).isSame(dayjs(), "day")
+                          ? dayjs()
+                          : null
+                      }
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          helperText: "DD/MM/YYYY",
+                        },
+                      }}
+                      {...field}
+                    />
                   )}
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
                 />
               </Grid>
 
@@ -217,15 +246,24 @@ const OPDSchedule = () => {
                 <Controller
                   name="toApptTime"
                   control={control}
-                  rules={{required:true}}
+                  rules={{ required: true }}
                   defaultValue={null}
+                  error={!!errors.toApptTime}
+                  helperText={errors.toApptTime?.message}
                   render={({ field }) => (
-                    <TimePicker 
-                    label="To Time" 
-                    minTime={watch('fromTime')}
-                    {...field} />
+                    <TimePicker
+                      label="To Time"
+                      minTime={watch("fromTime")}
+                      {...field}
+                      slotProps={{
+                        textField: {
+                          size: "small",
+                          fullWidth: true,
+                          helperText: "DD/MM/YYYY",
+                        },
+                      }}
+                    />
                   )}
-                  slotProps={{ textField: { size: "small", fullWidth: true } }}
                 />
               </Grid>
             </Grid>
@@ -236,7 +274,9 @@ const OPDSchedule = () => {
                   label="Interval (minutes)"
                   type="number"
                   fullWidth
-                  {...register("intervalMinuit",{required:true})}
+                  error={!!errors.intervalMinuit}
+                  helperText={errors.intervalMinuit?.message}
+                  {...register("intervalMinuit", { required: true })}
                 />
               </Grid>
 
@@ -246,7 +286,9 @@ const OPDSchedule = () => {
                   label="Slot Limit"
                   type="number"
                   fullWidth
-                  {...register("maxLimitSlot",{required:true})}
+                  error={!!errors.maxLimitSlot}
+                  helperText={errors.maxLimitSlot?.message}
+                  {...register("maxLimitSlot", { required: true })}
                 />
               </Grid>
             </Grid>
