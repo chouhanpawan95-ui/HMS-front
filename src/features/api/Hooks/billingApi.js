@@ -1,5 +1,4 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import { get } from "react-hook-form";
 
 // Configure the base query with the API URL
 const billingBaseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
@@ -65,6 +64,14 @@ export const billingApi = createApi({
                 method: 'GET',
             }),
         }),
+        // Fetch bills for a specific registration id (regid)
+        getBillMasterByRegId: builder.query({
+            query: (regid) => ({
+                url: `/billmasters/regid/${encodeURIComponent(regid)}`,
+                method: 'GET',
+            }),
+            transformResponse: (res) => res.data || res || [],
+        }),
         // Fetch a single bill master by id (useful to load full bill details)
         getBillMasterById: builder.query({
             query: (id) => ({
@@ -87,6 +94,14 @@ export const billingApi = createApi({
             }),
             transformResponse: (res) => res.data || res || {},
         }),
+        // Fetch receipt adjustment details referencing a particular adjusted bill (fkAdjustedBillId)
+        getReceiptAdjustmentsByAdjustedBillId: builder.query({
+            query: (billid) => ({
+                url: `/receiptadjustmentdetail?fkAdjustedBillId=${encodeURIComponent(billid)}`,
+                method: 'GET',
+            }),
+            transformResponse: (res) => res.data || res || [],
+        }),
         getBillId: builder.query({
             // args is an object with optional query params
             query: (args = {}) => {
@@ -107,12 +122,18 @@ export const {
     useGetBillMasterByIdQuery,
     useGetBillDetailByIdQuery,
     useGetBillDetailByBillIdQuery,
+    useLazyGetBillDetailByBillIdQuery,
+
+    useGetReceiptAdjustmentsByAdjustedBillIdQuery,
+    useLazyGetReceiptAdjustmentsByAdjustedBillIdQuery,
 
     useCreateBillMutation,
     useCreateBilldetailsMutation,
     useCreateReceiptMasterMutation,
     useCreateReceiptAdjustmentDetailMutation,
 
+    useGetBillMasterByRegIdQuery,
+    useLazyGetBillMasterByRegIdQuery,
     useGetBillMasterQuery,
     useGetBillDetailQuery,
 
