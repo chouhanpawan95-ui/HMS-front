@@ -1,5 +1,5 @@
 import { Controller, useForm } from "react-hook-form";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   useCreateOPDAppointmentMutation,
   useGetOPDAppointmentQuery,
@@ -14,12 +14,13 @@ import {
   MenuItem,
   Checkbox,
   FormControlLabel,
-  Autocomplete,
-  CircularProgress
+  CircularProgress,
 } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
 import { Country, State, City } from "country-state-city";
 import BranchName from "../../Comman/Branch";
+import { useGetPatientsQuery } from "../../features/api/patientsApi";
+
 import { DatePicker, TimePicker } from "@mui/x-date-pickers";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -57,10 +58,13 @@ const OPDAppointment = ({
   appointments,
   onClose,
 }) => {
-const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
+  const [createOPDAppointment, { isLoading }] =
+    useCreateOPDAppointmentMutation();
   const { data: opdappointments } = useGetOPDAppointmentQuery();
   console.log("Appointment: ", opdappointments);
   console.log("Appointment Data: ", opdappointments?.data);
+
+  const { data: patientsRespond} = useGetPatientsQuery();
 
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -68,6 +72,11 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
 
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
+
+  const [filteredPatients, setFilteredPatients] = useState([]);
+  const [showOldPatientSearch, setShowOldPatientSearch] = useState(false);
+  const [searchText, setSearchText] = useState("");
+  const [searchResults, setSearchResult] = useState([]);
 
   const {
     register,
@@ -83,13 +92,41 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
       fkRegId: "",
       fkCityId: "",
       bookingDate: null,
-      apptDate:null,
-      apptTime:null,
-      dob:null,
+      apptDate: null,
+      apptTime: null,
+      dob: null,
     },
   });
 
   const title = ["Mr.", "Mrs.", "Miss", "Ms"];
+  // normalize patient
+  const patient = Array.isArray(patientsRespond)
+    ? patientsRespond
+    : patientsRespond && Array.isArray(patientsRespond.data)
+    ? patientsRespond.data
+    : [];
+
+  useEffect(() => {
+    setFilteredPatients(patient);
+  }, [patient]);
+
+  useEffect(() => {
+    if (!searchText) {
+      setSearchResult([]);
+      return;
+    }
+    const value = searchText.toLowerCase();
+
+    const result = patient.filter(
+      (p) =>
+        p.firstName?.toLowerCase().includes(value) ||
+        p.lastName?.toLowerCase().includes(value) ||
+        String(p.patientId)?.includes(value) ||
+        (p.dateOfBirth &&
+          dayjs(p.dateOfBirth).format("DD/MM/YYYY").includes(value))
+    );
+    setSearchResult(result);
+  }, [searchText, patient]);
 
   useEffect(() => {
     setCountries(Country.getAllCountries());
@@ -169,24 +206,42 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
     });
   };
 
-  // Serach
-  const searchList = useMemo(() => {
-    if (!opdappointments) return [];
+  // // Serach
+  // const searchList = useMemo(() => {
+  //   if (!opdappointments) return [];
 
-    return opdappointments.map((a) => ({
-      appointmentId: a.appointmentId,
-      fkRegId: a.fkRegId || a.appointmentId,
-      firstName: a.firstName,
-      lastName: a.lastName,
-      contactNo: a.contactNo,
-      dob: dayjs(a.dob),
-      emailAddress: a.emailAddress,
-      address: a.address,
-      fkCityId: a.fkCityId,
-      initial: a.initial,
-      isVIP: a.isVIP,
+  //   return opdappointments.map((a) => ({
+  //     appointmentId: a.appointmentId,
+  //     fkRegId: a.fkRegId || a.appointmentId,
+  //     firstName: a.firstName,
+  //     lastName: a.lastName,
+  //     contactNo: a.contactNo,
+  //     dob: dayjs(a.dob),
+  //     emailAddress: a.emailAddress,
+  //     address: a.address,
+  //     fkCityId: a.fkCityId,
+  //     initial: a.initial,
+  //     isVIP: a.isVIP,
+  //   }));
+  // }, [opdappointments]);
+
+  // auto fill
+  const handleSelectOldPatient = (p) => {
+    reset((prev) => ({
+      ...prev,
+      fkRegId: p.patientId,
+      initial: p.initial,
+      firstName: p.firstName,
+      lastName: p.lastName,
+      dob: p.dateOfBirth ? dayjs(p.birthDate) : null,
+      contactNo: p.permanentAddress?.mobileNo,
+      address: p.permanentAddress?.addressLine,
+      fkCityId: p.permanentAddress?.cityName,
     }));
-  }, [opdappointments]);
+    setSearchResult([]);
+    setSearchText("");
+    setShowOldPatientSearch(false);
+  };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -200,14 +255,68 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
           </Typography>
 
           <Box>
+            {showOldPatientSearch && (
+              <Box sx={{ mb: 2 }}>
+                <TextField
+                  label="Search old patient (Name/ID/DOB)"
+                  size="small"
+                  fullWidth
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                />
+                {searchResults.length > 0 && (
+                  <Paper
+                    elevation={1}
+                    sx={{
+                      mt: 1,
+                      maxHeight: 200,
+                      overflowY: "auto",
+                    }}
+                  >
+                    {searchResults.map((p) => (
+                      <Box
+                        key={p.patientId}
+                        sx={{
+                          p: 1,
+                          borderBottom: "1px solid #eee",
+                          cursor: "pointer",
+                          "&:hover": { backgroundColor: "#f5f5f5" },
+                        }}
+                        onClick={() => handleSelectOldPatient(p)}
+                      >
+                        <Typography variant="body2">
+                          <strong>
+                            {p.firstName} {p.lastName}
+                          </strong>
+                        </Typography>
+                        <Typography variant="caption">
+                          ID:{p.patientId} | DOB:{" "}
+                          {p.dateOfBirth
+                            ? dayjs(p.dateOfBirth).format("DD/MM/YYYY")
+                            : ""}{" "}
+                          | Mobile: {p.permanentAddress?.mobileNo}
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Paper>
+                )}
+              </Box>
+            )}
+            <Box sx={{
+              filter:showOldPatientSearch ? 'blur(3px)' : 'none',
+              pointerEvents:showOldPatientSearch ? 'none' :'auto',
+              transition:'0.3s',
+            }}>
             <form
               onSubmit={handleSubmit(onSubmitOPDAppointment, (formErrors) => {
                 console.log("SUBMIT BLOCKED BY:", formErrors);
               })}
             >
               <Grid container spacing={2}>
-                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
+                    focused
+                    color="text"
                     label="Branch"
                     fullWidth
                     select
@@ -227,19 +336,25 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     ))}
                   </TextField>
                 </Grid>
-                {/* <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
+                    focused
+                    color="text"
                     label="RegId"
                     fullWidth
                     size="small"
                     {...register("fkRegId")}
                   />
-                </Grid> */}
-                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                </Grid>
+                {/* <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                   <Autocomplete
                     options={searchList}
                     getOptionLabel={(option) =>
-                      `${option.firstName || ''} ${option.lastName || ''} | ${option.contactNo || ''} | ${option.appointmentId || ''} | ${option.dob ? dayjs(option.dob).format('DD/MM/YYYY') : ''}`
+                      `${option.firstName || ""} ${option.lastName || ""} | ${
+                        option.contactNo || ""
+                      } | ${option.appointmentId || ""} | ${
+                        option.dob ? dayjs(option.dob).format("DD/MM/YYYY") : ""
+                      }`
                     }
                     filterOptions={(options, { inputValue }) => {
                       const value = inputValue.toLowerCase();
@@ -250,7 +365,8 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                           o.lastName?.toLowerCase().includes(value) ||
                           o.contactNo?.includes(value) ||
                           o.appointmentId?.includes(value) ||
-                          (o.dob && dayjs(o.dob).format("DD/MM/YYYY").includes(value))
+                          (o.dob &&
+                            dayjs(o.dob).format("DD/MM/YYYY").includes(value))
                       );
                     }}
                     onChange={(e, selected) => {
@@ -279,11 +395,11 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                       />
                     )}
                   />
-                </Grid>
+                </Grid> */}
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
+                <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
                   <Controller
                     name="bookingDate"
                     size="small"
@@ -307,7 +423,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     )}
                   />
                 </Grid>
-                <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
+                <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
                   <Controller
                     name="apptDate"
                     control={control}
@@ -326,7 +442,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     )}
                   />
                 </Grid>
-                <Grid sx={{ width: { xs: "44%", md: "24%" } }}>
+                <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
                   <Controller
                     name="apptTime"
                     control={control}
@@ -351,7 +467,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "25%", md: "10%" } }}>
+                <Grid item sx={{ width: { xs: "25%", md: "10%" } }}>
                   <TextField
                     select
                     label="Title"
@@ -372,10 +488,10 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     ))}
                   </TextField>
                 </Grid>
-                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
-                    focused 
-                    color='text'
+                    focused
+                    color="text"
                     label="First Name"
                     size="small"
                     fullWidth
@@ -386,8 +502,10 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     })}
                   />
                 </Grid>
-                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
+                    focused
+                    color="text"
                     label="Last Name"
                     size="small"
                     fullWidth
@@ -401,7 +519,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "44.5%", md: "19.5%" } }}>
+                <Grid item sx={{ width: { xs: "44.5%", md: "19.5%" } }}>
                   <Controller
                     name="dob"
                     control={control}
@@ -424,8 +542,10 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     )}
                   />
                 </Grid>
-                <Grid sx={{ width: { xs: "45%", md: "18%" } }}>
+                <Grid item sx={{ width: { xs: "45%", md: "18%" } }}>
                   <TextField
+                    focused
+                    color="text"
                     type="tel"
                     fullWidth
                     size="small"
@@ -441,8 +561,10 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     })}
                   />
                 </Grid>
-                <Grid sx={{ width: { xs: "50%", mb: "20%" } }}>
+                <Grid item sx={{ width: { xs: "50%", mb: "20%" } }}>
                   <TextField
+                    focused
+                    color="text"
                     type="email"
                     size="small"
                     label="Email"
@@ -458,7 +580,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
+                <Grid item sx={{ width: { xs: "40%", md: "25%" } }}>
                   <TextField
                     label="Country"
                     select
@@ -483,7 +605,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                   </TextField>
                 </Grid>
 
-                <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
+                <Grid item sx={{ width: { xs: "40%", md: "25%" } }}>
                   <TextField
                     SelectProps={{ native: true }}
                     value={selectedState}
@@ -533,8 +655,10 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
               </Grid>
 
               <Grid container spacing={2} mt={2}>
-                <Grid sx={{ width: { xs: "100%", md: "100%" } }}>
+                <Grid item sx={{ width: { xs: "100%", md: "100%" } }}>
                   <TextField
+                    focused
+                    color="text"
                     label="Address"
                     size="small"
                     fullWidth
@@ -543,7 +667,7 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                     {...register("address")}
                   />
                 </Grid>
-                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
                   <FormControlLabel
                     control={<Checkbox {...register("isVIP")} />}
                     label="Is VIP"
@@ -552,9 +676,19 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
               </Grid>
 
               <Box sx={{ display: "flex", gap: 2 }}>
-                <Button type="submit" variant="contained" sx={{ mt: 3 }} disabled={isLoading}>
-                  {isLoading ? (<CircularProgress size={24} sx={{color:"white"}}/>) : ("Save Appointment")}
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{ mt: 3 }}
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <CircularProgress size={24} sx={{ color: "white" }} />
+                  ) : (
+                    "Save Appointment"
+                  )}
                 </Button>
+
                 <Button
                   type="button"
                   variant="contained"
@@ -564,8 +698,18 @@ const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
                 >
                   Cancel
                 </Button>
+
+                <Button
+                  type="button"
+                  variant="contained"
+                  sx={{ mt: 3 }}
+                  onClick={() => setShowOldPatientSearch(true)}
+                >
+                  Old Patient
+                </Button>
               </Box>
             </form>
+            </Box>
           </Box>
         </Paper>
       </Box>
