@@ -14,7 +14,7 @@ const BlockAppointment = ({
   const [createOPDAppointmentBlockDetail] =
     useCreateOPDAppointmentBlockDetailMutation();
 
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset,formState:{errors} } = useForm();
 
   useEffect(() => {});
 
@@ -108,6 +108,7 @@ const BlockAppointment = ({
                   fullWidth
                   rows={4}
                   sx={{ width: "100%" }}
+                  error = {!!errors.blockReason}
                   multiline
                   {...register("blockReason", { required: true })}
                 />

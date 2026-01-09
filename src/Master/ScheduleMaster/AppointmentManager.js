@@ -381,7 +381,9 @@ const AppointmentManager = () => {
       >
         <BlockAppointment
           branchId={blockSlot?.fkBranchId}
+          // branchName={blockSlot?.fkBranchId?.BranchName}
           doctorId={blockSlot?.fkConsultantId}
+          // doctorName={blockSlot?.DoctorList?.name}
           appointmentDate={normalizeDate(blockSlot?.apptDate)}
           appointmentTime={blockSlot?.apptTime}
           appointmentId={blockSlot?.appointmentId}

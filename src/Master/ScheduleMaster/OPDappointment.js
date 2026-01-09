@@ -1,6 +1,9 @@
 import { Controller, useForm } from "react-hook-form";
-import { useEffect, useState } from "react";
-import { useCreateOPDAppointmentMutation } from "../../features/api/scheduleApi";
+import { useEffect, useMemo, useState } from "react";
+import {
+  useCreateOPDAppointmentMutation,
+  useGetOPDAppointmentQuery,
+} from "../../features/api/scheduleApi";
 import {
   Paper,
   Box,
@@ -11,14 +14,10 @@ import {
   MenuItem,
   Checkbox,
   FormControlLabel,
+  Autocomplete,
+  CircularProgress
 } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
-// import {
-//   useGetCountryQuery,
-//   useGetStateQuery,
-//   useGetDistrictsQuery,
-//   useGetCitiesQuery,
-// } from "../../features/api/locationApi";
 import { Country, State, City } from "country-state-city";
 import BranchName from "../../Comman/Branch";
 import { DatePicker, TimePicker } from "@mui/x-date-pickers";
@@ -58,7 +57,10 @@ const OPDAppointment = ({
   appointments,
   onClose,
 }) => {
-  const [createOPDAppointment] = useCreateOPDAppointmentMutation();
+const [createOPDAppointment,{isLoading}] = useCreateOPDAppointmentMutation();
+  const { data: opdappointments } = useGetOPDAppointmentQuery();
+  console.log("Appointment: ", opdappointments);
+  console.log("Appointment Data: ", opdappointments?.data);
 
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -81,6 +83,9 @@ const OPDAppointment = ({
       fkRegId: "",
       fkCityId: "",
       bookingDate: null,
+      apptDate:null,
+      apptTime:null,
+      dob:null,
     },
   });
 
@@ -164,6 +169,25 @@ const OPDAppointment = ({
     });
   };
 
+  // Serach
+  const searchList = useMemo(() => {
+    if (!opdappointments) return [];
+
+    return opdappointments.map((a) => ({
+      appointmentId: a.appointmentId,
+      fkRegId: a.fkRegId || a.appointmentId,
+      firstName: a.firstName,
+      lastName: a.lastName,
+      contactNo: a.contactNo,
+      dob: dayjs(a.dob),
+      emailAddress: a.emailAddress,
+      address: a.address,
+      fkCityId: a.fkCityId,
+      initial: a.initial,
+      isVIP: a.isVIP,
+    }));
+  }, [opdappointments]);
+
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
       <Box sx={{ p: 3, mt: 3, width: "100%" }}>
@@ -203,12 +227,57 @@ const OPDAppointment = ({
                     ))}
                   </TextField>
                 </Grid>
-                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                {/* <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
                     label="RegId"
                     fullWidth
                     size="small"
                     {...register("fkRegId")}
+                  />
+                </Grid> */}
+                <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                  <Autocomplete
+                    options={searchList}
+                    getOptionLabel={(option) =>
+                      `${option.firstName || ''} ${option.lastName || ''} | ${option.contactNo || ''} | ${option.appointmentId || ''} | ${option.dob ? dayjs(option.dob).format('DD/MM/YYYY') : ''}`
+                    }
+                    filterOptions={(options, { inputValue }) => {
+                      const value = inputValue.toLowerCase();
+
+                      return options.filter(
+                        (o) =>
+                          o.firstName?.toLowerCase().includes(value) ||
+                          o.lastName?.toLowerCase().includes(value) ||
+                          o.contactNo?.includes(value) ||
+                          o.appointmentId?.includes(value) ||
+                          (o.dob && dayjs(o.dob).format("DD/MM/YYYY").includes(value))
+                      );
+                    }}
+                    onChange={(e, selected) => {
+                      if (!selected) return;
+
+                      reset((prev) => ({
+                        ...prev,
+                        fkRegId: selected.fkRegId,
+                        initial: selected.initial,
+                        firstName: selected.firstName,
+                        lastName: selected.lastName,
+                        dob: dayjs(selected.dob),
+                        contactNo: selected.contactNo,
+                        emailAddress: selected.emailAddress,
+                        address: selected.address,
+                        fkCityId: selected.fkCityId,
+                        isVIP: selected.isVIP,
+                      }));
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Name/Mobile/appointemtId/DOB"
+                        size="small"
+                        fullWidth
+                      />
+                    )}
                   />
                 </Grid>
               </Grid>
@@ -305,6 +374,8 @@ const OPDAppointment = ({
                 </Grid>
                 <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
                   <TextField
+                    focused 
+                    color='text'
                     label="First Name"
                     size="small"
                     fullWidth
@@ -320,7 +391,7 @@ const OPDAppointment = ({
                     label="Last Name"
                     size="small"
                     fullWidth
-                    helperText={errors.firstName?.message}
+                    helperText={errors?.message}
                     error={!!errors.lastName}
                     {...register("lastName", {
                       required: "Last name is required",
@@ -346,9 +417,7 @@ const OPDAppointment = ({
                             size: "small",
                             fullWidth: true,
                             error: !!errors.dob,
-                            helperText: errors.dob
-                              ? "Date of Birth is required"
-                              : "DD/MM/YYYY",
+                            helperText: errors.dob?.message,
                           },
                         }}
                       />
@@ -483,14 +552,15 @@ const OPDAppointment = ({
               </Grid>
 
               <Box sx={{ display: "flex", gap: 2 }}>
-                <Button type="submit" variant="contained" sx={{ mt: 3 }}>
-                  Save Appointment
+                <Button type="submit" variant="contained" sx={{ mt: 3 }} disabled={isLoading}>
+                  {isLoading ? (<CircularProgress size={24} sx={{color:"white"}}/>) : ("Save Appointment")}
                 </Button>
                 <Button
                   type="button"
                   variant="contained"
                   sx={{ mt: 3 }}
                   onClick={onClose}
+                  disabled={isLoading}
                 >
                   Cancel
                 </Button>

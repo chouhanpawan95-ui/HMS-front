@@ -7,6 +7,7 @@ import {
   MenuItem,
   Button,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import style from "../BillingMaster/RateListMaster.module.css";
 import BranchName from "../../Comman/Branch";
@@ -20,7 +21,7 @@ import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 dayjs.extend(isSameOrBefore);
 
 const OPDSchedule = () => {
-  const [createSchedule] = useCreateOPDScheduleMutation();
+  const [createSchedule, { isLoading }] = useCreateOPDScheduleMutation();
   const {
     register,
     handleSubmit,
@@ -104,62 +105,86 @@ const OPDSchedule = () => {
           <form onSubmit={handleSubmit(onSubmit)}>
             <Grid container spacing={2}>
               <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                <TextField
-                  label="Branch"
-                  size="small"
-                  fullWidth
-                  select
-                  error={!!errors.fkBranchId}
-                  helperText={errors.fkBranchId?.message}
-                  {...register("fkBranchId", { required: true })}
-                >
-                  <MenuItem value="">Select</MenuItem>
-                  {BranchName.map((bn) => (
-                    <MenuItem key={bn.id} value={bn.id}>
-                      {bn.BranchName}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Controller
+                  name="fkBranchId"
+                  control={control}
+                  defaultValue=""
+                  rules={{ required: "Branch is required" }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select
+                      label="Branch"
+                      size="small"
+                      fullWidth
+                      error={!!errors.fkBranchId}
+                      helperText={errors.fkBranchId?.message}
+                    >
+                      <MenuItem value="">Select</MenuItem>
+                      {BranchName.map((bn) => (
+                        <MenuItem key={bn.id} value={bn.id}>
+                          {bn.BranchName}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
               </Grid>
 
               <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                <TextField
-                  label="Schedule Type"
-                  select
-                  size="small"
-                  fullWidth
-                  error={!!errors.fkScheduleTypeId}
-                  helperText={errors.fkScheduleTypeId?.message}
-                  {...register("fkScheduleTypeId", { required: true })}
-                >
-                  <MenuItem value="">Select</MenuItem>
-                  {scheduleType.map((st) => (
-                    <MenuItem key={st} value={st}>
-                      {st}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Controller
+                  name="fkScheduleTypeId"
+                  control={control}
+                  defaultValue=""
+                  rules={{ required: "Schedule Type is required" }}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select
+                      label="Schedule Type"
+                      size="small"
+                      fullWidth
+                      error={!!errors.fkScheduleTypeId}
+                      helperText={errors.fkScheduleTypeId?.message}
+                    >
+                      <MenuItem value="">Select</MenuItem>
+                      {scheduleType.map((st) => (
+                        <MenuItem key={st} value={st}>
+                          {st}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
               </Grid>
             </Grid>
             <Grid container spacing={2} mt={2}>
               <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                <TextField
-                  select
-                  label="Doctor"
-                  size="small"
-                  fullWidth
-                  defaultValue=""
-                  error={!!errors.fkDoctorId}
-                  helperText={errors.fkDoctorId?.message}
-                  {...register("fkDoctorId", { required: true })}
-                >
-                  <MenuItem value="">Select</MenuItem>
-                  {DoctorList.map((d) => (
-                    <MenuItem key={d.id} value={d.id}>
-                      {d.name}
-                    </MenuItem>
-                  ))}
-                </TextField>
+                <Controller
+                  name="fkDoctorId"
+                  defaultValue=''
+                  control={control}
+                  rules={{required:'Doctor is required'}}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      select
+                      label="Doctor"
+                      size="small"
+                      fullWidth
+                      error={!!errors.fkDoctorId}
+                      helperText={errors.fkDoctorId?.message}
+                      {...register("fkDoctorId", { required: true })}
+                    >
+                      <MenuItem value="">Select</MenuItem>
+                      {DoctorList.map((d) => (
+                        <MenuItem key={d.id} value={d.id}>
+                          {d.name}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  )}
+                />
               </Grid>
             </Grid>
             <Grid container spacing={2} mt={2}>
@@ -179,7 +204,6 @@ const OPDSchedule = () => {
                         textField: {
                           size: "small",
                           fullWidth: true,
-                          helperText: "DD/MM/YYYY",
                         },
                       }}
                     />
@@ -204,7 +228,6 @@ const OPDSchedule = () => {
                         textField: {
                           size: "small",
                           fullWidth: true,
-                          helperText: "DD/MM/YYYY",
                         },
                       }}
                     />
@@ -224,16 +247,15 @@ const OPDSchedule = () => {
                   render={({ field }) => (
                     <TimePicker
                       label="From Time"
-                      minTime={
-                        dayjs(watch("fromDate")).isSame(dayjs(), "day")
-                          ? dayjs()
-                          : null
-                      }
+                      // minTime={
+                      //   dayjs(watch("fromDate")).isSame(dayjs(), "day")
+                      //     ? dayjs()
+                      //     : null
+                      // }
                       slotProps={{
                         textField: {
                           size: "small",
                           fullWidth: true,
-                          helperText: "DD/MM/YYYY",
                         },
                       }}
                       {...field}
@@ -253,13 +275,12 @@ const OPDSchedule = () => {
                   render={({ field }) => (
                     <TimePicker
                       label="To Time"
-                      minTime={watch("fromTime")}
+                      minTime={watch("fromApptTime")}
                       {...field}
                       slotProps={{
                         textField: {
                           size: "small",
                           fullWidth: true,
-                          helperText: "DD/MM/YYYY",
                         },
                       }}
                     />
@@ -293,9 +314,26 @@ const OPDSchedule = () => {
               </Grid>
             </Grid>
 
-            <Box>
-              <Button type="submit" variant="contained" sx={{ mt: 3 }}>
-                Save Schedule
+            <Box sx={{ display: "flex", gap: 2 }}>
+              <Button
+                type="submit"
+                variant="contained"
+                sx={{ mt: 3 }}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <CircularProgress size={24} sx={{ color: "white" }} />
+                ) : (
+                  "Save Schedule"
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="contained"
+                sx={{ mt: 3 }}
+                disabled={isLoading}
+              >
+                Cancel
               </Button>
             </Box>
           </form>
