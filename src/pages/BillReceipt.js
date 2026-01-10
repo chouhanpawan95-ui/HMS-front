@@ -614,7 +614,7 @@ const BillReceipt = () => {
                       </Box>
                     </TableCell>
                   </TableRow>
-                ));
+                )
               })()}
 
               {/* Empty state: show original single row when no visible payments configured */}
