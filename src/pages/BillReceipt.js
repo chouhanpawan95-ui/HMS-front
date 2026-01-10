@@ -552,70 +552,131 @@ const BillReceipt = () => {
               </TableRow>
             </TableHead>
             <TableBody>
-              {(payments || []).map((p, i) => {    
-                console.log('Rendering payment row', billDetails);     
-                // Render all payment rows (including zero/empty amounts) so Add Row shows immediately
-                return (
-                  <TableRow key={i}>
-                    <TableCell>{p.receiptId || 'Pending'}</TableCell>
-                    <TableCell>{p.payDate || receiptDateTime}</TableCell>
-                    <TableCell>
-                      <TextField sx={{width:80}}  size="small" type="number" inputProps={{ min: 0, step: 0.01 }} value={p.amount} onChange={(e) => updatePaymentRow(i, { amount: Number(e.target.value) })} />
-                    </TableCell>
-                    <TableCell>0</TableCell>
-                    <TableCell>{p.amount}</TableCell>
-                    <TableCell>
-                      <TextField select size="small" value={p.method} disabled={p.fetched} onChange={(e) => { if (!p.fetched) updatePaymentRow(i, { method: e.target.value }); }}>
-                        {['CASH','CREDIT_CARD','UPI','CHEQUE','OTHER'].map((m) => (
-                          <MenuItem key={m} value={m}>{m.replace('_',' ')}</MenuItem>
-                        ))}
-                      </TextField>
-                    </TableCell>
-                    <TableCell>{partyName}</TableCell>
-                    <TableCell>{billDetails?.FK_BillSerieseId || ''}</TableCell>
-                    <TableCell>
-                      <Checkbox checked={Boolean(p.isCoPay)} disabled={p.fetched} onChange={(e) => { if (!p.fetched) updatePaymentRow(i, { isCoPay: e.target.checked }); }} />
-                    </TableCell>
-                    <TableCell>
-                      <Box>
-                        <TextField size="small" value={billDetails?.BillNo || ''} onChange={(e) => updatePaymentRow(i, { adjustedBillId: e.target.value })} onBlur={(e) => handleFetchAdjDetails(i, e.target.value)} placeholder="Bill ID" sx={{width:80}} />
-                        <Box sx={{ mt: 0.5, display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {p.adjLoading ? (
-                            <Typography variant="caption" color="text.secondary">Checking…</Typography>
-                          ) : (p.adjustedBillFound === false ? (
-                            <Typography variant="caption" color="error">Bill not found</Typography>
-                          ) : null)}
-                          {/* {p.adjustedBillAdjustCount ? (
-                            <Typography variant="caption" color="text.secondary">Adjustments: {p.adjustedBillAdjustCount}</Typography>
-                          ) : null} */}
-                        </Box>
-                      </Box>
-                    </TableCell>
-                    <TableCell
-                          align="center"
-                          sx={{
-                            width: 150,
-                            minWidth: 150,
-                            maxWidth: 150,
-                            verticalAlign: 'middle'
-                          }}
-                        >
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            gap: 1,ml:7
-                          }}
-                        >
-                        {renderAdjStatus(p)}
-                        <Button size="small" variant="outlined" onClick={() => addPaymentRowAt(i)} disabled={(currentPayable || 0) <= 0}>Add</Button>
-                        <Button size="small" color="error" variant="outlined" onClick={() => { if (!p.fetched && window.confirm('Delete this payment row?')) removePaymentRow(i); }} disabled={p.fetched}>Delete</Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ));
-              })()}
+              {(payments || []).map((p, i) => {
+  console.log('Rendering payment row', billDetails);
+
+  return (
+    <TableRow key={i}>
+      <TableCell>{p.receiptId || 'Pending'}</TableCell>
+      <TableCell>{p.payDate || receiptDateTime}</TableCell>
+
+      <TableCell>
+        <TextField
+          sx={{ width: 80 }}
+          size="small"
+          type="number"
+          inputProps={{ min: 0, step: 0.01 }}
+          value={p.amount}
+          onChange={(e) =>
+            updatePaymentRow(i, { amount: Number(e.target.value) })
+          }
+        />
+      </TableCell>
+
+      <TableCell>0</TableCell>
+      <TableCell>{p.amount}</TableCell>
+
+      <TableCell>
+        <TextField
+          select
+          size="small"
+          value={p.method}
+          disabled={p.fetched}
+          onChange={(e) => {
+            if (!p.fetched) {
+              updatePaymentRow(i, { method: e.target.value });
+            }
+          }}
+        >
+          {['CASH', 'CREDIT_CARD', 'UPI', 'CHEQUE', 'OTHER'].map((m) => (
+            <MenuItem key={m} value={m}>
+              {m.replace('_', ' ')}
+            </MenuItem>
+          ))}
+        </TextField>
+      </TableCell>
+
+      <TableCell>{partyName}</TableCell>
+      <TableCell>{billDetails?.FK_BillSerieseId || ''}</TableCell>
+
+      <TableCell>
+        <Checkbox
+          checked={Boolean(p.isCoPay)}
+          disabled={p.fetched}
+          onChange={(e) => {
+            if (!p.fetched) {
+              updatePaymentRow(i, { isCoPay: e.target.checked });
+            }
+          }}
+        />
+      </TableCell>
+
+      <TableCell>
+        <Box>
+          <TextField
+            size="small"
+            value={billDetails?.BillNo || ''}
+            placeholder="Bill ID"
+            sx={{ width: 80 }}
+            onChange={(e) =>
+              updatePaymentRow(i, { adjustedBillId: e.target.value })
+            }
+            onBlur={(e) =>
+              handleFetchAdjDetails(i, e.target.value)
+            }
+          />
+
+          <Box sx={{ mt: 0.5, display: 'flex', gap: 1 }}>
+            {p.adjLoading && (
+              <Typography variant="caption">Checking…</Typography>
+            )}
+            {p.adjustedBillFound === false && (
+              <Typography variant="caption" color="error">
+                Bill not found
+              </Typography>
+            )}
+          </Box>
+        </Box>
+      </TableCell>
+
+      <TableCell align="center" sx={{ width: 150 }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 1,
+          }}
+        >
+          {renderAdjStatus(p)}
+
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => addPaymentRowAt(i)}
+            disabled={(currentPayable || 0) <= 0}
+          >
+            Add
+          </Button>
+
+          <Button
+            size="small"
+            color="error"
+            variant="outlined"
+            disabled={p.fetched}
+            onClick={() => {
+              if (!p.fetched && window.confirm('Delete this payment row?')) {
+                removePaymentRow(i);
+              }
+            }}
+          >
+            Delete
+          </Button>
+        </Box>
+      </TableCell>
+    </TableRow>
+  );
+})}
+
 
               {/* Empty state: show original single row when no visible payments configured */}
               {((!payments || payments.length === 0) || ((payments || []).filter((p) => { const isPending = !p.receiptId && !p.fetched; return !(Number(currentPayable) <= 0 && isPending); }).length === 0)) && (
