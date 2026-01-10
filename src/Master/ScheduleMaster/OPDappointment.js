@@ -64,7 +64,7 @@ const OPDAppointment = ({
   console.log("Appointment: ", opdappointments);
   console.log("Appointment Data: ", opdappointments?.data);
 
-  const { data: patientsRespond} = useGetPatientsQuery();
+  const { data: patientsRespond } = useGetPatientsQuery();
 
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
@@ -206,25 +206,6 @@ const OPDAppointment = ({
     });
   };
 
-  // // Serach
-  // const searchList = useMemo(() => {
-  //   if (!opdappointments) return [];
-
-  //   return opdappointments.map((a) => ({
-  //     appointmentId: a.appointmentId,
-  //     fkRegId: a.fkRegId || a.appointmentId,
-  //     firstName: a.firstName,
-  //     lastName: a.lastName,
-  //     contactNo: a.contactNo,
-  //     dob: dayjs(a.dob),
-  //     emailAddress: a.emailAddress,
-  //     address: a.address,
-  //     fkCityId: a.fkCityId,
-  //     initial: a.initial,
-  //     isVIP: a.isVIP,
-  //   }));
-  // }, [opdappointments]);
-
   // auto fill
   const handleSelectOldPatient = (p) => {
     reset((prev) => ({
@@ -302,413 +283,364 @@ const OPDAppointment = ({
                 )}
               </Box>
             )}
-            <Box sx={{
-              filter:showOldPatientSearch ? 'blur(3px)' : 'none',
-              pointerEvents:showOldPatientSearch ? 'none' :'auto',
-              transition:'0.3s',
-            }}>
-            <form
-              onSubmit={handleSubmit(onSubmitOPDAppointment, (formErrors) => {
-                console.log("SUBMIT BLOCKED BY:", formErrors);
-              })}
+            <Box
+              sx={{
+                filter: showOldPatientSearch ? "blur(3px)" : "none",
+                pointerEvents: showOldPatientSearch ? "none" : "auto",
+                transition: "0.3s",
+              }}
             >
-              <Grid container spacing={2}>
-                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    label="Branch"
-                    fullWidth
-                    select
-                    defaultValue=""
-                    error={!!errors.fkBranchId}
-                    helperText={errors.fkBranchId?.message}
-                    size="small"
-                    {...register("fkBranchId", {
-                      required: "Branch is required",
-                    })}
+              <form
+                onSubmit={handleSubmit(onSubmitOPDAppointment, (formErrors) => {
+                  console.log("SUBMIT BLOCKED BY:", formErrors);
+                })}
+              >
+                <Grid container spacing={2}>
+                  <Grid item sx={{ width: { xs: "90.5%", md: "30.5%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      label="Branch"
+                      fullWidth
+                      select
+                      defaultValue=""
+                      error={!!errors.fkBranchId}
+                      helperText={errors.fkBranchId?.message}
+                      size="small"
+                      {...register("fkBranchId", {
+                        required: "Branch is required",
+                      })}
+                    >
+                      <MenuItem value=""></MenuItem>
+                      {BranchName.map((bn) => (
+                        <MenuItem key={bn.id} value={bn.id}>
+                          {bn.BranchName}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "90.5%", md: "30.5%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      label="RegId"
+                      fullWidth
+                      size="small"
+                      {...register("fkRegId")}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "90%", md: "30%" } }}>
+                    <Button
+                      type="button"
+                      onClick={() => setShowOldPatientSearch(true)}
+                    >
+                      View Patient
+                    </Button>
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={2} mt={2}>
+                  <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
+                    <Controller
+                      name="bookingDate"
+                      size="small"
+                      rules={{ required: "Booking date is require" }}
+                      control={control}
+                      render={({ field }) => (
+                        <DatePicker
+                          label="Booking Date"
+                          format="DD/MM/YYYY"
+                          minDate={dayjs()}
+                          {...field}
+                          slotProps={{
+                            textField: {
+                              size: "small",
+                              fullWidth: true,
+                              error: !!errors.bookingDate,
+                              helperText: errors.bookingDate?.message,
+                            },
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
+                    <Controller
+                      name="apptDate"
+                      control={control}
+                      defaultValue={null}
+                      render={({ field }) => (
+                        <DatePicker
+                          label="Date of Appointment"
+                          readOnly
+                          minDate={dayjs()}
+                          format="DD/MM/YYYY"
+                          {...field}
+                          slotProps={{
+                            textField: { size: "small", fullWidth: true },
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
+                    <Controller
+                      name="apptTime"
+                      control={control}
+                      defaultValue={null}
+                      render={({ field }) => (
+                        <TimePicker
+                          label="Time of Appointment"
+                          readOnly
+                          minTime={
+                            dayjs(watch("apptDate")).isSame(dayjs(), "day")
+                              ? dayjs()
+                              : null
+                          }
+                          {...field}
+                          slotProps={{
+                            textField: { size: "small", fullWidth: true },
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={2} mt={2}>
+                  <Grid item sx={{ width: { xs: "25%", md: "10%" } }}>
+                    <TextField
+                      select
+                      label="Title"
+                      fullWidth
+                      size="small"
+                      error={!!errors.initial}
+                      helperText={errors.initial?.message}
+                      SelectProps={{ native: true }}
+                      {...register("initial", {
+                        required: true,
+                      })}
+                    >
+                      <option value=""></option>
+                      {title.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </TextField>
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      label="First Name"
+                      size="small"
+                      fullWidth
+                      error={!!errors.firstName}
+                      helperText={errors.firstName?.message}
+                      {...register("firstName", {
+                        required: "First name is required",
+                      })}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      label="Last Name"
+                      size="small"
+                      fullWidth
+                      helperText={errors?.message}
+                      error={!!errors.lastName}
+                      {...register("lastName", {
+                        required: "Last name is required",
+                      })}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={2} mt={2}>
+                  <Grid item sx={{ width: { xs: "44.5%", md: "19.5%" } }}>
+                    <Controller
+                      name="dob"
+                      control={control}
+                      rules={{ required: "DOB is required" }}
+                      render={({ field }) => (
+                        <DatePicker
+                          label="Date of Birth"
+                          format="DD/MM/YYYY"
+                          maxDate={dayjs()}
+                          {...field}
+                          slotProps={{
+                            textField: {
+                              size: "small",
+                              fullWidth: true,
+                              error: !!errors.dob,
+                              helperText: errors.dob?.message,
+                            },
+                          }}
+                        />
+                      )}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "45%", md: "18%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      type="tel"
+                      fullWidth
+                      size="small"
+                      error={!!errors.contactNo}
+                      helperText={errors.contactNo?.message}
+                      label="Contact No"
+                      {...register("contactNo", {
+                        required: true,
+                        pattern: {
+                          value: /^[0-9]{10}$/,
+                          message: "Contact number must be 10 digits",
+                        },
+                      })}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "50%", mb: "20%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      type="email"
+                      size="small"
+                      label="Email"
+                      fullWidth
+                      {...register("emailAddress", {
+                        pattern: {
+                          value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                          message: "Invalid email address",
+                        },
+                      })}
+                    />
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={2} mt={2}>
+                  <Grid item sx={{ width: { xs: "40%", md: "25%" } }}>
+                    <TextField
+                      label="Country"
+                      select
+                      size="small"
+                      fullWidth
+                      SelectProps={{ native: true }}
+                      value={selectedCountry}
+                      onChange={(e) => {
+                        const countryCode = e.target.value;
+                        setSelectedCountry(countryCode);
+                        setStates(State.getStatesOfCountry(countryCode));
+                        setCities([]);
+                        setSelectedState("");
+                      }}
+                    >
+                      <option value=""></option>
+                      {countries.map((c) => (
+                        <option key={c.isoCode} value={c.isoCode}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <Grid item sx={{ width: { xs: "40%", md: "25%" } }}>
+                    <TextField
+                      SelectProps={{ native: true }}
+                      value={selectedState}
+                      label="State"
+                      size="small"
+                      fullWidth
+                      select
+                      onChange={(e) => {
+                        const stateCode = e.target.value;
+                        setSelectedState(stateCode);
+                        setCities(
+                          City.getCitiesOfState(selectedCountry, stateCode)
+                        );
+                      }}
+                    >
+                      <option value=""></option>
+                      {states.map((s) => (
+                        <option key={s.isoCode} value={s.isoCode}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </TextField>
+                  </Grid>
+
+                  <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
+                    <TextField
+                      select
+                      label="City"
+                      size="small"
+                      fullWidth
+                      error={!!errors.fkCityId}
+                      helperText={errors.fkCityId?.message}
+                      SelectProps={{ native: true }}
+                      {...register("fkCityId", {
+                        required: "City is required",
+                      })}
+                    >
+                      <option value=""></option>
+
+                      {cities.map((c) => (
+                        <option key={c.name} value={c.name}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </TextField>
+                  </Grid>
+                </Grid>
+
+                <Grid container spacing={2} mt={2}>
+                  <Grid item sx={{ width: { xs: "100%", md: "100%" } }}>
+                    <TextField
+                      focused
+                      color="text"
+                      label="Address"
+                      size="small"
+                      fullWidth
+                      multiline
+                      rows={2}
+                      {...register("address")}
+                    />
+                  </Grid>
+                  <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
+                    <FormControlLabel
+                      control={<Checkbox {...register("isVIP")} />}
+                      label="Is VIP"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Button
+                    type="submit"
+                    variant="contained"
+                    sx={{ mt: 3 }}
+                    disabled={isLoading}
                   >
-                    <MenuItem value=""></MenuItem>
-                    {BranchName.map((bn) => (
-                      <MenuItem key={bn.id} value={bn.id}>
-                        {bn.BranchName}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Grid>
-                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    label="RegId"
-                    fullWidth
-                    size="small"
-                    {...register("fkRegId")}
-                  />
-                </Grid>
-                {/* <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                  <Autocomplete
-                    options={searchList}
-                    getOptionLabel={(option) =>
-                      `${option.firstName || ""} ${option.lastName || ""} | ${
-                        option.contactNo || ""
-                      } | ${option.appointmentId || ""} | ${
-                        option.dob ? dayjs(option.dob).format("DD/MM/YYYY") : ""
-                      }`
-                    }
-                    filterOptions={(options, { inputValue }) => {
-                      const value = inputValue.toLowerCase();
-
-                      return options.filter(
-                        (o) =>
-                          o.firstName?.toLowerCase().includes(value) ||
-                          o.lastName?.toLowerCase().includes(value) ||
-                          o.contactNo?.includes(value) ||
-                          o.appointmentId?.includes(value) ||
-                          (o.dob &&
-                            dayjs(o.dob).format("DD/MM/YYYY").includes(value))
-                      );
-                    }}
-                    onChange={(e, selected) => {
-                      if (!selected) return;
-
-                      reset((prev) => ({
-                        ...prev,
-                        fkRegId: selected.fkRegId,
-                        initial: selected.initial,
-                        firstName: selected.firstName,
-                        lastName: selected.lastName,
-                        dob: dayjs(selected.dob),
-                        contactNo: selected.contactNo,
-                        emailAddress: selected.emailAddress,
-                        address: selected.address,
-                        fkCityId: selected.fkCityId,
-                        isVIP: selected.isVIP,
-                      }));
-                    }}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Name/Mobile/appointemtId/DOB"
-                        size="small"
-                        fullWidth
-                      />
+                    {isLoading ? (
+                      <CircularProgress size={24} sx={{ color: "white" }} />
+                    ) : (
+                      "Save Appointment"
                     )}
-                  />
-                </Grid> */}
-              </Grid>
+                  </Button>
 
-              <Grid container spacing={2} mt={2}>
-                <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
-                  <Controller
-                    name="bookingDate"
-                    size="small"
-                    rules={{ required: "Booking date is require" }}
-                    control={control}
-                    render={({ field }) => (
-                      <DatePicker
-                        label="Booking Date"
-                        format="DD/MM/YYYY"
-                        minDate={dayjs()}
-                        {...field}
-                        slotProps={{
-                          textField: {
-                            size: "small",
-                            fullWidth: true,
-                            error: !!errors.bookingDate,
-                            helperText: errors.bookingDate?.message,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
-                  <Controller
-                    name="apptDate"
-                    control={control}
-                    defaultValue={null}
-                    render={({ field }) => (
-                      <DatePicker
-                        label="Date of Appointment"
-                        readOnly
-                        minDate={dayjs()}
-                        format="DD/MM/YYYY"
-                        {...field}
-                        slotProps={{
-                          textField: { size: "small", fullWidth: true },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid item sx={{ width: { xs: "44%", md: "24%" } }}>
-                  <Controller
-                    name="apptTime"
-                    control={control}
-                    defaultValue={null}
-                    render={({ field }) => (
-                      <TimePicker
-                        label="Time of Appointment"
-                        readOnly
-                        minTime={
-                          dayjs(watch("apptDate")).isSame(dayjs(), "day")
-                            ? dayjs()
-                            : null
-                        }
-                        {...field}
-                        slotProps={{
-                          textField: { size: "small", fullWidth: true },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={2} mt={2}>
-                <Grid item sx={{ width: { xs: "25%", md: "10%" } }}>
-                  <TextField
-                    select
-                    label="Title"
-                    fullWidth
-                    size="small"
-                    error={!!errors.initial}
-                    helperText={errors.initial?.message}
-                    SelectProps={{ native: true }}
-                    {...register("initial", {
-                      required: true,
-                    })}
+                  <Button
+                    type="button"
+                    variant="contained"
+                    sx={{ mt: 3 }}
+                    onClick={onClose}
+                    disabled={isLoading}
                   >
-                    <option value=""></option>
-                    {title.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </TextField>
-                </Grid>
-                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    label="First Name"
-                    size="small"
-                    fullWidth
-                    error={!!errors.firstName}
-                    helperText={errors.firstName?.message}
-                    {...register("firstName", {
-                      required: "First name is required",
-                    })}
-                  />
-                </Grid>
-                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    label="Last Name"
-                    size="small"
-                    fullWidth
-                    helperText={errors?.message}
-                    error={!!errors.lastName}
-                    {...register("lastName", {
-                      required: "Last name is required",
-                    })}
-                  />
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={2} mt={2}>
-                <Grid item sx={{ width: { xs: "44.5%", md: "19.5%" } }}>
-                  <Controller
-                    name="dob"
-                    control={control}
-                    rules={{ required: "DOB is required" }}
-                    render={({ field }) => (
-                      <DatePicker
-                        label="Date of Birth"
-                        format="DD/MM/YYYY"
-                        maxDate={dayjs()}
-                        {...field}
-                        slotProps={{
-                          textField: {
-                            size: "small",
-                            fullWidth: true,
-                            error: !!errors.dob,
-                            helperText: errors.dob?.message,
-                          },
-                        }}
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid item sx={{ width: { xs: "45%", md: "18%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    type="tel"
-                    fullWidth
-                    size="small"
-                    error={!!errors.contactNo}
-                    helperText={errors.contactNo?.message}
-                    label="Contact No"
-                    {...register("contactNo", {
-                      required: true,
-                      pattern: {
-                        value: /^[0-9]{10}$/,
-                        message: "Contact number must be 10 digits",
-                      },
-                    })}
-                  />
-                </Grid>
-                <Grid item sx={{ width: { xs: "50%", mb: "20%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    type="email"
-                    size="small"
-                    label="Email"
-                    fullWidth
-                    {...register("emailAddress", {
-                      pattern: {
-                        value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                        message: "Invalid email address",
-                      },
-                    })}
-                  />
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={2} mt={2}>
-                <Grid item sx={{ width: { xs: "40%", md: "25%" } }}>
-                  <TextField
-                    label="Country"
-                    select
-                    size="small"
-                    fullWidth
-                    SelectProps={{ native: true }}
-                    value={selectedCountry}
-                    onChange={(e) => {
-                      const countryCode = e.target.value;
-                      setSelectedCountry(countryCode);
-                      setStates(State.getStatesOfCountry(countryCode));
-                      setCities([]);
-                      setSelectedState("");
-                    }}
-                  >
-                    <option value=""></option>
-                    {countries.map((c) => (
-                      <option key={c.isoCode} value={c.isoCode}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </TextField>
-                </Grid>
-
-                <Grid item sx={{ width: { xs: "40%", md: "25%" } }}>
-                  <TextField
-                    SelectProps={{ native: true }}
-                    value={selectedState}
-                    label="State"
-                    size="small"
-                    fullWidth
-                    select
-                    onChange={(e) => {
-                      const stateCode = e.target.value;
-                      setSelectedState(stateCode);
-                      setCities(
-                        City.getCitiesOfState(selectedCountry, stateCode)
-                      );
-                    }}
-                  >
-                    <option value=""></option>
-                    {states.map((s) => (
-                      <option key={s.isoCode} value={s.isoCode}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </TextField>
-                </Grid>
-
-                <Grid sx={{ width: { xs: "40%", md: "25%" } }}>
-                  <TextField
-                    select
-                    label="City"
-                    size="small"
-                    fullWidth
-                    error={!!errors.fkCityId}
-                    helperText={errors.fkCityId?.message}
-                    SelectProps={{ native: true }}
-                    {...register("fkCityId", {
-                      required: "City is required",
-                    })}
-                  >
-                    <option value=""></option>
-
-                    {cities.map((c) => (
-                      <option key={c.name} value={c.name}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </TextField>
-                </Grid>
-              </Grid>
-
-              <Grid container spacing={2} mt={2}>
-                <Grid item sx={{ width: { xs: "100%", md: "100%" } }}>
-                  <TextField
-                    focused
-                    color="text"
-                    label="Address"
-                    size="small"
-                    fullWidth
-                    multiline
-                    rows={2}
-                    {...register("address")}
-                  />
-                </Grid>
-                <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
-                  <FormControlLabel
-                    control={<Checkbox {...register("isVIP")} />}
-                    label="Is VIP"
-                  />
-                </Grid>
-              </Grid>
-
-              <Box sx={{ display: "flex", gap: 2 }}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  sx={{ mt: 3 }}
-                  disabled={isLoading}
-                >
-                  {isLoading ? (
-                    <CircularProgress size={24} sx={{ color: "white" }} />
-                  ) : (
-                    "Save Appointment"
-                  )}
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="contained"
-                  sx={{ mt: 3 }}
-                  onClick={onClose}
-                  disabled={isLoading}
-                >
-                  Cancel
-                </Button>
-
-                <Button
-                  type="button"
-                  variant="contained"
-                  sx={{ mt: 3 }}
-                  onClick={() => setShowOldPatientSearch(true)}
-                >
-                  Old Patient
-                </Button>
-              </Box>
-            </form>
+                    Cancel
+                  </Button>
+                </Box>
+              </form>
             </Box>
           </Box>
         </Paper>
