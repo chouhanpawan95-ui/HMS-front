@@ -15,23 +15,26 @@ import {
   MenuItem,
   TableBody,
   Dialog,
+  Button,
+  Checkbox,
 } from "@mui/material";
-
 import { useState, useMemo } from "react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
-
 import style from "../BillingMaster/RateListMaster.module.css";
 import {
   useGetOPDScheduleQuery,
   useGetOPDAppointmentQuery,
   useGetOPDAppointmentBlockDetailQuery,
+  useDeleteOPDAppointmentMutation,
+  useDeleteOPDAppointmentBlockDetailMutation,
 } from "../../features/api/scheduleApi";
-
 import OPDAppointment from "./OPDappointment";
 import Loader from "../../component/Loader";
 import DoctorList from "../../Comman/DoctorList";
 import BlockAppointment from "./BlockAppointment";
+import CancelAppointment from "./CancelAppointment";
+
 dayjs.extend(utc);
 
 /* -------------------- Utility -------------------- */
@@ -40,9 +43,6 @@ const normalizeDate = (dateValue) => {
   return dayjs(dateValue).utc().format("YYYY-MM-DD");
 };
 
-/* -------------------- Appt Type -------------------- */
-// const normalizeApptTyp
-
 /* -------------------- Component -------------------- */
 const AppointmentManager = () => {
   const [selectedDoctor, setSelectedDoctor] = useState("");
@@ -50,7 +50,13 @@ const AppointmentManager = () => {
   const [openAppointment, setOpenAppointment] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState(null);
   const [openBlock, setOpenBlock] = useState(false);
-  const [blockSlot, setBlockSlot] = useState(null);
+  const [selectedBlockSlot, setSelectedBlockSlots] = useState(new Set());
+  const [openCancel, setOpenCancel] = useState(false);
+  const [selectedAppointments, setSelectedAppointments] = useState(new Set());
+
+  // delete mutations for releasing items
+  const [deleteAppointment] = useDeleteOPDAppointmentMutation();
+  const [deleteBlockDetail] = useDeleteOPDAppointmentBlockDetailMutation();
 
   /* -------------------- APIs -------------------- */
   const { data: opdScheduleResponse, isLoading: isScheduleLoading } =
@@ -102,9 +108,6 @@ const AppointmentManager = () => {
     });
   }, [appointmentList, selectedDoctor, selectedDate]);
 
-  console.log("appointment", appointments);
-  console.log("appointmentList", appointmentList);
-
   const appointmentByIdMap = useMemo(() => {
     const map = new Map();
     appointmentList.forEach((appt) => {
@@ -112,8 +115,6 @@ const AppointmentManager = () => {
     });
     return map;
   }, [appointmentList]);
-
-  console.log("appointmentByIdMap", appointmentByIdMap);
 
   /* -------------------- Booked Slot Map -------------------- */
   const bookedSlots = useMemo(() => {
@@ -198,19 +199,152 @@ const AppointmentManager = () => {
     setSelectedSlot(null);
   };
 
+  const closeBlock = () => {
+    setOpenBlock(false);
+    setSelectedBlockSlots(new Set());
+  };
+
   const handleSlotClick = (slot) => {
     const appt = bookedSlots.get(slot);
 
-    if (appt && !appt.isBlocked) {
-      setBlockSlot(appt);
-      setOpenBlock(true);
+    // Clicking an empty slot should open the booking dialog
+    if (!appt) {
+      setSelectedSlot(slot);
+      setOpenAppointment(true);
       return;
     }
 
-    if (appt?.isBlocked) return;
-    if (appt) return;
-    setSelectedSlot(slot);
-    setOpenAppointment(true);
+    // Clicking a booked row does nothing; selection for block/cancel
+    // is handled via the row checkboxes.
+  };
+
+  /* -------------------- Multiple row -------------------- */
+
+  const toggleAppointmentSelection = (id) => {
+    setSelectedAppointments((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+  const clearSelections = () => {
+    setSelectedAppointments(new Set());
+  };
+
+  const toggleBlockSlot = (slot) => {
+    setSelectedBlockSlots((prev) => {
+      const next = new Set(prev);
+      next.has(slot) ? next.delete(slot) : next.add(slot);
+      return next;
+    });
+  };
+
+  /* -------------------- Release Selected -------------------- */
+  const handleRelease = async () => {
+    if (selectedAppointments.size === 0 && selectedBlockSlot.size === 0) return;
+
+    if (!window.confirm("Are you sure you want to release the selected items?"))
+      return;
+
+    const failed = [];
+    let successCount = 0;
+
+    try {
+      // delete selected appointments (includes cancelled & booked)
+      for (const selId of selectedAppointments) {
+        // try to resolve to a real appointment record to get its DB id
+        const appt = appointmentList.find((a) =>
+          [
+            a._id,
+            a.appointmentId,
+            String(a._id),
+            String(a.appointmentId),
+          ].includes(String(selId))
+        );
+
+        const idToDelete = appt
+          ? appt._id || appt.appointmentId || selId
+          : selId;
+
+        try {
+          await deleteAppointment({ id: idToDelete }).unwrap();
+          successCount++;
+        } catch (err) {
+          console.error("Failed to delete appointment id", idToDelete, err);
+          failed.push({
+            type: "appointment",
+            id: idToDelete,
+            reason: err?.data || err?.message,
+          });
+        }
+      }
+
+      // delete blocks matching selected slots for the selected date & doctor
+      for (const slot of selectedBlockSlot) {
+        const matches = blockedList.filter((b) => {
+          return (
+            normalizeDate(b.apptDate) === selectedDate &&
+            String(b.apptTime) === String(slot) &&
+            String(b.fkDoctorId) === String(selectedDoctor)
+          );
+        });
+
+        if (matches.length === 0) {
+          failed.push({
+            type: "block",
+            slot,
+            reason: "No matching block record found",
+          });
+          continue;
+        }
+
+        for (const b of matches) {
+          const id =
+            b.id ||
+            b._id ||
+            b.appointmentBlockDetailId ||
+            b.blockId ||
+            b.opdAppointmentBlockDetailId;
+          if (!id) {
+            failed.push({
+              type: "block",
+              slot,
+              reason: "No deletable id on block record",
+            });
+            continue;
+          }
+
+          try {
+            await deleteBlockDetail({ id }).unwrap();
+            successCount++;
+          } catch (err) {
+            console.error("Failed to delete block id", id, err);
+            failed.push({
+              type: "block",
+              id,
+              slot,
+              reason: err?.data || err?.message,
+            });
+          }
+        }
+      }
+
+      // report results
+      if (failed.length === 0) {
+        alert(`Released ${successCount} items successfully`);
+      } else {
+        alert(
+          `Released ${successCount} items, but ${failed.length} failed. Check console for details.`
+        );
+        console.warn("Release failures:", failed);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Failed to release selected items");
+    } finally {
+      setSelectedAppointments(new Set());
+      setSelectedBlockSlots(new Set());
+    }
   };
 
   /* -------------------- Loading -------------------- */
@@ -219,20 +353,26 @@ const AppointmentManager = () => {
 
   /* -------------------- Render -------------------- */
   return (
-    <Box sx={{ p: 3, mt: 6 }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, mt: { xs: 4, md: 6 } }}>
       <Paper>
-        <Typography variant="h5" className={style.header}>
+        <Typography
+          variant="h5"
+          className={style.header}
+          sx={{ fontSize: { xs: "1.1rem", md: "1.5rem" } }}
+        >
           Appointment Manager
         </Typography>
 
         {/* -------------------- Filters -------------------- */}
-        <Grid container spacing={2} mt={1}>
-          <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+        <Grid container spacing={2} mt={1} alignItems="center" >
+          <Grid item xs={13} sm={7} md={4} >
             <FormControl fullWidth size="small">
               <InputLabel>Doctor Name</InputLabel>
               <Select
                 label="Doctor Name"
                 value={selectedDoctor}
+                fullWidth
+                sx={{width:'141px'}}
                 onChange={(e) => setSelectedDoctor(e.target.value)}
               >
                 <MenuItem value="">Select</MenuItem>
@@ -245,7 +385,7 @@ const AppointmentManager = () => {
             </FormControl>
           </Grid>
 
-          <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+          <Grid item xs={12} sm={6} md={3}>
             <TextField
               label="Appointment Date"
               type="date"
@@ -256,14 +396,54 @@ const AppointmentManager = () => {
               onChange={(e) => setSelectedDate(e.target.value)}
             />
           </Grid>
+
+          
+          <Grid item xs={12} sm={6} md={2}>
+            <Button
+              fullWidth
+              size="small"
+              variant="contained"
+              disabled={selectedAppointments.size === 0}
+              onClick={() => setOpenCancel(true)}
+            >
+              Cancel ({selectedAppointments.size})
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={2}>
+            <Button
+              fullWidth
+              size="small"
+              variant="contained"
+              disabled={selectedBlockSlot.size === 0}
+              onClick={() => setOpenBlock(true)}
+            >
+              Block ({selectedBlockSlot.size})
+            </Button>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={2}>
+            <Button
+              fullWidth
+              size="small"
+              variant="contained"
+              disabled={
+                selectedAppointments.size === 0 && selectedBlockSlot.size === 0
+              }
+              onClick={handleRelease}
+            >
+              Release
+            </Button>
+          </Grid>
         </Grid>
 
         {/* -------------------- Table -------------------- */}
-        <TableContainer sx={{ mt: 2, minWidth: 900 }}>
-          <Table stickyHeader size="small">
+        <TableContainer sx={{ mt: 2, width: "100%", overflowX: "auto" }}>
+          <Table stickyHeader size="small" sx={{ minWidth: 900 }}>
             <TableHead>
               <TableRow>
                 {[
+                  "Select",
                   "Time",
                   "Patient Id",
                   "Patient Name",
@@ -286,7 +466,7 @@ const AppointmentManager = () => {
             <TableBody>
               {isDoctorUnavailable && (
                 <TableRow>
-                  <TableCell colSpan={8} align="center">
+                  <TableCell colSpan={9} align="center">
                     No Appointment Will Be Scheduled
                   </TableCell>
                 </TableRow>
@@ -295,61 +475,84 @@ const AppointmentManager = () => {
               {availableSchedule &&
                 timeSlots.map((slot) => {
                   const booked = bookedSlots.get(slot);
-                  const isBloked = booked?.isBlocked;
-                  const linked = booked?.linkedAppointment;
+                  const isBlocked = booked?.isBlocked === true;
+                  const isCancelled = booked?.isCancelled === true;
+                  const isBooked = !!booked && !isCancelled;
+                  const isEmpty = !booked;
+                  const isSelectedForBlock = selectedBlockSlot.has(slot);
+                  const isSelected = selectedAppointments.has(booked?._id);
 
                   return (
                     <TableRow
                       key={slot}
                       hover={!booked}
-                      onClick={() => handleSlotClick(slot)}
+                      onClick={() => {
+                        if (booked) return;
+
+                        handleSlotClick(slot);
+                      }}
                       sx={{
-                        backgroundColor: isBloked
+                        backgroundColor: isBlocked
                           ? "#ffebee"
+                          : isSelectedForBlock
+                          ? "#abb2ff"
+                          : isCancelled
+                          ? "#fff3cd"
                           : booked
                           ? "#e8f5e9"
                           : "inherit",
                         cursor: booked ? "not-allowed" : "pointer",
                       }}
                     >
+                      <TableCell padding="checkbox">
+                        {/* Booked or Cancelled appointments */}
+                        {booked && !isBlocked && (
+                          <Checkbox
+                            checked={isSelected}
+                            size="small"
+                            onChange={() =>
+                              toggleAppointmentSelection(booked._id)
+                            }
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        )}
+
+                        {/* Blocked slots can be selected for release */}
+                        {isBlocked && (
+                          <Checkbox
+                            checked={isSelectedForBlock}
+                            size="small"
+                            onChange={() => toggleBlockSlot(slot)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        )}
+
+                        {/* Empty slots (to select multiple for blocking) */}
+                        {isEmpty && !isBlocked && (
+                          <Checkbox
+                            checked={isSelectedForBlock}
+                            size="small"
+                            onChange={() => toggleBlockSlot(slot)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        )}
+                      </TableCell>
                       <TableCell
                         sx={{ fontWeight: booked ? "bold" : "normal" }}
                       >
                         {slot}
                       </TableCell>
+                      <TableCell>{booked?.appointmentId ?? "--"}</TableCell>
                       <TableCell>
-                        {(isBloked
-                          ? linked?.appointmentId
-                          : booked?.appointmentId) ?? "-"}
-                      </TableCell>
-                      <TableCell>
-                        {(isBloked
-                          ? linked
-                            ? `${linked.firstName} ${linked.lastName}`
-                            : "--"
-                          : booked
+                        {booked
                           ? `${booked.firstName} ${booked.lastName}`
-                          : "--") ?? "--"}
+                          : "--"}
                       </TableCell>
-                      <TableCell>
-                        {isBloked
-                          ? linked?.ageYear ?? "--"
-                          : booked?.ageYear ?? "--"}
-                      </TableCell>
-                      <TableCell>
-                        {isBloked
-                          ? linked?.apptType ?? "--"
-                          : booked?.apptType ?? "--"}
-                      </TableCell>
-                      <TableCell>
-                        {(isBloked ? linked?.contactNo : booked?.contactNo) ??
-                          "--"}
-                      </TableCell>
+                      <TableCell>{booked?.ageYear ?? "--"}</TableCell>
+                      <TableCell>{booked?.apptType ?? "--"}</TableCell>
+                      <TableCell>{booked?.contactNo ?? "--"}</TableCell>
                       <TableCell>{booked?.referredBy ?? "--"}</TableCell>
-                      <TableCell>
-                        {(isBloked ? booked.blockReason : booked?.remarks) ??
-                          "--"}
-                      </TableCell>
+                      <TableCell>{booked?.remarks ?? "--"}</TableCell>
                     </TableRow>
                   );
                 })}
@@ -373,20 +576,31 @@ const AppointmentManager = () => {
           onClose={closeDialog}
         />
       </Dialog>
+      <Dialog open={openBlock} onClose={closeBlock} maxWidth="md" fullWidth>
+        <BlockAppointment
+          doctorId={selectedDoctor}
+          appointmentDate={selectedDate}
+          appointmentTimes={[...selectedBlockSlot]}
+          onClose={closeBlock}
+          onSuccess={() => {
+            setSelectedBlockSlots(new Set());
+            setOpenBlock(false);
+          }}
+        />
+      </Dialog>
       <Dialog
-        open={openBlock}
-        onClose={() => setOpenBlock(false)}
+        open={openCancel}
+        onClose={() => setOpenCancel(false)}
         maxWidth="md"
         fullWidth
       >
-        <BlockAppointment
-          branchId={blockSlot?.fkBranchId}
-          // branchName={blockSlot?.fkBranchId?.BranchName}
-          doctorId={blockSlot?.fkConsultantId}
-          // doctorName={blockSlot?.DoctorList?.name}
-          appointmentDate={normalizeDate(blockSlot?.apptDate)}
-          appointmentTime={blockSlot?.apptTime}
-          appointmentId={blockSlot?.appointmentId}
+        <CancelAppointment
+          appointmentIds={[...selectedAppointments]}
+          onClose={() => setOpenCancel(false)}
+          onSuccess={() => {
+            clearSelections();
+            setOpenCancel(false);
+          }}
         />
       </Dialog>
     </Box>

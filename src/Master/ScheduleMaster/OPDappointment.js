@@ -188,6 +188,7 @@ const OPDAppointment = ({
         fkConsultantId: data.fkConsultantId,
         isVIP: data.isVIP ?? false,
         address: data.address,
+        isCancelled : false
         // fkServiceId: data.fkServiceId,
       }).unwrap();
       alert("Appointment Scheduled!!");
