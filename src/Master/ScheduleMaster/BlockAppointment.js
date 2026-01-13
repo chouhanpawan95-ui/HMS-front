@@ -1,38 +1,36 @@
-import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useCreateOPDAppointmentBlockDetailMutation } from "../../features/api/scheduleApi";
 import { Paper, TextField, Typography, Grid, Box, Button } from "@mui/material";
-import style from "../BillingMaster/RateListMaster.module.css";
 
 const BlockAppointment = ({
   branchId,
   doctorId,
   appointmentDate,
-  appointmentTime,
-  appointmentId,
+  appointmentTimes,
+  onSuccess,
+  onClose,
 }) => {
-  const [createOPDAppointmentBlockDetail] =
-    useCreateOPDAppointmentBlockDetailMutation();
+  const [createBlock] = useCreateOPDAppointmentBlockDetailMutation();
+  const { register, handleSubmit, reset } = useForm();
 
-  const { register, handleSubmit, reset,formState:{errors} } = useForm();
-
-  useEffect(() => {});
-
-  const onSubmitOPDAppointmentBlockDetail = async (data) => {
+  const onSubmit = async (data) => {
     try {
-      await createOPDAppointmentBlockDetail({
-        fkCreatedById: appointmentId,
-        fkBranchId: branchId,
-        fkDoctorId: doctorId,
-        apptDate: appointmentDate,
-        apptTime: appointmentTime,
-        blockReason: data.blockReason,
-      }).unwrap();
-      alert("Appointment blocked successfully");
+      for (const time of appointmentTimes) {
+        await createBlock({
+          fkBranchId: branchId,
+          fkDoctorId: doctorId,
+          apptDate: appointmentDate,
+          apptTime: time,
+          blockReason: data.blockReason,
+        }).unwrap();
+      }
+
+      alert("Appointments blocked successfully");
       reset();
+      onSuccess?.();
     } catch (err) {
-      console.error("Failed to create appointment block detail:", err);
-      alert("Error creating appointment block detail. Please try again.");
+      console.error(err);
+      alert("Failed to block appointments");
     }
   };
 
@@ -42,87 +40,44 @@ const BlockAppointment = ({
         elevation={3}
         sx={{ p: { xs: 2, sm: 3 }, maxWidth: 900, mx: "auto" }}
       >
-        <Typography variant="h5" mb={3} className={style.header}>
-          Block Appointment
-        </Typography>
-        <Box>
-          <form onSubmit={handleSubmit(onSubmitOPDAppointmentBlockDetail)}>
-            <Grid container spacing={2} mt={2}>
-              <Grid sx={{ width: { xs: "46%", md: "26%" } }}>
-                <TextField
-                  label="Appointment"
-                  value={appointmentId}
-                  fullWidth
-                  disabled
-                  size="small"
-                />
-              </Grid>
+        <Typography variant="h6">Block Appointment</Typography>
 
-              <Grid sx={{ width: { xs: "46%", md: "26%" } }}>
-                <TextField
-                  label="Branch"
-                  value={branchId}
-                  fullWidth
-                  disabled
-                  size="small"
-                />
-              </Grid>
-
-              <Grid sx={{ width: { xs: "46%", md: "26%" } }}>
-                <TextField
-                  label="Doctor"
-                  value={doctorId}
-                  fullWidth
-                  disabled
-                  size="small"
-                />
-              </Grid>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Grid container spacing={2}>
+            <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
+              <TextField
+                label="Appointment Times"
+                value={appointmentTimes.join(", ")}
+                fullWidth
+                size="small"
+                disabled
+              />
             </Grid>
-
-            <Grid container spacing={2} mt={2}>
-              <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                <TextField
-                  label="Appointment Time"
-                  value={appointmentTime}
-                  fullWidth
-                  disabled
-                  size="small"
-                />
-              </Grid>
-
-              <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
-                <TextField
-                  label="Appointment Date"
-                  value={appointmentDate}
-                  fullWidth
-                  disabled
-                  size="small"
-                />
-              </Grid>
+          </Grid>
+          <Grid container spacing={2} mt={2}>
+            <Grid item sx={{ width: { xs: "100%", md: "40%" } }}>
+              <TextField
+                label="Block Reason"
+                multiline
+                rows={4}
+                fullWidth
+                {...register("blockReason", { required: true })}
+              />
             </Grid>
+          </Grid>
 
-            <Grid container spacing={2} mt={2}>
-              <Grid sx={{ width: { xs: "100%", md: "82%" } }}>
-                <TextField
-                  label="Reason for Blocking"
-                  fullWidth
-                  rows={4}
-                  sx={{ width: "100%" }}
-                  error = {!!errors.blockReason}
-                  multiline
-                  {...register("blockReason", { required: true })}
-                />
-              </Grid>
-            </Grid>
-            <Box>
-              <Button type="submit" variant="contained" sx={{ mt: 3 }}>
-                Blocked Appointment
-              </Button>
-            </Box>
-          </form>
-        </Box>
+          <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+            <Button type="submit" variant="contained">
+              Block {appointmentTimes.length} Slots
+            </Button>
+            <Button variant="outlined" onClick={() => onClose?.()}>
+              Cancel
+            </Button>
+          </div>
+        </form>
       </Paper>
     </Box>
   );
 };
+
 export default BlockAppointment;
