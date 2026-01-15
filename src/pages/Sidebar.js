@@ -349,12 +349,18 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                       <ListItemText primary="Appointment Manager" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
                   </List>
-                  {/* <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/OPDappointment' onClick={handleMenuClick}>
+                  <List component='div' disablePadding>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/AppointmentSchedule' onClick={handleMenuClick}>
                       <ListItemIcon sx={{minWidth:30}}/>
-                      <ListItemText primary="Appointment" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
+                      <ListItemText primary="Patient Schedule" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
-                  </List> */}
+                  </List>
+                  <List component='div' disablePadding>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/DoctorSchedule' onClick={handleMenuClick}>
+                      <ListItemIcon sx={{minWidth:30}}/>
+                      <ListItemText primary="Doctor Schedule" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
+                    </ListItemButton>
+                  </List>
                 </Collapse>
 
               </List>

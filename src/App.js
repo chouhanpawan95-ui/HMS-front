@@ -27,6 +27,8 @@ import AppointmentManager from "./Master/ScheduleMaster/AppointmentManager";
 import OPDappointment from "./Master/ScheduleMaster/OPDappointment";
 import BillReceipt from "./pages/BillReceipt";
 import BlockAppointment from "./Master/ScheduleMaster/BlockAppointment";
+import AppointmentSchedule from "./Master/ScheduleMaster/AppointmentSchedule";
+import DoctorSchedule from "./Master/ScheduleMaster/DoctorSchedule";
 
 function App() {
   return (
@@ -67,6 +69,8 @@ function App() {
               <Route path="/AppointmentManager" element={<AppointmentManager/>} />
               <Route path="/OPDappointment" element={<OPDappointment/>}/>
               <Route path="/BlockAppointment" element={<BlockAppointment/>}/>
+              <Route path="/AppointmentSchedule" element={<AppointmentSchedule/>}/>
+              <Route path="DoctorSchedule" element={<DoctorSchedule/>}/>
 
               {/* FIXED: Billinginformation route */}
               <Route

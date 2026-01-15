@@ -213,9 +213,6 @@ const AppointmentManager = () => {
       setOpenAppointment(true);
       return;
     }
-
-    // Clicking a booked row does nothing; selection for block/cancel
-    // is handled via the row checkboxes.
   };
 
   /* -------------------- Multiple row -------------------- */
@@ -251,33 +248,33 @@ const AppointmentManager = () => {
 
     try {
       // delete selected appointments (includes cancelled & booked)
-      for (const selId of selectedAppointments) {
-        // try to resolve to a real appointment record to get its DB id
-        const appt = appointmentList.find((a) =>
-          [
-            a._id,
-            a.appointmentId,
-            String(a._id),
-            String(a.appointmentId),
-          ].includes(String(selId))
-        );
+      // for (const selId of selectedAppointments) {
+      //   // try to resolve to a real appointment record to get its DB id
+      //   const appt = appointmentList.find((a) =>
+      //     [
+      //       a._id,
+      //       a.appointmentId,
+      //       String(a._id),
+      //       String(a.appointmentId),
+      //     ].includes(String(selId))
+      //   );
 
-        const idToDelete = appt
-          ? appt._id || appt.appointmentId || selId
-          : selId;
+      //   const idToDelete = appt
+      //     ? appt._id || appt.appointmentId || selId
+      //     : selId;
 
-        try {
-          await deleteAppointment({ id: idToDelete }).unwrap();
-          successCount++;
-        } catch (err) {
-          console.error("Failed to delete appointment id", idToDelete, err);
-          failed.push({
-            type: "appointment",
-            id: idToDelete,
-            reason: err?.data || err?.message,
-          });
-        }
-      }
+      //   try {
+      //     await deleteAppointment({ id: idToDelete }).unwrap();
+      //     successCount++;
+      //   } catch (err) {
+      //     console.error("Failed to delete appointment id", idToDelete, err);
+      //     failed.push({
+      //       type: "appointment",
+      //       id: idToDelete,
+      //       reason: err?.data || err?.message,
+      //     });
+      //   }
+      // }
 
       // delete blocks matching selected slots for the selected date & doctor
       for (const slot of selectedBlockSlot) {
@@ -342,7 +339,7 @@ const AppointmentManager = () => {
       console.error(err);
       alert("Failed to release selected items");
     } finally {
-      setSelectedAppointments(new Set());
+      // setSelectedAppointments(new Set());
       setSelectedBlockSlots(new Set());
     }
   };
@@ -477,7 +474,6 @@ const AppointmentManager = () => {
                   const booked = bookedSlots.get(slot);
                   const isBlocked = booked?.isBlocked === true;
                   const isCancelled = booked?.isCancelled === true;
-                  const isBooked = !!booked && !isCancelled;
                   const isEmpty = !booked;
                   const isSelectedForBlock = selectedBlockSlot.has(slot);
                   const isSelected = selectedAppointments.has(booked?._id);
@@ -493,13 +489,13 @@ const AppointmentManager = () => {
                       }}
                       sx={{
                         backgroundColor: isBlocked
-                          ? "#ffebee"
+                          ? "red"
                           : isSelectedForBlock
-                          ? "#abb2ff"
+                          ? "blue"
                           : isCancelled
-                          ? "#fff3cd"
+                          ? "yellow"
                           : booked
-                          ? "#e8f5e9"
+                          ? "green"
                           : "inherit",
                         cursor: booked ? "not-allowed" : "pointer",
                       }}
@@ -543,11 +539,7 @@ const AppointmentManager = () => {
                         {slot}
                       </TableCell>
                       <TableCell>{booked?.appointmentId ?? "--"}</TableCell>
-                      <TableCell>
-                        {booked
-                          ? `${booked.firstName} ${booked.lastName}`
-                          : "--"}
-                      </TableCell>
+                      <TableCell>{(booked? `${booked.firstName} ${booked.lastName}`: "--")} </TableCell>
                       <TableCell>{booked?.ageYear ?? "--"}</TableCell>
                       <TableCell>{booked?.apptType ?? "--"}</TableCell>
                       <TableCell>{booked?.contactNo ?? "--"}</TableCell>
@@ -555,7 +547,7 @@ const AppointmentManager = () => {
                       <TableCell>{booked?.remarks ?? "--"}</TableCell>
                     </TableRow>
                   );
-                })}
+                })}date
             </TableBody>
           </Table>
         </TableContainer>
