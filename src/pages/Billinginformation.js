@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from 'react-router-dom';
+import { useLocation } from "react-router-dom";
 import {
   Box,
   Grid,
@@ -25,17 +25,31 @@ import {
 } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
 import { Radio, RadioGroup, FormControl } from "@mui/material";
-import { useGetPatientsQuery, useCreateOpdVisitMutation } from "../features/api/patientsApi";
-import { useGetRateListQuery, useGetRatelistDetailsQuery } from '../features/api/Hooks/ratelistApi'
-import { useGetPartyNameQuery } from '../features/api/Hooks/partyApi.js';
-import { useCreateBillMutation, useCreateBilldetailsMutation, useGetBillMasterByIdQuery, useGetBillDetailByBillIdQuery, useCreateReceiptMasterMutation, useCreateReceiptAdjustmentDetailMutation } from '../features/api/Hooks/billingApi.js';
-import { useGetServiceQuery } from '../features/api/Hooks/serviceApi';
-import { renderReceiptHtml } from './BillReceiptPrint';
-import { renderBillHtml } from './BillPrint';
+import {
+  useGetPatientsQuery,
+  useCreateOpdVisitMutation,
+} from "../features/api/patientsApi";
+import {
+  useGetRateListQuery,
+  useGetRatelistDetailsQuery,
+} from "../features/api/Hooks/ratelistApi";
+import { useGetPartyNameQuery } from "../features/api/Hooks/partyApi.js";
+import {
+  useCreateBillMutation,
+  useCreateBilldetailsMutation,
+  useGetBillMasterByIdQuery,
+  useGetBillDetailByBillIdQuery,
+  useCreateReceiptMasterMutation,
+  useCreateReceiptAdjustmentDetailMutation,
+} from "../features/api/Hooks/billingApi.js";
+import { useGetServiceQuery } from "../features/api/Hooks/serviceApi";
+import { renderReceiptHtml } from "./BillReceiptPrint";
+import { renderBillHtml } from "./BillPrint";
 import SearchBar from "../component/SearchBar.js";
 import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
+import { useGetOPDAppointmentQuery} from '../features/api/scheduleApi.js';
 const BranchName = [
   { id: 1, BranchName: "Indore" },
   { id: 2, BranchName: "Bhopal" },
@@ -58,10 +72,15 @@ const PartyName = [
   { id: 2, PartyName: "INSURANCE LIMITED" },
   { id: 3, PartyName: "ERGO HEALTH" },
 ];
-const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList = [] }) => {
+const BillingInformation = ({
+  doctorList = [],
+  billTypeList = [],
+  categoryList = [],
+}) => {
   const navigate = useNavigate();
   const [createReceiptMaster] = useCreateReceiptMasterMutation();
-  const [createReceiptAdjustmentDetail] = useCreateReceiptAdjustmentDetailMutation();
+  const [createReceiptAdjustmentDetail] =
+    useCreateReceiptAdjustmentDetailMutation();
   const [submittingWithReceipt, setSubmittingWithReceipt] = useState(false);
   const routerLocation = useLocation();
   const { bill, patient } = routerLocation.state || {};
@@ -72,8 +91,20 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [openDialog, setOpenDialog] = useState(false);
   const { data: patientsResp, isLoading } = useGetPatientsQuery();
   const { data: GetRatelistResponse, error } = useGetRateListQuery();
-  const [createBill, { data: createbilldetails, isLoading: isCreating, error: createBillError }] = useCreateBillMutation();
-  const [createBillDetails, { data: createBillDetailsResp, isLoading: isCreatingDetails, error: createBillDetailsError }] = useCreateBilldetailsMutation();
+  const {data:appointmentResponse,isLoading:isAppointmentResponseLoading} = useGetOPDAppointmentQuery();
+  console.log("appointment: ",appointmentResponse)
+  const [
+    createBill,
+    { data: createbilldetails, isLoading: isCreating, error: createBillError },
+  ] = useCreateBillMutation();
+  const [
+    createBillDetails,
+    {
+      data: createBillDetailsResp,
+      isLoading: isCreatingDetails,
+      error: createBillDetailsError,
+    },
+  ] = useCreateBilldetailsMutation();
   // OPD visit creation (executed after bill is created)
   const [createOpdVisit] = useCreateOpdVisitMutation();
   const [isSaving, setIsSaving] = useState(false);
@@ -82,13 +113,18 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const { data: getBillDetail } = useGetBillDetailByBillIdQuery(bill?.billId);
   // Utility: resolve service name from various potential sources
   const resolveServiceName = (input) => {
-
     if (!input) return "";
     // If input is an object
     if (typeof input === "object") {
       const it = input;
       return (
-        it.ServiceName || it.serviceName || it.Service || it.name || it.Description || it.ServiceDesc || ""
+        it.ServiceName ||
+        it.serviceName ||
+        it.Service ||
+        it.name ||
+        it.Description ||
+        it.ServiceDesc ||
+        ""
       );
     }
     // If input is an id string/number, search known service lists
@@ -96,14 +132,31 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     // Search services first
     if (Array.isArray(services)) {
       const found = services?.find(
-        s => String(s.serviceId || s.FK_ServiceId) === String(rate.FK_ServiceId)
+        (s) =>
+          String(s.serviceId || s.FK_ServiceId) === String(rate.FK_ServiceId)
       );
-      if (found) return found.ServiceName || found.serviceName || found.name || found.Service || "";
+      if (found)
+        return (
+          found.ServiceName ||
+          found.serviceName ||
+          found.name ||
+          found.Service ||
+          ""
+        );
     }
     // Fallback: search rate list details (may contain service names)
     if (Array.isArray(filteredRateListDetails)) {
-      const found = filteredRateListDetails?.find((s) => String(s.FK_ServiceId || s.serviceId || s.id || s._id) === id);
-      if (found) return found.ServiceName || found.serviceName || found.Service || found.name || "";
+      const found = filteredRateListDetails?.find(
+        (s) => String(s.FK_ServiceId || s.serviceId || s.id || s._id) === id
+      );
+      if (found)
+        return (
+          found.ServiceName ||
+          found.serviceName ||
+          found.Service ||
+          found.name ||
+          ""
+        );
     }
     return "";
   };
@@ -123,8 +176,78 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   const [partyName, setPartyName] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
   const [billingRemarks, setBillingRemarks] = useState("");
+  //
+  const [openAppointmentPopup, setOpenAppointmentPopup] = useState(false);
+  const [todayAppointments, setTodayAppointments] = useState([]);
+  const formatDateForInput = (isoDate) => {
+    if(!isoDate) return "";
+    const date = new Date(isoDate);
+    if(isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
+  };
+  // get todayDate
+  const getTodayDate = () => {
+    const d = new Date();
+    return d.toISOString().split("T")[0];
+  };
+  const handleWithAppointmentClick = () => {
+    try {
+      const today = getTodayDate();
+      
+      // Use existing appointment data from Redux query
+      const appointments = Array.isArray(appointmentResponse)
+        ? appointmentResponse
+        : Array.isArray(appointmentResponse?.data)
+        ? appointmentResponse.data
+        : [];
+
+      const todayList = appointments.filter(
+        (appt) => appt.apptDate?.split("T")[0] === today
+      );
+
+      setTodayAppointments(todayList);
+      setOpenAppointmentPopup(true);
+    } catch (err) {
+      console.error("Error filtering appointments:", err);
+      setTodayAppointments([]);
+      setOpenAppointmentPopup(true);
+    }
+  };
+  const handleAppointmentSelect = (appt) => {
+    if(!appt.fkRegId){
+      navigate("/Registration",{
+        state:{appointmentData:appt}
+      });
+      return;
+    }
+    setSelectedPatient({
+      patientId: appt.fkRegId,
+      firstName: appt.firstName || "",
+      lastName: appt.lastName || "",
+      ageYMD: appt.ageYear || appt.ageYMD||"",
+      sex: appt.sex || "",
+      isAppointment: true,
+      isWalkIn: false,
+      FK_BranchId: appt.fkBranchId || appt.branch,
+      FK_DoctorId: appt.fkConsultantId,
+      appointmentId: appt.appointmentId || appt.pkAppointmentId,
+      admissionId: appt.admissionId || "",
+      doctorId: appt.fkConsultantId,
+      dateOfBirth:formatDateForInput(appt.dob) || "",
+    });
+    setBillDetails((prev) => ({
+      ...prev,
+      FK_RegId: appt.fkRegId,
+      FK_DoctorId: appt.fkConsultantId,
+      FK_BranchId: appt.fkBranchId || appt.branch,
+      FK_IPDId: appt.appointmentId || appt.pkAppointmentId,
+    }));
+    setOpenAppointmentPopup(false);
+  };
   // First API response (RateList) — handle both top-level array and { data: [] } shapes
-  const rateList = Array.isArray(GetRatelistResponse) ? GetRatelistResponse : (GetRatelistResponse?.data || []);
+  const rateList = Array.isArray(GetRatelistResponse)
+    ? GetRatelistResponse
+    : GetRatelistResponse?.data || [];
 
   // Second API response (RateListDetails)
   const rateListDetails = GetRatedetails?.data || [];
@@ -138,13 +261,11 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     (item) => item.FK_RateListId === selectedRateListId
   );
   // 4. Extract FK_ServiceId from details
-  const result = filteredRateListDetails.map(rate => {
-    const service = services?.find(
-      s => s.serviceId === rate.FK_ServiceId
-    );
+  const result = filteredRateListDetails.map((rate) => {
+    const service = services?.find((s) => s.serviceId === rate.FK_ServiceId);
     return {
       ...rate,
-      ServiceName: service ? service.ServiceName : null
+      ServiceName: service ? service.ServiceName : null,
     };
   });
   const serviceIds = filteredRateListDetails.map((item) => item.FK_ServiceId);
@@ -156,25 +277,31 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     if (isViewMode) return; // don't add rows when viewing an existing bill
     const newRow = item
       ? {
-        FK_ServiceId: item.FK_ServiceId || item.FK_ServiceId || item.FK_ServiceId || "",
-        ServiceName: item.ServiceName || item.serviceName || resolveServiceName(item.FK_ServiceId) || resolveServiceName(item) || "",
-        RateGeneral: item.RateGeneral ?? item.Rate ?? item.RateAmount ?? 0,
-        Qty: item.Unit ?? item.UnitQty ?? 1,
-        Discountpercent: item.Discountpercent ?? 0,
-        Discount: item.Discount ?? 0,
-        SCPercent: item.SCPercent ?? 0,
-        ServiceCharge: item.ServiceCharge ?? item.ServiceCharges ?? 0,
-        Remarks: item.Remarks || item.remark || "",
-        ...item,
-      }
+          FK_ServiceId:
+            item.FK_ServiceId || item.FK_ServiceId || item.FK_ServiceId || "",
+          ServiceName:
+            item.ServiceName ||
+            item.serviceName ||
+            resolveServiceName(item.FK_ServiceId) ||
+            resolveServiceName(item) ||
+            "",
+          RateGeneral: item.RateGeneral ?? item.Rate ?? item.RateAmount ?? 0,
+          Qty: item.Unit ?? item.UnitQty ?? 1,
+          Discountpercent: item.Discountpercent ?? 0,
+          Discount: item.Discount ?? 0,
+          SCPercent: item.SCPercent ?? 0,
+          ServiceCharge: item.ServiceCharge ?? item.ServiceCharges ?? 0,
+          Remarks: item.Remarks || item.remark || "",
+          ...item,
+        }
       : {
-        ServiceName: "",
-        FK_ServiceId: null,
-        RateGeneral: 0,
-        Qty: 1,
-        NetAmount: 0,
-        Remarks: "",
-      };
+          ServiceName: "",
+          FK_ServiceId: null,
+          RateGeneral: 0,
+          Qty: 1,
+          NetAmount: 0,
+          Remarks: "",
+        };
     setTableRows((prev) => [...prev, newRow]);
   };
 
@@ -186,7 +313,12 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         return {
           ...r,
           FK_ServiceId: item.FK_ServiceId || r.FK_ServiceId || "",
-          ServiceName: item.ServiceName || item.serviceName || resolveServiceName(item.FK_ServiceId) || r.ServiceName || "",
+          ServiceName:
+            item.ServiceName ||
+            item.serviceName ||
+            resolveServiceName(item.FK_ServiceId) ||
+            r.ServiceName ||
+            "",
           RateGeneral: item.RateGeneral || item.Rate || r.RateGeneral || 0,
           Discountpercent: item.Discountpercent ?? r.Discountpercent ?? 0,
           Discount: item.Discount ?? r.Discount ?? 0,
@@ -273,17 +405,17 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
 
   // When API loads → set default value automatically
   useEffect(() => {
-    console.log('RateListResponse changed', GetRatelistResponse);
+    console.log("RateListResponse changed", GetRatelistResponse);
     if (Array.isArray(rateList) && rateList.length > 0) {
       const first = rateList[0];
-      const id = first.rateListId || first._id || first.id || '';
+      const id = first.rateListId || first._id || first.id || "";
       setSelectedRateListId(id);
-      setBillDetails(prev => ({
+      setBillDetails((prev) => ({
         ...prev,
-        RateType: first.RateListName || first.RateList || first.name || '',
+        RateType: first.RateListName || first.RateList || first.name || "",
       }));
     } else {
-      setSelectedRateListId('');
+      setSelectedRateListId("");
     }
   }, [rateList, GetRatelistResponse]);
   // If navigated with a bill in location.state, populate bill and rows
@@ -301,31 +433,31 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         BillNo: bill.BillNo || bill.billId || prev.BillNo,
         BillDate: bill.BillDate || prev.BillDate,
         FK_RegId: bill.FK_RegId || prev.FK_RegId,
-        FK_BranchId:bill.FK_BranchId || prev.FK_BranchId,
-        FK_FinYearId:bill.FK_FinYearId || prev.FK_FinYearId,
-        FK_BillSerieseId:bill.FK_BillSerieseId || prev.FK_BillSerieseId,
-        FK_BillTypeId:bill.FK_BillTypeId || prev.FK_BillTypeId,
+        FK_BranchId: bill.FK_BranchId || prev.FK_BranchId,
+        FK_FinYearId: bill.FK_FinYearId || prev.FK_FinYearId,
+        FK_BillSerieseId: bill.FK_BillSerieseId || prev.FK_BillSerieseId,
+        FK_BillTypeId: bill.FK_BillTypeId || prev.FK_BillTypeId,
         FK_DoctorId: bill.FK_DoctorId || prev.FK_DoctorId,
-        FK_CategoryId:bill.FK_CategoryId || prev.FK_CategoryId,
-        FK_ReferredById:bill.FK_ReferredById || prev.FK_ReferredById,
-        FK_PartyId:bill.FK_PartyId || prev.FK_PartyId,
-        FreeReason:bill.FreeReason || prev.FreeReason,
+        FK_CategoryId: bill.FK_CategoryId || prev.FK_CategoryId,
+        FK_ReferredById: bill.FK_ReferredById || prev.FK_ReferredById,
+        FK_PartyId: bill.FK_PartyId || prev.FK_PartyId,
+        FreeReason: bill.FreeReason || prev.FreeReason,
         TotalAmt: bill.TotalAmt || bill.TotalAmount || prev.TotalAmt,
         DiscountAmt: bill.DiscountAmt || bill.Discount || prev.DiscountAmt,
         NetBillAmt: bill.NetBillAmt || bill.NetAmt || prev.NetBillAmt,
         Remarks: bill.Remarks || prev.Remarks,
       }));
-      const result = getBillDetail?.map(rate => {
+      const result = getBillDetail?.map((rate) => {
         const service = services?.find(
-          s => s.serviceId === rate.FK_ServiceId
+          (s) => s.serviceId === rate.FK_ServiceId
         );
         return {
           ...rate,
-          ServiceName: service ? service.ServiceName : null
+          ServiceName: service ? service.ServiceName : null,
         };
       });
       // map details if present
-      const detailsArr = result// bill.BillDetails || bill.details || bill.billDetails || bill.BillDetail || [];
+      const detailsArr = result; // bill.BillDetails || bill.details || bill.billDetails || bill.BillDetail || [];
       if (Array.isArray(detailsArr) && detailsArr.length > 0) {
         const mapped = detailsArr.map((d) => ({
           FK_ServiceId: d.FK_ServiceId || d.serviceId || d.FK_ServiceId || "",
@@ -341,7 +473,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         setTableRows(mapped);
       }
     }
-  }, [bill?.billId,getBillDetail, services]);
+  }, [bill?.billId, getBillDetail, services]);
 
   const billMasterSubmit = async (skipNavigate = false) => {
     let billMasterPayload;
@@ -357,8 +489,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         FK_BillSerieseId: billDetails.FK_BillSerieseId || 1,
         BillNo: billDetails.BillNo || "",
         BillDate: billDate || billDetails.BillDate || new Date().toISOString(),
-        BillTime: billDetails.BillTime || new Date().toISOString().slice(11, 19),
-        FK_RegId: selectedPatient?.patientId || "",//computeRegId(),
+        BillTime:
+          billDetails.BillTime || new Date().toISOString().slice(11, 19),
+        FK_RegId: selectedPatient?.patientId || "", //computeRegId(),
         FK_IPDId: billDetails.FK_IPDId || 0,
         FK_DoctorId: billDetails.FK_DoctorId || 0,
         FK_DrDeptID: billDetails.FK_DrDeptID || 0,
@@ -395,15 +528,26 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         FK_PaytypeID: billDetails.FK_PaytypeID || 0,
         BillRefID: billDetails.BillRefID || 0,
         Diagnosis: billDetails.Diagnosis || "",
-      };      
+      };
       // Remove invalid PK_BillId if present
-      if (Object.prototype.hasOwnProperty.call(billMasterPayload, 'PK_BillId')) {
-        if (!billMasterPayload.PK_BillId || Number(billMasterPayload.PK_BillId) <= 0) delete billMasterPayload.PK_BillId;
-      }    
-      const billMasterResp = await createBill(billMasterPayload).unwrap();    
-      setpkbillId(billMasterResp?.billId)
+      if (
+        Object.prototype.hasOwnProperty.call(billMasterPayload, "PK_BillId")
+      ) {
+        if (
+          !billMasterPayload.PK_BillId ||
+          Number(billMasterPayload.PK_BillId) <= 0
+        )
+          delete billMasterPayload.PK_BillId;
+      }
+      const billMasterResp = await createBill(billMasterPayload).unwrap();
+      setpkbillId(billMasterResp?.billId);
       // Ensure billDetails state has the primary key for later receipt/adjustment
-      const newBillId = billMasterResp?.billId || billMasterResp?.PK_BillId || billMasterResp?.id || billMasterResp?.PK_BillId || null;
+      const newBillId =
+        billMasterResp?.billId ||
+        billMasterResp?.PK_BillId ||
+        billMasterResp?.id ||
+        billMasterResp?.PK_BillId ||
+        null;
       if (newBillId) {
         setBillDetails((prev) => ({ ...prev, PK_BillId: newBillId }));
       }
@@ -414,68 +558,83 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
           await billDeailSubmit(billMasterResp?.billId);
         } catch (err) {
           // Non-fatal: bill details failed but bill master was created — continue to receipt step
-          console.error('Failed to create bill details (non-fatal):', err);
-          alert('Bill created, but some bill details failed to save. Proceeding to create receipt.');
+          console.error("Failed to create bill details (non-fatal):", err);
+          alert(
+            "Bill created, but some bill details failed to save. Proceeding to create receipt."
+          );
         }
       } finally {
         setIsSaving(false);
       }
       // return normalized response with guaranteed id where possible
       return { ...(billMasterResp || {}), normalizedBillId: newBillId || null };
-     
     } catch (err) {
       console.error("Error creating bill:", err);
     }
-  }
+  };
   const billDeailSubmit = async (billId) => {
     if (!billId) return;
 
     // Build details array (may be empty)
-    const details = Array.isArray(tableRows) && tableRows.length > 0 ? tableRows.map((r) => {
-      const res = calculateNetFromAmount(r);
-      const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
-      const qty = Number(r.Qty) || 1;
-      const amount = rate * qty;
-      return {
-        FK_BillId: billId,
-        FK_ServiceId: String(r.FK_ServiceId || ""),
-        Rate: rate,
-        Unit: qty,
-        Amount: amount,
-        Discount: Number(res.discountAmount) || Number(r.Discount) || 0,
-        ServiceCharges: Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
-        NetAmt: Number(res.netAmount) || 0,
-        FK_PackageId: r.FK_PackageId || "",
-        IsPerformed: Boolean(r.IsPerformed) || false,
-        Remarks: r.Remarks || "",
-        Received: Boolean(r.Received) || false,
-        FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
-        FK_DoctorID: billDetails.FK_DoctorId ? String(billDetails.FK_DoctorId) : (selectedPatient?.doctorId ? String(selectedPatient.doctorId) : ""),
-      };
-    }) : [];
+    const details =
+      Array.isArray(tableRows) && tableRows.length > 0
+        ? tableRows.map((r) => {
+            const res = calculateNetFromAmount(r);
+            const rate = Number(r.RateGeneral) || Number(r.Rate) || 0;
+            const qty = Number(r.Qty) || 1;
+            const amount = rate * qty;
+            return {
+              FK_BillId: billId,
+              FK_ServiceId: String(r.FK_ServiceId || ""),
+              Rate: rate,
+              Unit: qty,
+              Amount: amount,
+              Discount: Number(res.discountAmount) || Number(r.Discount) || 0,
+              ServiceCharges:
+                Number(res.serviceChargeAmount) || Number(r.ServiceCharge) || 0,
+              NetAmt: Number(res.netAmount) || 0,
+              FK_PackageId: r.FK_PackageId || "",
+              IsPerformed: Boolean(r.IsPerformed) || false,
+              Remarks: r.Remarks || "",
+              Received: Boolean(r.Received) || false,
+              FK_BillableServiceTranID: r.FK_BillableServiceTranID || "",
+              FK_DoctorID: billDetails.FK_DoctorId
+                ? String(billDetails.FK_DoctorId)
+                : selectedPatient?.doctorId
+                ? String(selectedPatient.doctorId)
+                : "",
+            };
+          })
+        : [];
 
     // Prepare OPD payload
     const visitDateISO = new Date(billDate).toISOString();
-    const visitTime = billDetails.BillTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-    const ageParts = (selectedPatient?.ageYMD || '').split(/[^\d]+/).map(n => parseInt(n) || 0);
+    const visitTime =
+      billDetails.BillTime ||
+      new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    const ageParts = (selectedPatient?.ageYMD || "")
+      .split(/[^\d]+/)
+      .map((n) => parseInt(n) || 0);
     const opdPayload = {
       pkVisitId: `VISIT-${billId}`,
-      fkBranchId: String(billDetails.FK_BranchId || ''),
-      fkRegId: selectedPatient?.patientId || '',
-      fkPrimaryDoctorId: String(billDetails.FK_DoctorId || selectedPatient?.doctorId || ''),
+      fkBranchId: String(billDetails.FK_BranchId || ""),
+      fkRegId: selectedPatient?.patientId || "",
+      fkPrimaryDoctorId: String(
+        billDetails.FK_DoctorId || selectedPatient?.doctorId || ""
+      ),
       visitDate: visitDateISO,
       visitTime,
       ageYear: ageParts[0] || 0,
       ageMonth: ageParts[1] || 0,
       ageDays: ageParts[2] || 0,
-      fkBillCategoryId: String(billDetails.FK_CategoryId || ''),
-      fkPatientLocationId: selectedPatient?.locationId || '',
+      fkBillCategoryId: String(billDetails.FK_CategoryId || ""),
+      fkPatientLocationId: selectedPatient?.locationId || "",
       isWaiting: false,
-      remarks: billingRemarks || '',
+      remarks: billingRemarks || "",
       fkCreatedById: String(billDetails.FK_CreatedById || 1),
       isWalkIn: Boolean(selectedPatient?.isWalkIn),
-      fkPartyId: String(billDetails.FK_PartyId || ''),
-      oldRegId: selectedPatient?.oldNo || '',
+      fkPartyId: String(billDetails.FK_PartyId || ""),
+      oldRegId: selectedPatient?.oldNo || "",
     };
 
     try {
@@ -483,11 +642,25 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       const detailPromises = details.map((d) => createBillDetails(d).unwrap());
 
       // Only create OPD visit when Bill Type is "Consultation" (case-insensitive)
-      const selectedBillType = (billTypeList || []).find(b => String(b.id) === String(billDetails.FK_BillTypeId) || String(b.BillTypeId) === String(billDetails.FK_BillTypeId));
-      const billTypeName = (selectedBillType && (selectedBillType.name || selectedBillType.BillTypeName || selectedBillType.BillType || '') ) || '';
-      const isConsultation = String(billTypeName).toLowerCase().includes('consult');
+      const selectedBillType = (billTypeList || []).find(
+        (b) =>
+          String(b.id) === String(billDetails.FK_BillTypeId) ||
+          String(b.BillTypeId) === String(billDetails.FK_BillTypeId)
+      );
+      const billTypeName =
+        (selectedBillType &&
+          (selectedBillType.name ||
+            selectedBillType.BillTypeName ||
+            selectedBillType.BillType ||
+            "")) ||
+        "";
+      const isConsultation = String(billTypeName)
+        .toLowerCase()
+        .includes("consult");
 
-      const opdPromise = isConsultation ? createOpdVisit(opdPayload).unwrap() : null;
+      const opdPromise = isConsultation
+        ? createOpdVisit(opdPayload).unwrap()
+        : null;
 
       // Run all concurrently; include OPD promise only when applicable
       const allPromises = [...detailPromises];
@@ -498,37 +671,53 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       const detailResults = results.slice(0, detailPromises.length);
       const opdResult = opdPromise ? results[detailPromises.length] : null;
 
-      const failedDetails = detailResults.filter((r) => r.status === 'rejected');
-      const opdFailed = opdResult && opdResult.status === 'rejected';
+      const failedDetails = detailResults.filter(
+        (r) => r.status === "rejected"
+      );
+      const opdFailed = opdResult && opdResult.status === "rejected";
 
       if (failedDetails.length > 0 || opdFailed) {
-        console.error('Some operations failed', { failedDetails, opdFailed, results });
+        console.error("Some operations failed", {
+          failedDetails,
+          opdFailed,
+          results,
+        });
         if (failedDetails.length > 0 && opdFailed) {
-          alert('✅ Bill created, but failed to create OPD visit and one or more bill details. Check console.');
+          alert(
+            "✅ Bill created, but failed to create OPD visit and one or more bill details. Check console."
+          );
         } else if (failedDetails.length > 0) {
-          alert('✅ Bill created, but failed to create one or more bill details. Check console.');
+          alert(
+            "✅ Bill created, but failed to create one or more bill details. Check console."
+          );
         } else {
-          alert('✅ Bill created, but failed to create OPD visit. Check console.');
+          alert(
+            "✅ Bill created, but failed to create OPD visit. Check console."
+          );
         }
       } else {
         if (!isConsultation) {
-          alert('✅ Bill created successfully. OPD creation skipped because Bill Type is not "Consultation".');
+          alert(
+            '✅ Bill created successfully. OPD creation skipped because Bill Type is not "Consultation".'
+          );
         } else {
-          alert('✅ Bill created successfully!');
+          alert("✅ Bill created successfully!");
         }
       }
 
       // setSelectedPatient(null);
       // navigate('/Dashboard');
     } catch (err) {
-      console.error('Error creating bill details or OPD:', err);
-      alert('✅ Bill created, but failed to create one or more follow-up records. Check console.');
+      console.error("Error creating bill details or OPD:", err);
+      alert(
+        "✅ Bill created, but failed to create one or more follow-up records. Check console."
+      );
       setSelectedPatient(null);
       return;
     }
-  }
- 
-  const handleConfirmYes =() => {
+  };
+
+  const handleConfirmYes = () => {
     setOpenDialog(false);
     billMasterSubmit();
     //setSelectedPatient(null);
@@ -539,63 +728,94 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     setSubmittingWithReceipt(true);
 
     // Open print window immediately to avoid popup blockers (must be opened in direct user click)
-    let printWindow = window.open('', '_blank', 'width=900,height=700');
+    let printWindow = window.open("", "_blank", "width=900,height=700");
     if (printWindow) {
       try {
         printWindow.document.open();
-        printWindow.document.write('<html><head><title>Preparing receipt...</title></head><body><p>Preparing receipt...</p></body></html>');
+        printWindow.document.write(
+          "<html><head><title>Preparing receipt...</title></head><body><p>Preparing receipt...</p></body></html>"
+        );
         printWindow.document.close();
       } catch (e) {
         // ignore write errors
       }
     } else {
-      alert('Popup blocked — allow popups for this site to enable automatic printing. Receipt will still be created.');
+      alert(
+        "Popup blocked — allow popups for this site to enable automatic printing. Receipt will still be created."
+      );
     }
 
     try {
       // Create bill but don't navigate yet
       const billResp = await billMasterSubmit(true);
-      if (!billResp) throw new Error('Bill creation failed');
+      if (!billResp) throw new Error("Bill creation failed");
 
       // Compute totals
       const totals = calculateBillTotals();
-      const paymentDate = billDetails?.BillDate ? billDetails.BillDate.split('T')[0] : new Date().toISOString().slice(0,10);
-      const paymentTime = billDetails?.BillTime || new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-      const currencyAmount = Number(totals.totalNetAmount || totals.totalNet || totals.totalNetAmount) || Number(totals.totalNet) || 0;
+      const paymentDate = billDetails?.BillDate
+        ? billDetails.BillDate.split("T")[0]
+        : new Date().toISOString().slice(0, 10);
+      const paymentTime =
+        billDetails?.BillTime ||
+        new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      const currencyAmount =
+        Number(
+          totals.totalNetAmount || totals.totalNet || totals.totalNetAmount
+        ) ||
+        Number(totals.totalNet) ||
+        0;
 
       const receiptPayload = {
         fkBillingCompanyId: billDetails?.FK_BillingCompanyId || 1,
         fkBranchId: billDetails?.FK_BranchId || 1,
         fkFinyearId: billDetails?.FK_FinYearId || 1,
-        fkRegId: selectedPatient?.patientId || billDetails?.FK_RegId || '',
+        fkRegId: selectedPatient?.patientId || billDetails?.FK_RegId || "",
         fkDepositHeadId: billDetails?.FK_DepositHeadId || 0,
         receiptNo: billDetails?.BillNo || `REC-${Date.now()}`,
         paymentDate,
         paymentTime,
         fkDoctorId: billDetails?.FK_DoctorId || selectedPatient?.doctorId || 0,
-        fkCurrencyId: 'INR',
+        fkCurrencyId: "INR",
         currencyAmount,
         convertRatio: 1,
         amountINR: currencyAmount,
-        fkPayTypeId: billDetails?.FK_PaytypeID || 'CASH',
-        fkDepositTypeId: billDetails?.FK_DepositTypeId || 'OPD',
+        fkPayTypeId: billDetails?.FK_PaytypeID || "CASH",
+        fkDepositTypeId: billDetails?.FK_DepositTypeId || "OPD",
         isCoPayment: billDetails?.isCoPayment || false,
-        fkPartyId: billDetails?.FK_PartyId || selectedPatient?.partyId || selectedPatient?.patientId || '',
+        fkPartyId:
+          billDetails?.FK_PartyId ||
+          selectedPatient?.partyId ||
+          selectedPatient?.patientId ||
+          "",
         fkCreatedById: billDetails?.FK_CreatedById || 1,
-        userRemarks: billDetails?.Remarks || '',
-        counterName: billDetails?.counterName || 'Front Desk',
-        fkAppointmentID: billDetails?.FK_AppointmentID || billDetails?.FK_AppointmentId || selectedPatient?.appointmentId || '',
+        userRemarks: billDetails?.Remarks || "",
+        counterName: billDetails?.counterName || "Front Desk",
+        fkAppointmentID:
+          billDetails?.FK_AppointmentID ||
+          billDetails?.FK_AppointmentId ||
+          selectedPatient?.appointmentId ||
+          "",
       };
 
-      console.log('billResp for Submit & Receipt', billResp);
-      console.log('Computed totals for receipt', totals);
-      console.log('Receipt payload to send:', receiptPayload);
+      console.log("billResp for Submit & Receipt", billResp);
+      console.log("Computed totals for receipt", totals);
+      console.log("Receipt payload to send:", receiptPayload);
 
       // Validate we have a bill id to adjust
-      const adjustedBillId = billResp?.normalizedBillId || billResp?.billId || billResp?.PK_BillId || billDetails?.PK_BillId || billDetails?.BillNo || null;
-      console.log('Resolved adjustedBillId:', adjustedBillId);
+      const adjustedBillId =
+        billResp?.normalizedBillId ||
+        billResp?.billId ||
+        billResp?.PK_BillId ||
+        billDetails?.PK_BillId ||
+        billDetails?.BillNo ||
+        null;
+      console.log("Resolved adjustedBillId:", adjustedBillId);
       if (!adjustedBillId) {
-        const msg = 'Could not determine created bill id; aborting receipt creation.';
+        const msg =
+          "Could not determine created bill id; aborting receipt creation.";
         console.error(msg, { billResp, billDetails });
         alert(msg);
         throw new Error(msg);
@@ -604,14 +824,23 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       let receiptResp;
       try {
         receiptResp = await createReceiptMaster(receiptPayload).unwrap();
-        console.log('Receipt create response:', receiptResp);
+        console.log("Receipt create response:", receiptResp);
       } catch (err) {
-        console.error('createReceiptMaster failed:', err);
-        const errMsg = err?.data?.message || err?.error || err?.message || JSON.stringify(err);
+        console.error("createReceiptMaster failed:", err);
+        const errMsg =
+          err?.data?.message ||
+          err?.error ||
+          err?.message ||
+          JSON.stringify(err);
         alert(`Receipt create failed: ${errMsg}`);
         throw err; // bubble to outer catch to stop further steps
       }
-      const receiptId = receiptResp?.receiptId || receiptResp?.id || receiptResp?.PK_ReceiptId || receiptResp?.ReceiptId || `R${Date.now()}`;
+      const receiptId =
+        receiptResp?.receiptId ||
+        receiptResp?.id ||
+        receiptResp?.PK_ReceiptId ||
+        receiptResp?.ReceiptId ||
+        `R${Date.now()}`;
 
       const adjustmentPayload = {
         fkReceiptId: receiptId,
@@ -624,13 +853,19 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
         fkAdjustedById: billDetails?.FK_CreatedById || 1,
         adjustedDatetime: new Date().toISOString(),
       };
-      console.log('Adjustment payload to send:', adjustmentPayload);
+      console.log("Adjustment payload to send:", adjustmentPayload);
       try {
-        const adjResp = await createReceiptAdjustmentDetail(adjustmentPayload).unwrap();
-        console.log('Adjustment create response:', adjResp);
+        const adjResp = await createReceiptAdjustmentDetail(
+          adjustmentPayload
+        ).unwrap();
+        console.log("Adjustment create response:", adjResp);
       } catch (err) {
-        console.error('createReceiptAdjustmentDetail failed:', err);
-        const errMsg = err?.data?.message || err?.error || err?.message || JSON.stringify(err);
+        console.error("createReceiptAdjustmentDetail failed:", err);
+        const errMsg =
+          err?.data?.message ||
+          err?.error ||
+          err?.message ||
+          JSON.stringify(err);
         alert(`Adjustment create failed: ${errMsg}`);
         throw err;
       }
@@ -639,14 +874,28 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       try {
         const receiptNo = receiptPayload.receiptNo;
         const receiptDateTime = `${paymentDate} ${paymentTime}`;
-        const partyName = selectedPatient ? `${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}` : billDetails?.PartyName || 'Patient';
-          const html = renderReceiptHtml({ receiptNo, receiptDateTime, partyName, selectedPatient, totals, payType: billDetails?.FK_PaytypeID || 'CASH', billDetails });
+        const partyName = selectedPatient
+          ? `${selectedPatient.firstName || ""} ${
+              selectedPatient.lastName || ""
+            }`
+          : billDetails?.PartyName || "Patient";
+        const html = renderReceiptHtml({
+          receiptNo,
+          receiptDateTime,
+          partyName,
+          selectedPatient,
+          totals,
+          payType: billDetails?.FK_PaytypeID || "CASH",
+          billDetails,
+        });
         // Reuse printWindow opened at the start to avoid popup blocking; try to open again if missing
         if (!printWindow) {
-          printWindow = window.open('', '_blank', 'width=900,height=700');
+          printWindow = window.open("", "_blank", "width=900,height=700");
         }
         if (!printWindow) {
-          alert('Popup blocked — allow popups for this site to print. You can still view the receipt by navigating to Receipt & Payment.');
+          alert(
+            "Popup blocked — allow popups for this site to print. You can still view the receipt by navigating to Receipt & Payment."
+          );
         } else {
           try {
             printWindow.document.open();
@@ -655,34 +904,40 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             printWindow.focus();
             setTimeout(() => printWindow.print(), 300);
           } catch (err) {
-            console.error('Failed to write to print window', err);
-            alert('Unable to open print window. Please enable popups or use the Receipt & Payment preview to print.');
+            console.error("Failed to write to print window", err);
+            alert(
+              "Unable to open print window. Please enable popups or use the Receipt & Payment preview to print."
+            );
           }
         }
       } catch (err) {
-        console.error('Print after submit failed', err);
+        console.error("Print after submit failed", err);
       }
 
-      alert('Bill, receipt and adjustment saved successfully');
+      alert("Bill, receipt and adjustment saved successfully");
       // After all done, go back
       // setSelectedPatient(null);
       // navigate('/Dashboard');
     } catch (err) {
-      console.error('Submit & Receipt failed', err);
-      alert('Submit & Receipt failed. See console for details.');
+      console.error("Submit & Receipt failed", err);
+      alert("Submit & Receipt failed. See console for details.");
     } finally {
       setSubmittingWithReceipt(false);
     }
   };
   const handleInputChange = (index, field, value) => {
-    setTableRows(prev =>
+    setTableRows((prev) =>
       prev.map((row, i) => {
         if (i === index) {
           // Create a new mutable object from the row
           const newRow = { ...row };
 
           // For textual fields keep the string, otherwise parse number
-          if (field === "ServiceName" || field === "Remarks" || field === "FK_ServiceId") {
+          if (
+            field === "ServiceName" ||
+            field === "Remarks" ||
+            field === "FK_ServiceId"
+          ) {
             newRow[field] = value;
           } else {
             newRow[field] = Number(value) || 0;
@@ -717,14 +972,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
   // If user cancels (No)
   const handleConfirmNo = () => {
     setOpenDialog(false);
-   // setSelectedPatient(null); // Go back to patient list
+    // setSelectedPatient(null); // Go back to patient list
   };
   // Extract patients safely
   const patients = Array.isArray(patientsResp)
     ? patientsResp
     : patientsResp && Array.isArray(patientsResp.data)
-      ? patientsResp.data
-      : [];
+    ? patientsResp.data
+    : [];
   const paginatedPatients = filteredPatients.slice(
     (page - 1) * rowsPerPage,
     page * rowsPerPage
@@ -773,24 +1028,33 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
     try {
       const totals = calculateBillTotals();
       const paidAmount = Number(totals.totalNetAmount) || 0;
-      const billNoStr = billDetails?.BillNo || billNo || '';
-      const billDateTime = billDetails?.BillDate ? `${billDetails.BillDate} ${billDetails.BillTime || ''}` : new Date().toLocaleString();
-      const patientNameStr = selectedPatient ? `${selectedPatient.firstName || ''} ${selectedPatient.lastName || ''}` : (patient?.firstName || patient?.name || '');
+      const billNoStr = billDetails?.BillNo || billNo || "";
+      const billDateTime = billDetails?.BillDate
+        ? `${billDetails.BillDate} ${billDetails.BillTime || ""}`
+        : new Date().toLocaleString();
+      const patientNameStr = selectedPatient
+        ? `${selectedPatient.firstName || ""} ${selectedPatient.lastName || ""}`
+        : patient?.firstName || patient?.name || "";
 
       const html = renderBillHtml({
         billNo: billNoStr,
         billDateTime,
         patientName: patientNameStr,
         patient: selectedPatient || patient,
-        totals: { totalAmount: totals.totalGross, totalDiscount: totals.totalDiscount, totalServiceCharge: totals.totalServiceCharge, totalNet: totals.totalNetAmount },
+        totals: {
+          totalAmount: totals.totalGross,
+          totalDiscount: totals.totalDiscount,
+          totalServiceCharge: totals.totalServiceCharge,
+          totalNet: totals.totalNetAmount,
+        },
         tableRows,
         paidAmount,
         billDetails,
       });
 
-      const printWindow = window.open('', '_blank', 'width=1000,height=800');
+      const printWindow = window.open("", "_blank", "width=1000,height=800");
       if (!printWindow) {
-        alert('Popup blocked — allow popups for this site to print.');
+        alert("Popup blocked — allow popups for this site to print.");
         return;
       }
 
@@ -800,8 +1064,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
       printWindow.focus();
       setTimeout(() => printWindow.print(), 300);
     } catch (err) {
-      console.error('Bill print failed', err);
-      alert('Print failed, check console.');
+      console.error("Bill print failed", err);
+      alert("Print failed, check console.");
     }
   };
 
@@ -1012,8 +1276,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Patient Name"
-                  value={`${selectedPatient?.firstName || ""} ${selectedPatient?.lastName || ""
-                    }`}
+                  value={`${selectedPatient?.firstName || ""} ${
+                    selectedPatient?.lastName || ""
+                  }`}
                   size="small"
                   fullWidth
                 />
@@ -1021,8 +1286,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
               <Grid item xs={12} sm={6} md={3}>
                 <TextField
                   label="Age/Sex"
-                  value={`${selectedPatient?.ageYMD || ""} / ${selectedPatient?.sex || ""
-                    }`}
+                  value={`${selectedPatient?.ageYMD || ""} / ${
+                    selectedPatient?.sex || ""
+                  }`}
                   size="small"
                   fullWidth
                 />
@@ -1043,8 +1309,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       selectedPatient?.isWalkIn
                         ? "Walk-In"
                         : selectedPatient?.isAppointment
-                          ? "With Appointment"
-                          : "Walk-In"
+                        ? "With Appointment"
+                        : "Walk-In"
                     }
                     onChange={(e) => {
                       const value = e.target.value;
@@ -1053,6 +1319,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                         isWalkIn: value === "Walk-In",
                         isAppointment: value === "With Appointment",
                       }));
+                      if (value === "With Appointment") {
+                        handleWithAppointmentClick();
+                      }
                     }}
                   >
                     <FormControlLabel
@@ -1064,6 +1333,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       value="With Appointment"
                       control={<Radio />}
                       label="With Appointment"
+                      onClick={() => {handleWithAppointmentClick()}}
                     />
                   </RadioGroup>
                 </FormControl>
@@ -1090,7 +1360,12 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   <TextField
                     label="Invoice/Bill No"
                     value={billDetails.BillNo || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, BillNo: e.target.value }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        BillNo: e.target.value,
+                      }))
+                    }
                     size="small"
                     disabled={isViewMode}
                     fullWidth
@@ -1114,7 +1389,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     fullWidth
                     label="Select Branch"
                     value={billDetails.FK_BranchId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BranchId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        FK_BranchId: isNaN(Number(e.target.value))
+                          ? e.target.value
+                          : Number(e.target.value),
+                      }))
+                    }
                     disabled={isViewMode}
                     sx={{ width: "230px", height: "10px" }}
                   >
@@ -1132,7 +1414,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     fullWidth
                     label="Select FinYear"
                     value={billDetails.FK_FinYearId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_FinYearId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        FK_FinYearId: isNaN(Number(e.target.value))
+                          ? e.target.value
+                          : Number(e.target.value),
+                      }))
+                    }
                     disabled={isViewMode}
                     sx={{ width: "230px", height: "10px" }}
                   >
@@ -1161,9 +1450,17 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     fullWidth
                     label="Select BillSeries"
                     value={billDetails.FK_BillSerieseId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BillSerieseId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        FK_BillSerieseId: isNaN(Number(e.target.value))
+                          ? e.target.value
+                          : Number(e.target.value),
+                      }))
+                    }
                     disabled={isViewMode}
-                    sx={{ width: "230px", height: "10px" }}                  >
+                    sx={{ width: "230px", height: "10px" }}
+                  >
                     <MenuItem value=""></MenuItem>
                     {BillSeries.map((bill) => (
                       <MenuItem key={bill.id} value={bill.id}>
@@ -1178,7 +1475,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     fullWidth
                     label="Bill Type entry"
                     value={billDetails.FK_BillTypeId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_BillTypeId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        FK_BillTypeId: isNaN(Number(e.target.value))
+                          ? e.target.value
+                          : Number(e.target.value),
+                      }))
+                    }
                     disabled={isViewMode}
                     sx={{ width: "230px", height: "10px" }}
                   >
@@ -1197,7 +1501,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     fullWidth
                     label="Select Category"
                     value={billDetails.FK_CategoryId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_CategoryId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        FK_CategoryId: isNaN(Number(e.target.value))
+                          ? e.target.value
+                          : Number(e.target.value),
+                      }))
+                    }
                     disabled={isViewMode}
                     sx={{ width: "230px", height: "10px" }}
                   >
@@ -1216,7 +1527,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                     fullWidth
                     label="Select Doctor"
                     value={billDetails.FK_DoctorId || ""}
-                    onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_DoctorId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                    onChange={(e) =>
+                      setBillDetails((prev) => ({
+                        ...prev,
+                        FK_DoctorId: isNaN(Number(e.target.value))
+                          ? e.target.value
+                          : Number(e.target.value),
+                      }))
+                    }
                     disabled={isViewMode}
                     sx={{ width: "230px", height: "10px" }}
                   >
@@ -1245,7 +1563,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       fullWidth
                       label="Reffered By"
                       value={billDetails.FK_ReferredById || ""}
-                      onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_ReferredById: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                      onChange={(e) =>
+                        setBillDetails((prev) => ({
+                          ...prev,
+                          FK_ReferredById: isNaN(Number(e.target.value))
+                            ? e.target.value
+                            : Number(e.target.value),
+                        }))
+                      }
                       disabled={isViewMode}
                       sx={{ width: "230px", height: "10px" }}
                     >
@@ -1263,7 +1588,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       fullWidth
                       label="Select Party Name"
                       value={billDetails.FK_PartyId || ""}
-                      onChange={(e) => setBillDetails((prev) => ({ ...prev, FK_PartyId: isNaN(Number(e.target.value)) ? e.target.value : Number(e.target.value) }))}
+                      onChange={(e) =>
+                        setBillDetails((prev) => ({
+                          ...prev,
+                          FK_PartyId: isNaN(Number(e.target.value))
+                            ? e.target.value
+                            : Number(e.target.value),
+                        }))
+                      }
                       disabled={isViewMode}
                       sx={{ width: "230px", height: "10px" }}
                     >
@@ -1295,22 +1627,27 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                       select
                       fullWidth
                       label="Rate Type"
-                      name="rateListId"              // ✅ REQUIRED for form submit
+                      name="rateListId" // ✅ REQUIRED for form submit
                       value={selectedRateListId}
                       sx={{ width: "230px" }}
-
                       onClick={() => {
                         if (selectedRateListId) {
                           setOpenPopup(true);
                         }
                       }}
-                     disabled={isViewMode}
+                      disabled={isViewMode}
                       onChange={(e) => {
                         const value = e.target.value;
                         setSelectedRateListId(value);
-                        const sel = (rateList || []).find(i => String(i.rateListId) === String(value) || String(i._id) === String(value) || String(i.id) === String(value));
-                        const name = sel?.RateListName || sel?.RateList || sel?.name || '';
-                        setBillDetails(prev => ({
+                        const sel = (rateList || []).find(
+                          (i) =>
+                            String(i.rateListId) === String(value) ||
+                            String(i._id) === String(value) ||
+                            String(i.id) === String(value)
+                        );
+                        const name =
+                          sel?.RateListName || sel?.RateList || sel?.name || "";
+                        setBillDetails((prev) => ({
                           ...prev,
                           RateType: name,
                         }));
@@ -1321,20 +1658,29 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                         }
                       }}
                     >
-                      <MenuItem value=""><em>Select Rate Type</em></MenuItem>
+                      <MenuItem value="">
+                        <em>Select Rate Type</em>
+                      </MenuItem>
                       {(rateList || []).length === 0 ? (
-                        <MenuItem value="" disabled>No Rate Types available</MenuItem>
+                        <MenuItem value="" disabled>
+                          No Rate Types available
+                        </MenuItem>
                       ) : (
                         (rateList || []).map((item) => {
                           const val = item.rateListId || item._id || item.id;
-                          const label = item.RateListName || item.RateList || item.name || 'Unnamed Rate';
+                          const label =
+                            item.RateListName ||
+                            item.RateList ||
+                            item.name ||
+                            "Unnamed Rate";
                           return (
-                            <MenuItem key={val} value={val}>{label}</MenuItem>
+                            <MenuItem key={val} value={val}>
+                              {label}
+                            </MenuItem>
                           );
                         })
                       )}
                     </TextField>
-
                   </Grid>
                   <Grid
                     item
@@ -1389,10 +1735,29 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                             <TableCell>
                               <TextField
                                 size="small"
-                                value={row.ServiceName !== undefined && row.ServiceName !== null ? row.ServiceName : row.FK_ServiceId || ""}
-                                onChange={(e) => handleInputChange(index, "ServiceName", e.target.value)}
-                                onClick={() => { if (!isViewMode) { setEditingRowIndex(index); setOpenPopup(true); } }}
-                                sx={{ width: 100, cursor: isViewMode ? 'default' : 'pointer' }}
+                                value={
+                                  row.ServiceName !== undefined &&
+                                  row.ServiceName !== null
+                                    ? row.ServiceName
+                                    : row.FK_ServiceId || ""
+                                }
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    index,
+                                    "ServiceName",
+                                    e.target.value
+                                  )
+                                }
+                                onClick={() => {
+                                  if (!isViewMode) {
+                                    setEditingRowIndex(index);
+                                    setOpenPopup(true);
+                                  }
+                                }}
+                                sx={{
+                                  width: 100,
+                                  cursor: isViewMode ? "default" : "pointer",
+                                }}
                                 disabled={isViewMode}
                               />
                               {/* Service selection is handled via the popup — inline dropdown removed */}
@@ -1403,7 +1768,11 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                                 size="small"
                                 value={row.RateGeneral || ""}
                                 onChange={(e) =>
-                                  handleInputChange(index, "RateGeneral", e.target.value)
+                                  handleInputChange(
+                                    index,
+                                    "RateGeneral",
+                                    e.target.value
+                                  )
                                 }
                                 sx={{ width: 100 }}
                                 disabled={isViewMode}
@@ -1416,7 +1785,11 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                                 size="small"
                                 value={row.Qty || 1}
                                 onChange={(e) =>
-                                  handleInputChange(index, "Qty", e.target.value)
+                                  handleInputChange(
+                                    index,
+                                    "Qty",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isViewMode}
                               />
@@ -1426,9 +1799,18 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                             <TableCell>
                               <TextField
                                 size="small"
-                                value={row.Discountpercent !== undefined && row.Discountpercent > 0 ? row.Discountpercent : result.discountPercent}
+                                value={
+                                  row.Discountpercent !== undefined &&
+                                  row.Discountpercent > 0
+                                    ? row.Discountpercent
+                                    : result.discountPercent
+                                }
                                 onChange={(e) =>
-                                  handleInputChange(index, "Discountpercent", e.target.value)
+                                  handleInputChange(
+                                    index,
+                                    "Discountpercent",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isViewMode}
                               />
@@ -1438,9 +1820,17 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                             <TableCell>
                               <TextField
                                 size="small"
-                                value={row.Discount !== undefined && row.Discount > 0 ? row.Discount : result.discountAmount}
+                                value={
+                                  row.Discount !== undefined && row.Discount > 0
+                                    ? row.Discount
+                                    : result.discountAmount
+                                }
                                 onChange={(e) =>
-                                  handleInputChange(index, "Discount", e.target.value)
+                                  handleInputChange(
+                                    index,
+                                    "Discount",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isViewMode}
                               />
@@ -1451,9 +1841,18 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                               <TextField
                                 sx={{ width: "80px" }}
                                 size="small"
-                                value={row.SCPercent !== undefined && row.SCPercent > 0 ? row.SCPercent : result.serviceChargePercent}
+                                value={
+                                  row.SCPercent !== undefined &&
+                                  row.SCPercent > 0
+                                    ? row.SCPercent
+                                    : result.serviceChargePercent
+                                }
                                 onChange={(e) =>
-                                  handleInputChange(index, "SCPercent", e.target.value)
+                                  handleInputChange(
+                                    index,
+                                    "SCPercent",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isViewMode}
                               />
@@ -1464,9 +1863,18 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                               <TextField
                                 sx={{ width: "80px" }}
                                 size="small"
-                                value={row.ServiceCharge !== undefined && row.ServiceCharge > 0 ? row.ServiceCharge : result.serviceChargeAmount}
+                                value={
+                                  row.ServiceCharge !== undefined &&
+                                  row.ServiceCharge > 0
+                                    ? row.ServiceCharge
+                                    : result.serviceChargeAmount
+                                }
                                 onChange={(e) =>
-                                  handleInputChange(index, "ServiceCharge", e.target.value)
+                                  handleInputChange(
+                                    index,
+                                    "ServiceCharge",
+                                    e.target.value
+                                  )
                                 }
                                 disabled={isViewMode}
                               />
@@ -1486,7 +1894,13 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                               <TextField
                                 size="small"
                                 value={row.Remarks || ""}
-                                onChange={(e) => handleInputChange(index, "Remarks", e.target.value)}
+                                onChange={(e) =>
+                                  handleInputChange(
+                                    index,
+                                    "Remarks",
+                                    e.target.value
+                                  )
+                                }
                                 disabled={isViewMode}
                               />
                             </TableCell>
@@ -1514,35 +1928,55 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                         );
                       })}
                   </TableBody>
-
                 </Table>
 
                 {/* Popup */}
-                <Dialog open={openPopup} onClose={() => { setOpenPopup(false); setEditingRowIndex(null); }} fullWidth maxWidth="md">
-                  <DialogTitle>{editingRowIndex !== null ? 'Choose service to update row' : 'Select Services'}</DialogTitle>
+                <Dialog
+                  open={openPopup}
+                  onClose={() => {
+                    setOpenPopup(false);
+                    setEditingRowIndex(null);
+                  }}
+                  fullWidth
+                  maxWidth="md"
+                >
+                  <DialogTitle>
+                    {editingRowIndex !== null
+                      ? "Choose service to update row"
+                      : "Select Services"}
+                  </DialogTitle>
                   <DialogContent>
                     {result?.length ? (
                       // Deduplicate by FK_ServiceId so duplicate SRV codes are not shown repeatedly
-                      Array.from(new Map((result || []).map(i => [(i.serviceName || i._id || i.id), i])).values()).map((item, idx) => (
+                      Array.from(
+                        new Map(
+                          (result || []).map((i) => [
+                            i.serviceName || i._id || i.id,
+                            i,
+                          ])
+                        ).values()
+                      ).map((item, idx) => (
                         <div
                           key={item.FK_ServiceId || item._id || item.id || idx}
                           style={{
-                            display: 'grid',
-                            gridTemplateColumns: '40px 1fr 150px',
-                            padding: '8px 0',
-                            borderBottom: '1px solid #ddd',
-                            cursor: 'pointer',
+                            display: "grid",
+                            gridTemplateColumns: "40px 1fr 150px",
+                            padding: "8px 0",
+                            borderBottom: "1px solid #ddd",
+                            cursor: "pointer",
                           }}
                           onClick={(e) => {
                             // toggle checkbox when clicking the row (but not checkbox itself)
-                            if (e.target.type !== 'checkbox') {
+                            if (e.target.type !== "checkbox") {
                               setSelectedServices((prev) => {
                                 const isAlreadySelected = prev.some(
-                                  (service) => service.FK_ServiceId === item.FK_ServiceId
+                                  (service) =>
+                                    service.FK_ServiceId === item.FK_ServiceId
                                 );
                                 if (isAlreadySelected) {
                                   return prev.filter(
-                                    (service) => service.FK_ServiceId !== item.FK_ServiceId
+                                    (service) =>
+                                      service.FK_ServiceId !== item.FK_ServiceId
                                   );
                                 } else {
                                   return [...prev, item];
@@ -1553,17 +1987,20 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                         >
                           <Checkbox
                             checked={selectedServices.some(
-                              (service) => service.FK_ServiceId === item.FK_ServiceId
+                              (service) =>
+                                service.FK_ServiceId === item.FK_ServiceId
                             )}
                             onChange={(e) => {
                               e.stopPropagation();
                               setSelectedServices((prev) => {
                                 const isAlreadySelected = prev.some(
-                                  (service) => service.FK_ServiceId === item.FK_ServiceId
+                                  (service) =>
+                                    service.FK_ServiceId === item.FK_ServiceId
                                 );
                                 if (isAlreadySelected) {
                                   return prev.filter(
-                                    (service) => service.FK_ServiceId !== item.FK_ServiceId
+                                    (service) =>
+                                      service.FK_ServiceId !== item.FK_ServiceId
                                   );
                                 } else {
                                   return [...prev, item];
@@ -1572,8 +2009,15 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                             }}
                           />
                           <span>
-                            {item.ServiceName || item.serviceName || item.Service || item.name || item.FK_ServiceId}
-                            {item.FK_ServiceId && (item.ServiceName || item.serviceName) ? ` (${item.FK_ServiceId})` : ''}
+                            {item.ServiceName ||
+                              item.serviceName ||
+                              item.Service ||
+                              item.name ||
+                              item.FK_ServiceId}
+                            {item.FK_ServiceId &&
+                            (item.ServiceName || item.serviceName)
+                              ? ` (${item.FK_ServiceId})`
+                              : ""}
                           </span>
                         </div>
                       ))
@@ -1583,7 +2027,15 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   </DialogContent>
 
                   <DialogActions>
-                    <Button onClick={() => { setOpenPopup(false); setSelectedServices([]); setEditingRowIndex(null); }}>Cancel</Button>
+                    <Button
+                      onClick={() => {
+                        setOpenPopup(false);
+                        setSelectedServices([]);
+                        setEditingRowIndex(null);
+                      }}
+                    >
+                      Cancel
+                    </Button>
                     <Button
                       variant="contained"
                       disabled={selectedServices.length === 0}
@@ -1597,7 +2049,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                           setEditingRowIndex(null);
                           setOpenPopup(false);
                         } else {
-                          selectedServices.forEach((item) => handleAddRow(item));
+                          selectedServices.forEach((item) =>
+                            handleAddRow(item)
+                          );
                           setSelectedServices([]);
                           setOpenPopup(false);
                         }
@@ -1618,7 +2072,10 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 onChange={(e) => {
                   const v = e.target.value;
                   setPartyName(v);
-                  setBillDetails((prev) => ({ ...prev, FK_PartyId: isNaN(Number(v)) ? v : Number(v) }));
+                  setBillDetails((prev) => ({
+                    ...prev,
+                    FK_PartyId: isNaN(Number(v)) ? v : Number(v),
+                  }));
                 }}
                 sx={{ width: "230px", height: "10px" }}
               >
@@ -1628,7 +2085,6 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   </MenuItem>
                 ))}
               </TextField>
-
             </Grid>
 
             <Box
@@ -1648,8 +2104,8 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   value={(() => {
                     const totals = calculateBillTotals();
                     const amount = Number(totals.totalNetAmount);
-                    if (amount === 100) return 'One Hundred';
-                    if (amount === 200) return 'Two Hundred';
+                    if (amount === 100) return "One Hundred";
+                    if (amount === 200) return "Two Hundred";
                     return amount.toString();
                   })()}
                   disabled
@@ -1660,11 +2116,24 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   const totals = calculateBillTotals();
                   return (
                     <>
-                      <Typography><strong>Total Amount:</strong> {totals.totalGross}</Typography>
-                      <Typography><strong>Service Charge:</strong> {totals.totalServiceCharge}</Typography>
-                      <Typography><strong>Less Discount:</strong> {totals.totalDiscount}</Typography>
-                      <Typography><strong>Net Bill Amount:</strong> {totals.totalNetAmount}</Typography>
-                      <Typography><strong>Current Payable:</strong> {totals.totalNetAmount}</Typography>
+                      <Typography>
+                        <strong>Total Amount:</strong> {totals.totalGross}
+                      </Typography>
+                      <Typography>
+                        <strong>Service Charge:</strong>{" "}
+                        {totals.totalServiceCharge}
+                      </Typography>
+                      <Typography>
+                        <strong>Less Discount:</strong> {totals.totalDiscount}
+                      </Typography>
+                      <Typography>
+                        <strong>Net Bill Amount:</strong>{" "}
+                        {totals.totalNetAmount}
+                      </Typography>
+                      <Typography>
+                        <strong>Current Payable:</strong>{" "}
+                        {totals.totalNetAmount}
+                      </Typography>
                     </>
                   );
                 })()}
@@ -1674,7 +2143,14 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             <Divider sx={{ my: 2 }} />
 
             {/* ===== BILLING REMARKS ===== */}
-            <TextField label="Billing Remarks" fullWidth size="small" value={billingRemarks} onChange={(e) => setBillingRemarks(e.target.value)} disabled={isViewMode} />
+            <TextField
+              label="Billing Remarks"
+              fullWidth
+              size="small"
+              value={billingRemarks}
+              onChange={(e) => setBillingRemarks(e.target.value)}
+              disabled={isViewMode}
+            />
 
             {/* ===== ACTION BUTTONS ===== */}
             <Box
@@ -1693,14 +2169,20 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                 Print
               </Button>
 
-              {billDetails.BillNo &&<Button
-                variant="outlined"
-                color="primary"
-                onClick={() => navigate('/BillReceipt', { state: { billDetails, tableRows, selectedPatient } })}
-                sx={{ borderRadius: 2, textTransform: "none", px: 3, mr: 1 }}
-              >
-                Receipt & Payment
-              </Button>}
+              {billDetails.BillNo && (
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  onClick={() =>
+                    navigate("/BillReceipt", {
+                      state: { billDetails, tableRows, selectedPatient },
+                    })
+                  }
+                  sx={{ borderRadius: 2, textTransform: "none", px: 3, mr: 1 }}
+                >
+                  Receipt & Payment
+                </Button>
+              )}
 
               <Button
                 variant="outlined"
@@ -1723,7 +2205,9 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   mr: 1,
                 }}
               >
-                {submittingWithReceipt ? 'Saving & Printing...' : 'Submit & Receipt'}
+                {submittingWithReceipt
+                  ? "Saving & Printing..."
+                  : "Submit & Receipt"}
               </Button>
 
               <Button
@@ -1738,7 +2222,7 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
                   px: 3,
                 }}
               >
-                {isSaving ? 'Saving...' : 'Submit'}
+                {isSaving ? "Saving..." : "Submit"}
               </Button>
             </Box>
           </Paper>
@@ -1762,21 +2246,114 @@ const BillingInformation = ({ doctorList = [], billTypeList = [], categoryList =
             variant="contained"
             disabled={isSaving}
           >
-            {isSaving ? 'Saving...' : 'Yes'}
+            {isSaving ? "Saving..." : "Yes"}
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Dialog
+        open={openAppointmentPopup}
+        onClose={() => setOpenAppointmentPopup(false)}
+        fullWidth
+        maxWidth="md"
+      >
+        <DialogContent>
+          {todayAppointments.length === 0 ? (
+            <Typography>No appointments for today</Typography>
+          ) : (
+            <TableContainer>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    {[
+                      "RegId",
+                      "Doctor Name",
+                      "Patient Name",
+                      "Age",
+                      "Sex",
+                      "Mobile",
+                    ].map((h) => (
+                      <TableCell
+                        key={h}
+                        sx={{ backgroundColor: "#578EE5", color: "#fff" }}
+                      >
+                        {h}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                </TableHead>
+
+                <TableBody>
+                  {todayAppointments.map((appt) => (
+                    <TableRow 
+                      key={appt.appointmentId}
+                      hover
+                      sx={{cursor:'pointer'}}
+                      onClick={() => handleAppointmentSelect(appt)}
+                    >
+                      <TableCell>{appt.fkRegId}</TableCell>
+                      <TableCell>{appt.fkConsultantId}</TableCell>
+                      <TableCell>{appt.firstName} {appt.lastName}</TableCell>
+                      <TableCell>{appt.ageYear}</TableCell>
+                      <TableCell>{appt.sex}</TableCell>
+                      <TableCell>{appt.contactNo}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+
+              </Table>
+            </TableContainer>
+            // todayAppointments.map((appt) => (
+            //   <Box
+            //     key={appt.appointmentId}
+            //     sx={{
+            //       p: 1,
+            //       borderBottom: "1px solid #ddd",
+            //       cursor: "pointer",
+            //     }}
+            //     onClick={() => handleAppointmentSelect(appt)}
+            //   >
+            //     <Box>
+            //       <TableContainer
+            //         sx={{ mt: 2, width: "100%", overflowX: "auto" }}
+            //       >
+            //         <Table stickyHeader size="small" sx={{ minWidth: 900 }}>
+            //           <TableHead>
+            //             <TableRow>
+            //               {[
+            //                 "RegId",
+            //                 "Doctor Name",
+            //                 "Patient Name",
+            //                 "Age",
+            //                 "Sex",
+            //                 "Number",
+            //               ].map((h) => (
+            //                 <TableCell
+            //                   key={h}
+            //                   sx={{ backgroundColor: "#578EE5", color: "#fff" }}
+            //                 >
+            //                   {h}
+            //                 </TableCell>
+            //               ))}
+            //             </TableRow>
+            //           </TableHead>
+            //         </Table>
+            //       </TableContainer>
+            //     </Box>
+            //   </Box>
+            // ))
+          )}
+        </DialogContent>
+      </Dialog>
       {/* // pagination */}
-      <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
         <Pagination
           count={Math.ceil(filteredPatients.length / rowsPerPage)}
           page={page}
           onChange={(e, value) => setPage(value)}
-          color='primary'
+          color="primary"
         />
-
       </Box>
-
     </Box>
   );
 };

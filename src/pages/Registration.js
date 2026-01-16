@@ -16,7 +16,16 @@ import {
 } from "@mui/material";
 import { useCreatePatientMutation } from "../features/api/patientsApi";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import {useGetPatientIdQuery } from "../features/api/patientsApi";
+import { useGetPatientIdQuery } from "../features/api/patientsApi";
+import { useLocation } from "react-router-dom";
+
+// Helper function to convert ISO date to YYYY-MM-DD format
+const formatDateForInput = (isoDate) => {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return ""; // Invalid date
+  return date.toISOString().split("T")[0];
+};
 
 const now = new Date();
 const ist = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
@@ -76,6 +85,8 @@ const defaultPatient = {
 export default function PatientRegistrationForm() {
   const [patient, setPatient] = useState(defaultPatient);
   const [errors, setErrors] = useState({});
+  const location = useLocation();
+  const appointmentData = location.state?.appointmentData;
   const [createPatient, { isLoading, isSuccess, isError, error }] =
     useCreatePatientMutation();
   const { data: PatientId } = useGetPatientIdQuery();
@@ -89,14 +100,35 @@ export default function PatientRegistrationForm() {
     "lastName",
     "dateOfBirth",
   ];
-React.useEffect(() => {
-  if (PatientId?.patientId) {
-    setPatient((prev) => ({
-      ...prev,
-      patientId:PatientId?.patientId,
-    }));
-  }
-}, [PatientId]);
+  React.useEffect(() => {
+    if (PatientId?.patientId) {
+      setPatient((prev) => ({
+        ...prev,
+        patientId: PatientId?.patientId,
+      }));
+    }
+  }, [PatientId]);
+
+  React.useEffect(() => {
+    if (appointmentData) {
+      setPatient((prev) => ({
+        ...prev,
+        firstName: appointmentData.firstName || "",
+        lastName: appointmentData.lastName || "",
+        sex: appointmentData.sex || "",
+        ageYMD: appointmentData.ageYear || "",
+        dateOfBirth: formatDateForInput(appointmentData.dob) || "",
+        branch:appointmentData.fkBranchId || "",
+        title:appointmentData.initial || "",
+        permanentAddress: {
+          ...prev.permanentAddress,
+          mobileNo: appointmentData.contactNo || "",
+          addressLine:appointmentData.address || "",
+          cityName:appointmentData.fkCityId || "",
+        },
+      }));
+    }
+  },[appointmentData]);
 
   // Function to calculate age (years) from DOB
   const calculateAge = (dob) => {
@@ -181,7 +213,11 @@ React.useEffect(() => {
       if (years < 0) years = 0;
       if (years > 150) years = 150;
       const dob = calculateDOBFromYears(years);
-      setPatient((prev) => ({ ...prev, ageYMD: String(years), dateOfBirth: dob }));
+      setPatient((prev) => ({
+        ...prev,
+        ageYMD: String(years),
+        dateOfBirth: dob,
+      }));
       return;
     }
 
@@ -207,27 +243,37 @@ React.useEffect(() => {
       temp.lastName = "Last Name is required";
     if (requiredFields.includes("dateOfBirth") && !patient.dateOfBirth)
       temp.dateOfBirth = "Date of Birth is required";
-    if (!patient.permanentAddress.addressLine) temp["permanentAddress.addressLine"] = "Address is requiered";
-    if (!patient.permanentAddress.mobileNo) { temp["permanentAddress.mobileNo"] = "Mobile No is requiered"; }
-    if (!patient.permanentAddress.district) { temp["permanentAddress.district"] = "District is requiered"; }
-    if (!patient.permanentAddress.cityName) { temp["permanentAddress.cityName"] = "City Name is requiered"; }
-    if (!patient.permanentAddress.stateName) { temp["permanentAddress.stateName"] = "State Name is requiered"; }
-    if (!patient.permanentAddress.country) { temp["permanentAddress.country"] = "Country is requiered"; }
+    if (!patient.permanentAddress.addressLine)
+      temp["permanentAddress.addressLine"] = "Address is requiered";
+    if (!patient.permanentAddress.mobileNo) {
+      temp["permanentAddress.mobileNo"] = "Mobile No is requiered";
+    }
+    if (!patient.permanentAddress.district) {
+      temp["permanentAddress.district"] = "District is requiered";
+    }
+    if (!patient.permanentAddress.cityName) {
+      temp["permanentAddress.cityName"] = "City Name is requiered";
+    }
+    if (!patient.permanentAddress.stateName) {
+      temp["permanentAddress.stateName"] = "State Name is requiered";
+    }
+    if (!patient.permanentAddress.country) {
+      temp["permanentAddress.country"] = "Country is requiered";
+    }
 
-console.log("Validation errors:", temp);
+    console.log("Validation errors:", temp);
     setErrors(temp);
     return Object.keys(temp).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-console.log("Submitting patient:");
+    console.log("Submitting patient:");
     if (!validate()) {
       // keep the accordion open and focus is optional — here we simply stop submit
       return;
     }
     try {
-      
       await createPatient(patient).unwrap();
       setPatient(defaultPatient);
       setErrors({});
@@ -297,47 +343,47 @@ console.log("Submitting patient:");
               <Grid container spacing={4}>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
-                    fullWidth                   
+                    fullWidth
                     name="patientId"
                     defaultValue={PatientId?.patientId}
                     onChange={handleChange}
                     size="small"
-                    type="text"  
-                    disabled                
+                    type="text"
+                    disabled
                   />
-                </Grid>                
+                </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
                     label="Branch"
-                    name="branch"                   
+                    name="branch"
                     onChange={handleChange}
                     size="small"
-                    type="text"                                    
-                  />                  
+                    type="text"
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
                     label="Date & Time"
-                    name="dateTime" 
-                    value={patient.dateTime}                  
+                    name="dateTime"
+                    value={patient.dateTime}
                     onChange={handleChange}
                     size="small"
                     disabled
-                    type="text"                                    
-                  />                  
+                    type="text"
+                  />
                 </Grid>
-                 <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} sm={6} md={3}>
                   <TextField
                     fullWidth
                     label="Old No"
-                    name="oldNo" 
-                    value={patient.oldNo}                  
+                    name="oldNo"
+                    value={patient.oldNo}
                     onChange={handleChange}
                     size="small"
-                    type="text"                                    
-                  />                  
+                    type="text"
+                  />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>
                   <TextField
@@ -415,8 +461,8 @@ console.log("Submitting patient:");
                       errors.dateOfBirth
                         ? errors.dateOfBirth
                         : isFutureDOB
-                          ? "Future dates not allowed"
-                          : "Select date to auto-calculate age"
+                        ? "Future dates not allowed"
+                        : "Select date to auto-calculate age"
                     }
                   />
                 </Grid>
@@ -453,7 +499,7 @@ console.log("Submitting patient:");
             </AccordionDetails>
           </Accordion>
 
-          {/*  ADDRESS */ }
+          {/*  ADDRESS */}
           <Accordion>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <Typography variant="h6" fontWeight="bold" color="primary">
@@ -637,7 +683,13 @@ console.log("Submitting patient:");
           </Accordion>
 
           {/* BUTTONS */}
-          <Box display="flex" justifyContent="flex-end" flexWrap="wrap" gap={2} mt={3}>
+          <Box
+            display="flex"
+            justifyContent="flex-end"
+            flexWrap="wrap"
+            gap={2}
+            mt={3}
+          >
             <Button
               variant="outlined"
               color="secondary"

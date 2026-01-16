@@ -547,7 +547,7 @@ const AppointmentManager = () => {
                       <TableCell>{booked?.remarks ?? "--"}</TableCell>
                     </TableRow>
                   );
-                })}date
+                })}
             </TableBody>
           </Table>
         </TableContainer>
