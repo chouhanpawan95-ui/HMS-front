@@ -111,6 +111,11 @@ export default function PatientRegistrationForm() {
 
   React.useEffect(() => {
     if (appointmentData) {
+      console.log("Appointment Data:", appointmentData);
+      // Clean title by removing period if present
+      let cleanTitle = appointmentData.initial || appointmentData.title || "";
+      cleanTitle = cleanTitle.replace(".", ""); // Remove period from "Mrs." -> "Mrs"
+      
       setPatient((prev) => ({
         ...prev,
         firstName: appointmentData.firstName || "",
@@ -118,17 +123,17 @@ export default function PatientRegistrationForm() {
         sex: appointmentData.sex || "",
         ageYMD: appointmentData.ageYear || "",
         dateOfBirth: formatDateForInput(appointmentData.dob) || "",
-        branch:appointmentData.fkBranchId || "",
-        title:appointmentData.initial || "",
+        branch: appointmentData.fkBranchId || "",
+        title: cleanTitle,
         permanentAddress: {
           ...prev.permanentAddress,
-          mobileNo: appointmentData.contactNo || "",
-          addressLine:appointmentData.address || "",
-          cityName:appointmentData.fkCityId || "",
+          mobileNo: appointmentData.contactNo || appointmentData.phoneNo || "",
+          addressLine: appointmentData.address || "",
+          cityName: appointmentData.fkCityId || "",
         },
       }));
     }
-  },[appointmentData]);
+  }, [appointmentData]);
 
   // Function to calculate age (years) from DOB
   const calculateAge = (dob) => {
@@ -357,9 +362,14 @@ export default function PatientRegistrationForm() {
                     fullWidth
                     label="Branch"
                     name="branch"
+                    value={patient.branch}
                     onChange={handleChange}
                     size="small"
                     type="text"
+                    error={Boolean(errors.branch)}
+                    helperText={errors.branch}
+                    required={requiredFields.includes("branch")}
+                    InputLabelProps={{shrink:true}}
                   />
                 </Grid>
                 <Grid item xs={12} sm={6} md={3}>

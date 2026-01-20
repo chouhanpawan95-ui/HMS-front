@@ -50,6 +50,23 @@ import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import { useGetOPDAppointmentQuery} from '../features/api/scheduleApi.js';
+
+// Helper function to convert ISO date to datetime-local format (YYYY-MM-DDTHH:mm)
+const formatDateForDatetimeLocal = (isoDate) => {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return ""; // Invalid date
+  return date.toISOString().slice(0, 16);
+};
+
+// Helper function to convert ISO date to date format (YYYY-MM-DD)
+const formatDateForInput = (isoDate) => {
+  if (!isoDate) return "";
+  const date = new Date(isoDate);
+  if (isNaN(date.getTime())) return ""; // Invalid date
+  return date.toISOString().split("T")[0];
+};
+
 const BranchName = [
   { id: 1, BranchName: "Indore" },
   { id: 2, BranchName: "Bhopal" },
@@ -220,6 +237,18 @@ const BillingInformation = ({
       });
       return;
     }
+    
+    // Map branch code to numeric ID
+    const branchMap = {
+      "BR01": 1, // Indore
+      "BR02": 2, // Bhopal
+      "BR03": 3, // Gwalior
+      "BR04": 4, // Agar
+      "BR05": 5, // Ujjain
+    };
+    const numericBranchId = branchMap[appt.fkBranchId];
+    console.log("Branch Code:", appt.fkBranchId, "Mapped to ID:", numericBranchId);
+    
     setSelectedPatient({
       patientId: appt.fkRegId,
       firstName: appt.firstName || "",
@@ -228,18 +257,20 @@ const BillingInformation = ({
       sex: appt.sex || "",
       isAppointment: true,
       isWalkIn: false,
-      FK_BranchId: appt.fkBranchId || appt.branch,
+      FK_BranchId: numericBranchId || 1,
       FK_DoctorId: appt.fkConsultantId,
       appointmentId: appt.appointmentId || appt.pkAppointmentId,
       admissionId: appt.admissionId || "",
       doctorId: appt.fkConsultantId,
+      branchSelect: numericBranchId || 1,
+      branch: numericBranchId || 1,
       dateOfBirth:formatDateForInput(appt.dob) || "",
     });
     setBillDetails((prev) => ({
       ...prev,
       FK_RegId: appt.fkRegId,
       FK_DoctorId: appt.fkConsultantId,
-      FK_BranchId: appt.fkBranchId || appt.branch,
+      FK_BranchId: numericBranchId || 1,
       FK_IPDId: appt.appointmentId || appt.pkAppointmentId,
     }));
     setOpenAppointmentPopup(false);
