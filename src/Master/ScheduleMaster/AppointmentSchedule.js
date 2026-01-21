@@ -19,17 +19,18 @@ import BranchName from "../../Comman/Branch";
 import { useMemo, useState } from "react";
 import Loader from "../../component/Loader";
 import style from "../BillingMaster/RateListMaster.module.css";
+import { rowHeightWarning } from "@mui/x-data-grid/hooks/features/rows/gridRowsUtils";
 
 const AppointmentSchedule = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isTablet = useMediaQuery(theme.breakpoints.down("md"));
-  
+
   const [selectedFromDate, setSelectedFromDate] = useState("");
   const [selectedToDate, setSelectedToDate] = useState("");
   const { data: opdAppointmentResponse, isLoading } = useGetOPDAppointmentQuery(
     { fromDate: selectedFromDate, toDate: selectedToDate },
-    { skip: !selectedFromDate || !selectedToDate }
+    { skip: !selectedFromDate || !selectedToDate },
   );
 
   const [searchText, setSearchText] = useState("");
@@ -73,7 +74,7 @@ const AppointmentSchedule = () => {
         BranchName.find((b) => b.id === appt.fkBranchId)?.BranchName ||
         appt.fkBranchId ||
         "";
-      
+
       // Format appointment date in multiple formats for search
       const apptDateFormatted = formatDate(appt.apptDate).toLowerCase();
       const bookingDateFormatted = formatDate(appt.bookingDate).toLowerCase();
@@ -92,11 +93,113 @@ const AppointmentSchedule = () => {
   if (isLoading) return <Loader />;
 
   // Responsive column visibility
-  const visibleColumns = isMobile 
+  const visibleColumns = isMobile
     ? ["ApptDate", "Patient Name", "ContactNo"]
     : isTablet
-    ? ["BookingBranch", "Booking Date", "ApptDate", "Patient Name", "ContactNo"]
-    : ["DaySrNo", "BookingBranch", "Booking Date", "ApptDate", "ApptTime", "AppointmentId", "Patient Name", "ContactNo"];
+      ? [
+          "BookingBranch",
+          "Booking Date",
+          "ApptDate",
+          "Patient Name",
+          "ContactNo",
+        ]
+      : [
+          "DaySrNo",
+          "BookingBranch",
+          "Booking Date",
+          "ApptDate",
+          "ApptTime",
+          "AppointmentId",
+          "Patient Name",
+          "ContactNo",
+        ];
+
+  // print the info
+  const handlePrint = () => {
+    const printWindow = window.open("", "", "width=900,height=650");
+
+    const tableRows = filteredAppointments
+      .map(
+        (row, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${BranchName.find((b) => b.id === row.fkBranchId)?.BranchName || row.fkBranchId}</td>
+        <td>${formatDate(row.bookingDate)}</td>
+        <td>${formatDate(row.apptDate)}</td>
+        <td>${row.apptTime || ""}</td>
+        <td>${row.appointmentId || ""}</td>
+        <td>${row.initial} ${row.firstName} ${row.lastName}</td>
+        <td>${row.contactNo || ""}</td>
+      </tr>
+    `,
+      )
+      .join("");
+
+    printWindow.document.write(`
+    <html>
+      <head>
+        <title>Appointment Patient List</title>
+        <style>
+          body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+          }
+          h2 {
+            text-align: center;
+            margin-bottom: 20px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+          }
+          th, td {
+            border: 1px solid #000;
+            padding: 6px;
+            text-align: left;
+          }
+          th {
+            background-color: #f0f0f0;
+          }
+          @media print {
+            body {
+              margin: 0;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <h2>Appointment Patient List</h2>
+        <p>
+          From: ${selectedFromDate || "-"} &nbsp;&nbsp;
+          To: ${selectedToDate || "-"}
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Sr No</th>
+              <th>Branch</th>
+              <th>Booking Date</th>
+              <th>Appointment Date</th>
+              <th>Time</th>
+              <th>Appointment ID</th>
+              <th>Patient Name</th>
+              <th>Contact No</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `);
+
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
 
   return (
     <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2, sm: 4, md: 6 } }}>
@@ -104,15 +207,22 @@ const AppointmentSchedule = () => {
         <Typography
           variant="h5"
           className={style.header}
-          sx={{ 
+          sx={{
             fontSize: { xs: "1rem", sm: "1.2rem", md: "1.5rem" },
-            p: { xs: 1, md: 2 }
+            p: { xs: 1, md: 2 },
           }}
         >
           Appointment Patient List
         </Typography>
 
-        <Box sx={{ p: { xs: 1.5, md: 2 }, backgroundColor: "#f9fafb", borderRadius: 1, mb: 1 }}>
+        <Box
+          sx={{
+            p: { xs: 1.5, md: 2 },
+            backgroundColor: "#f9fafb",
+            borderRadius: 1,
+            mb: 1,
+          }}
+        >
           <Grid container spacing={{ xs: 1.5, sm: 2 }} alignItems="center">
             <Grid item xs={12} sm={6} md={3}>
               <TextField
@@ -147,20 +257,31 @@ const AppointmentSchedule = () => {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={2}>
-              <Button 
+              <Button
                 size={isMobile ? "medium" : "small"}
-                type="button" 
-                value='clear' 
-                variant="contained" 
+                type="button"
+                value="clear"
+                variant="contained"
                 fullWidth={isMobile}
-                disabled={!selectedFromDate && !selectedToDate && !searchText} 
+                disabled={!selectedFromDate && !selectedToDate && !searchText}
                 onClick={() => {
-                  setSelectedFromDate(''); 
-                  setSelectedToDate('');
-                  setSearchText('');
+                  setSelectedFromDate("");
+                  setSelectedToDate("");
+                  setSearchText("");
                 }}
               >
                 Clear
+              </Button>
+            </Grid>
+            <Grid item xs={12} sm={6} md={1.5}>
+              <Button
+                size={isMobile ? "medium" : "small"}
+                variant="outlined"
+                fullWidth={isMobile}
+                disabled={filteredAppointments.length === 0}
+                onClick={handlePrint}
+              >
+                Print
               </Button>
             </Grid>
           </Grid>
@@ -185,10 +306,14 @@ const AppointmentSchedule = () => {
                   {visibleColumns.map((h) => (
                     <TableCell
                       key={h}
-                      sx={{ 
-                        backgroundColor: "#578EE5", 
+                      sx={{
+                        backgroundColor: "#578EE5",
                         color: "#fff",
-                        fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.875rem" }
+                        fontSize: {
+                          xs: "0.65rem",
+                          sm: "0.75rem",
+                          md: "0.875rem",
+                        },
                       }}
                     >
                       {h}
@@ -213,11 +338,14 @@ const AppointmentSchedule = () => {
                       sx={{
                         backgroundColor: index % 2 === 0 ? "#fafafa" : "#fffff",
                         "&:hover": {
-                          backgroundColor: index % 2 === 0 ? "#f0f0f0" : "#f9f9f9"
-                        }
+                          backgroundColor:
+                            index % 2 === 0 ? "#f0f0f0" : "#f9f9f9",
+                        },
                       }}
                     >
-                      {visibleColumns.includes("DaySrNo") && <TableCell>{index + 1}</TableCell>}
+                      {visibleColumns.includes("DaySrNo") && (
+                        <TableCell>{index + 1}</TableCell>
+                      )}
                       {visibleColumns.includes("BookingBranch") && (
                         <TableCell>
                           {BranchName.find((b) => b.id === row.fkBranchId)
