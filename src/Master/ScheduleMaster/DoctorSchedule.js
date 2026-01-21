@@ -18,6 +18,8 @@ import {
   TableRow,
   TableCell,
   TableBody,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { useMemo, useState } from "react";
 import style from "../BillingMaster/RateListMaster.module.css";
@@ -55,6 +57,10 @@ const getDateRange = (from, to) => {
 /* -------------------------------- Component----------------------- */
 
 const DoctorSchedule = () => {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isTablet = useMediaQuery(theme.breakpoints.down("md"));
+  
   const [branch, setBranch] = useState("");
   const [doctor, setDoctor] = useState("");
   const [type, setType] = useState("");
@@ -125,18 +131,22 @@ const DoctorSchedule = () => {
 
   if (sLoading || aLoading) return <Loader />;
 
+  // Calculate visible dates based on screen size
+  const visibleDateCount = isMobile ? 3 : isTablet ? 5 : dateRange.length;
+  const displayDates = dateRange.slice(0, visibleDateCount);
+
   return (
     <Box
       sx={{
         p: { xs: 1, sm: 2, md: 3 },
-        mt: { xs: 4, md: 6 },
+        mt: { xs: 2, sm: 4, md: 6 },
         width: "100%",
       }}
     >
       <Paper
         elevation={2}
         sx={{
-          borderRadius: 2,
+          borderRadius: { xs: 1, md: 2 },
           overflow: "hidden",
         }}
       >
@@ -144,9 +154,9 @@ const DoctorSchedule = () => {
           variant="h5"
           className={style.header}
           sx={{
-            fontSize: { xs: "1rem", sm: "1.2rem", md: "1.4rem" },
-            px: { xs: 1.5, md: 2 },
-            py: 1,
+            fontSize: { xs: "0.95rem", sm: "1.2rem", md: "1.4rem" },
+            px: { xs: 1, sm: 2, md: 3 },
+            py: { xs: 0.75, md: 1 },
             backgroundColor: "#5b8def",
             color: "#fff",
             textAlign: "center",
@@ -158,7 +168,7 @@ const DoctorSchedule = () => {
         {/* Filters */}
         <Box
           sx={{
-            p: { xs: 1.5, md: 2 },
+            p: { xs: 1, sm: 1.5, md: 2 },
             backgroundColor: "#f9fafb",
             borderBottom: "1px solid #e0e0e0",
           }}
@@ -172,7 +182,7 @@ const DoctorSchedule = () => {
               <TextField
                 select
                 fullWidth
-                size="small"
+                size={isMobile ? "medium" : "small"}
                 label="Branch"
                 SelectProps={{ native: true }}
                 value={branch}
@@ -191,7 +201,7 @@ const DoctorSchedule = () => {
               <TextField
                 select
                 fullWidth
-                size="small"
+                size={isMobile ? "medium" : "small"}
                 label="Doctor"
                 SelectProps={{ native: true }}
                 value={doctor}
@@ -210,7 +220,7 @@ const DoctorSchedule = () => {
               <TextField
                 select
                 fullWidth
-                size="small"
+                size={isMobile ? "medium" : "small"}
                 label="Schedule Type"
                 SelectProps={{ native: true }}
                 value={type}
@@ -225,11 +235,11 @@ const DoctorSchedule = () => {
               </TextField>
             </Grid>
 
-            <Grid item xs={6} md={2}>
+            <Grid item xs={6} sm={3} md={2}>
               <TextField
                 type="date"
                 fullWidth
-                size="small"
+                size={isMobile ? "medium" : "small"}
                 label="From"
                 InputLabelProps={{ shrink: true }}
                 value={fromDate}
@@ -237,11 +247,11 @@ const DoctorSchedule = () => {
               />
             </Grid>
 
-            <Grid item xs={6} md={2}>
+            <Grid item xs={6} sm={3} md={2}>
               <TextField
                 type="date"
                 fullWidth
-                size="small"
+                size={isMobile ? "medium" : "small"}
                 label="To"
                 InputLabelProps={{ shrink: true }}
                 value={toDate}
@@ -256,60 +266,65 @@ const DoctorSchedule = () => {
           sx={{
             mt: 1,
             borderTop: "1px solid #ccc",
-            width:'100%',
-            overflow:'visible'
+            width: "100%",
+            overflow: "visible",
           }}
         >
           <TableContainer
             sx={{
-              maxHeight: { xs: "60vh", md: "70vh" },
+              maxHeight: { xs: "55vh", sm: "65vh", md: "70vh" },
               overflowX: "auto",
               overflowY: "auto",
               WebkitOverflowScrolling: "touch",
               backgroundColor: "#fff",
-              width:'78%'
+              width: "100%",
             }}
           >
             <Table
               stickyHeader
               aria-label="sticky table"
-              size="small"
+              size={isMobile ? "small" : "medium"}
               sx={{
-                minWidth: dateRange.length * 110 + 100,
+                minWidth: displayDates.length * (isMobile ? 80 : isTablet ? 100 : 110) + 80,
                 borderCollapse: "separate",
                 borderSpacing: 0,
 
                 "& th": {
                   backgroundColor: "#f5f7fa",
                   fontWeight: 600,
-                  fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.85rem" },
+                  fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.85rem" },
                   textAlign: "center",
                   border: "1px solid #000",
-                  padding: { xs: "6px", md: "8px" },
+                  padding: { xs: "4px 2px", sm: "6px", md: "8px" },
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
                 },
 
                 "& td": {
-                  fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.85rem" },
+                  fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.85rem" },
                   border: "1px solid #000",
-                  padding: { xs: "6px", md: "8px" },
+                  padding: { xs: "4px 2px", sm: "6px", md: "8px" },
+                  textAlign: "center",
                   whiteSpace: "nowrap",
                 },
               }}
             >
               <TableHead>
                 <TableRow>
-                  {dateRange.map((date) => (
+                  {displayDates.map((date) => (
                     <TableCell
                       key={date.toISOString()}
                       sx={{
-                        minWidth: { xs: 90, md: 110 },
+                        minWidth: { xs: 70, sm: 100, md: 110 },
                         textAlign: "center",
                       }}
                     >
-                      <div sx={{ fontSize: "0.7rem", color: "#555" }}>
-                        {date.toLocaleDateString("eniUS", { weekday: "short" })}
+                      <div sx={{ fontSize: { xs: "0.55rem", sm: "0.65rem" }, color: "#555" }}>
+                        {date.toLocaleDateString("en-US", { weekday: "short" })}
                       </div>
-                      <div sx={{ fontWeight: 600 }}>{date.toLocaleDateString("en-GB")}</div>
+                      <div sx={{ fontWeight: 600, fontSize: { xs: "0.65rem", sm: "0.8rem" } }}>
+                        {date.toLocaleDateString("en-GB")}
+                      </div>
                     </TableCell>
                   ))}
                 </TableRow>
@@ -319,10 +334,8 @@ const DoctorSchedule = () => {
               <TableBody>
                 {timeSlots.map((slot) => (
                   <TableRow key={slot}>
-                    {/* DATE CELLS */}
-                    {dateRange.map((date) => {
+                    {displayDates.map((date) => {
                       const booked = isBooked(date, slot);
-
                       return (
                         <TableCell
                           key={`${date.toISOString()}-${slot}`}
@@ -330,10 +343,12 @@ const DoctorSchedule = () => {
                             backgroundColor: booked ? "#90EE90" : "#fff",
                             color: "#000",
                             cursor: booked ? "not-allowed" : "pointer",
+                            transition: "background-color 0.2s",
                             "&:hover": {
-                              backgroundColor: booked ? "#90EE90" : "#f5f5f5",
+                              backgroundColor: booked ? "#90EE90" : "#f0f0f0",
                             },
-                            minWidth: "100px",
+                            minWidth: { xs: 70, sm: 100, md: 110 },
+                            fontSize: { xs: "0.6rem", sm: "0.7rem", md: "0.8rem" },
                           }}
                         >
                           {slot}
@@ -345,6 +360,13 @@ const DoctorSchedule = () => {
               </TableBody>
             </Table>
           </TableContainer>
+          {dateRange.length > visibleDateCount && (
+            <Box sx={{ p: 1.5, backgroundColor: "#f9fafb", textAlign: "center" }}>
+              <Typography variant="caption" sx={{ fontSize: { xs: "0.65rem", md: "0.75rem" } }}>
+                Showing {visibleDateCount} of {dateRange.length} dates. Scroll horizontally to see more dates.
+              </Typography>
+            </Box>
+          )}
         </Box>
       </Paper>
     </Box>
