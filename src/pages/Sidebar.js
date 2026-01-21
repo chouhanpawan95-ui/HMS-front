@@ -69,7 +69,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
             <ListItemIcon className="menu-icon">
               <HomeIcon className="mt-icon-1" sx={{ color: "#fff" }} />
             </ListItemIcon>
-            <ListItemButton className="menu-text" component={Link} to="/Dashboard" onClick={handleMenuClick}>
+            <ListItemButton className="menu-text" component={Link} to="/layout/Dashboard" onClick={handleMenuClick}>
               <ListItemText primary="Dashboard" />
             </ListItemButton>
           </div>
@@ -97,7 +97,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
           <Collapse in={openMenu.ui} timeout="auto" unmountOnExit>
             <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }} component={Link} to="/Registration" onClick={handleMenuClick}>
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/Registration" onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
@@ -107,7 +107,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                 />
               </ListItemButton>
 
-              <ListItemButton sx={{ pl: 6 }} component={Link} to="/Billinginformation" onClick={handleMenuClick}>
+              <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/Billinginformation" onClick={handleMenuClick}>
                 <ListItemIcon sx={{ minWidth: 30 }}>
                   <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
                 </ListItemIcon>
@@ -161,7 +161,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
               <Collapse in={openMenu.ms} timeout='auto' unmountOnExit>
                 <List component="div" disablePadding sx={{ fontSize: 18, color: "#fff" }}>
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/UserMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/UserMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -197,7 +197,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               <Collapse in={openMenu.loc} timeout='auto' unmountOnExit>
                 <List component="div" disablePadding>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/CountryMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/CountryMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -206,7 +206,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/StateMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/StateMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -215,7 +215,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/DistrictMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/DistrictMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -224,7 +224,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/CityMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/CityMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -258,7 +258,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
               <Collapse in={openMenu.bm} timeout='auto' unmountOnExit >
               <List component='div' disablePadding>
 
-                <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceMaster" onClick={handleMenuClick}>
+                <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/ServiceMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -267,7 +267,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceDepartmentMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/ServiceDepartmentMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -276,7 +276,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/ServiceCatMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/ServiceCatMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -285,7 +285,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/RateListMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/RateListMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -294,7 +294,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     />
                   </ListItemButton>
 
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/PartyMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/PartyMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -302,7 +302,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                       primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
                     />
                   </ListItemButton>
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/PackageMaster" onClick={handleMenuClick}>
+                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/PackageMaster" onClick={handleMenuClick}>
                     <ListItemIcon sx={{ minWidth: 30 }}>
                     </ListItemIcon>
                     <ListItemText
@@ -335,7 +335,7 @@ const Sidebar = ({ drawerWidth = 260 }) => {
 
                 <Collapse in={openMenu.s} timeout='auto' unmountOnExit>
                   <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/OPDSchedule' onClick={handleMenuClick}>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/OPDSchedule' onClick={handleMenuClick}>
                     <ListItemIcon sx={{minWidth:30}}/>
                     <ListItemText
                       primary='OPD Appointment Schedule'
@@ -344,19 +344,19 @@ const Sidebar = ({ drawerWidth = 260 }) => {
                     </ListItemButton>
                   </List>
                   <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/AppointmentManager' onClick={handleMenuClick}>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/AppointmentManager' onClick={handleMenuClick}>
                       <ListItemIcon sx={{minWidth:30}}/>
                       <ListItemText primary="Appointment Manager" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
                   </List>
                   <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/AppointmentSchedule' onClick={handleMenuClick}>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/AppointmentSchedule' onClick={handleMenuClick}>
                       <ListItemIcon sx={{minWidth:30}}/>
                       <ListItemText primary="Patient Schedule" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
                   </List>
                   <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/DoctorSchedule' onClick={handleMenuClick}>
+                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/DoctorSchedule' onClick={handleMenuClick}>
                       <ListItemIcon sx={{minWidth:30}}/>
                       <ListItemText primary="Doctor Schedule" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
                     </ListItemButton>
