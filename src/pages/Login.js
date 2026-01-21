@@ -1,16 +1,13 @@
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useLoginMutation } from '../api/authApi';
+ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import { Alert } from '@mui/material';
 
 function Login() {
   const navigate = useNavigate();
-  const { token } = useSelector((state) => state.auth);
-  const [login, { isLoading, error }] = useLoginMutation();
   const [form, setForm] = useState({ email: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -30,10 +27,37 @@ function Login() {
     }
 
     try {
-      const res = await login(form).unwrap();
-      if (res?.token) navigate('/dashboard');
+      setIsLoading(true);
+      const API_URL = process.env.REACT_APP_API_URL || 'https://hms-api-ho1n.onrender.com/api';
+      
+      const response = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.email,
+          password: form.password,
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Server error: ${response.status}`);
+      }
+
+      if (data?.token) {
+        localStorage.setItem('token', data.token);
+        navigate('/layout');
+      } else {
+        throw new Error('No token received from server');
+      }
     } catch (err) {
-      setErrorMessage(err.data?.message || 'Invalid email or password');
+      console.error('Login error:', err);
+      setErrorMessage(err.message || 'An error occurred during login');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -77,22 +101,22 @@ function Login() {
               label="Email"
               name="email"
               type="email"
+              value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               variant="outlined"
               fullWidth
               required
-              error={!!errorMessage && !form.email}
               disabled={isLoading}
             />
             <TextField
               label="Password"
               name="password"
               type="password"
+              value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
               variant="outlined"
               fullWidth
               required
-              error={!!errorMessage && !form.password}
               disabled={isLoading}
             />           
             <Button
@@ -109,9 +133,7 @@ function Login() {
                 'Login'
               )}
             </Button>
-            <p style={{ marginTop: '1rem' }}>
-        New user? <Link to="/register">Create a new account</Link>
-      </p>
+            
           </Box>
         </Paper>
       </Grid>

@@ -29,65 +29,42 @@ import BillReceipt from "./pages/BillReceipt";
 import BlockAppointment from "./Master/ScheduleMaster/BlockAppointment";
 import AppointmentSchedule from "./Master/ScheduleMaster/AppointmentSchedule";
 import DoctorSchedule from "./Master/ScheduleMaster/DoctorSchedule";
-
+import Login from "./pages/Login";
 function App() {
   return (
     <BrowserRouter>
-      <Box sx={{ display: "flex" }}>
-        {/* <Header />
-        <Sidebar /> */}
-
-        {/* Main content area where Routes render */}
-        <Box component="main" sx={{ flexGrow: 1 }} className="css-1du1ywb">
-          <Routes>
-            <Route path="/" element={<Layout />}>
-              <Route path="/Dashboard" element={<Dashboard />} />
-              <Route path="/Registration" element={<Registration />} />
-              <Route path="/BillTest" element={<BillTest />} />
-              <Route path="/CountryMaster" element={<CountryMaster />} />
-              <Route path="/StateMaster" element={<StateMaster />} />
-              <Route path="/DistrictMaster" element={<DistrictMaster />} />
-              <Route path="/AddUsermaster" element={<AddUsermaster />} />
-              <Route path="/UserMaster" element={<UserMaster />} />
-              <Route path="/UpdateUser/:id" element={<UpdateUser />} />
-              <Route
-                path="/ServiceMaster"
-                element={<ServiceMaster />}
-              />
-              <Route path="/CityMaster" element={<CityMaster />} />
-              <Route path="/ServiceCatMaster" element={<ServiceCatMaster />} />
-              <Route
-                path="/ServiceDepartmentMaster"
-                element={<ServiceDepartmentMaster />}
-              />
-              <Route path="/RateListMaster" element={<RateListMaster />} />
-              <Route path="/RateListMaster/:id" element={<RateListMaster />} />
-              <Route path="/PartyMaster" element={<PartyMaster />} />
-              <Route path="/PackageMaster" element={<PackageMaster />} />
-              <Route path="/PackageMaster/:id" element={<PackageMaster />} />
-              <Route path="/OPDSchedule" element={<OPDSchedule/>}/>
-              <Route path="/AppointmentManager" element={<AppointmentManager/>} />
-              <Route path="/OPDappointment" element={<OPDappointment/>}/>
-              <Route path="/BlockAppointment" element={<BlockAppointment/>}/>
-              <Route path="/AppointmentSchedule" element={<AppointmentSchedule/>}/>
-              <Route path="DoctorSchedule" element={<DoctorSchedule/>}/>
-
-              {/* FIXED: Billinginformation route */}
-              <Route
-                path="/Billinginformation"
-                element={
-                  <BillingInformation
-                    doctorList={DoctorList}
-                    billTypeList={BillType}
-                    categoryList={CategoryList}
-                  />
-                }
-              />
-              <Route path="/BillReceipt" element={<BillReceipt />} />
-            </Route>
-          </Routes>
-        </Box>
-      </Box>
+      <Routes>
+        <Route path="/" element={<Login />}/>
+        <Route path="/layout" element={<Layout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="Dashboard" element={<Dashboard />} />
+          <Route path="Registration" element={<Registration />} />
+          <Route path="BillTest" element={<BillTest />} />
+          <Route path="CountryMaster" element={<CountryMaster />} />
+          <Route path="StateMaster" element={<StateMaster />} />
+          <Route path="DistrictMaster" element={<DistrictMaster />} />
+          <Route path="AddUsermaster" element={<AddUsermaster />} />
+          <Route path="UserMaster" element={<UserMaster />} />
+          <Route path="UpdateUser/:id" element={<UpdateUser />} />
+          <Route path="ServiceMaster" element={<ServiceMaster />} />
+          <Route path="CityMaster" element={<CityMaster />} />
+          <Route path="ServiceCatMaster" element={<ServiceCatMaster />} />
+          <Route path="ServiceDepartmentMaster" element={<ServiceDepartmentMaster />} />
+          <Route path="RateListMaster" element={<RateListMaster />} />
+          <Route path="RateListMaster/:id" element={<RateListMaster />} />
+          <Route path="PartyMaster" element={<PartyMaster />} />
+          <Route path="PackageMaster" element={<PackageMaster />} />
+          <Route path="PackageMaster/:id" element={<PackageMaster />} />
+          <Route path="OPDSchedule" element={<OPDSchedule/>}/>
+          <Route path="AppointmentManager" element={<AppointmentManager/>} />
+          <Route path="OPDappointment" element={<OPDappointment/>}/>
+          <Route path="BlockAppointment" element={<BlockAppointment/>}/>
+          <Route path="AppointmentSchedule" element={<AppointmentSchedule/>}/>
+          <Route path="DoctorSchedule" element={<DoctorSchedule/>}/>
+          <Route path="Billinginformation" element={<BillingInformation doctorList={DoctorList} billTypeList={BillType} categoryList={CategoryList} />} />
+          <Route path="BillReceipt" element={<BillReceipt />} />
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }
