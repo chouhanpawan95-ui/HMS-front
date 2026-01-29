@@ -24,6 +24,7 @@ export default function Layout() {
           mt: "10px",
           width: "100%", // always full width
           transition: "all 0.3s ease",
+          ml: '50px',
         }}
       >
         <Outlet />

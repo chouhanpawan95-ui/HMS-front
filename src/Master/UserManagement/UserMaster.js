@@ -66,7 +66,7 @@ export default function ServiceMaster() {
       <Button
         variant="contained"
         sx={{ mb: 2, textTransform: "none" }}
-        onClick={() => navigate("/AddUsermaster")}
+        onClick={() => navigate("/layout/AddUsermaster")}
       >
         + New Service
       </Button>

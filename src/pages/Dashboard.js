@@ -146,7 +146,7 @@ console.log("getopdvisit", getOpd);
   if (isLoading || getOpdLoading) return <Loader />;
 
   return (
-    <Box className="dashboard-wrapper" sx={{ p: { xs: 1, sm: 2, md: 3 } }}>
+    <Box className="dashboard-wrapper" sx={{ p: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2, sm: 4, md: 6 } }}>
       {/* Error */}
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -163,7 +163,7 @@ console.log("getopdvisit", getOpd);
         justifyContent="space-between"
         alignItems="center"
         gap={2}
-        mb={2}
+        mb={1}
       >
         <Box display="flex" gap={2} alignItems="center">
 
@@ -199,8 +199,15 @@ console.log("getopdvisit", getOpd);
           <Button size="small" variant="text" onClick={() => setSelectedDate("")} sx={{ ml: 1 }}>
             Clear Date
           </Button>
+          <Button size="small" variant="outlined" sx={{ ml: 1 }}>
+            Bill Information 
+          </Button>
+          <Button size="small" variant="outlined" sx={{ ml: 1 }}>
+            Bill Recipt
+          </Button>
         </Box>
       </Box>
+      
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <TableContainer
           className="table-container"
@@ -209,16 +216,15 @@ console.log("getopdvisit", getOpd);
             maxHeight: 450,
             overflowX: "auto",
             overflowY: "auto",
-            borderRadius: 8,
             boxShadow: 1,
             width: "100%",
           }}
         >
           {/* minWidth ensures ALL columns show on mobile via horizontal scroll */}
-          <Table stickyHeader sx={{ minWidth: 1100, '& .MuiTableCell-head': { backgroundColor: '#f5f5f5', whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
+          <Table stickyHeader sx={{ minWidth: 1100, '& .MuiTableCell-head': { whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
             <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
+                <TableCell sx={{ fontWeight: 'bold',backgroundColor: "#578EE5", color: '#fff', textAlign: 'center' }}>
                   <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} sx={{ flexWrap: 'nowrap' }}>
                     <span>Seq</span>
                   </Box>
@@ -226,7 +232,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -235,8 +242,9 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    color: "#fff",
                     whiteSpace: "nowrap",
+                    backgroundColor: "#578EE5"
                   }}
                 >
                   Name
@@ -244,7 +252,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -253,7 +262,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -262,7 +272,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -271,7 +282,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -280,7 +292,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >
@@ -289,7 +302,8 @@ console.log("getopdvisit", getOpd);
                 <TableCell
                   sx={{
                     fontWeight: "bold",
-                    color: "primary.main",
+                    backgroundColor: "#578EE5",
+                    color: "#fff",
                     whiteSpace: "nowrap",
                   }}
                 >

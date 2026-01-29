@@ -19,7 +19,6 @@ import BranchName from "../../Comman/Branch";
 import { useMemo, useState } from "react";
 import Loader from "../../component/Loader";
 import style from "../BillingMaster/RateListMaster.module.css";
-import { rowHeightWarning } from "@mui/x-data-grid/hooks/features/rows/gridRowsUtils";
 
 const AppointmentSchedule = () => {
   const theme = useTheme();
@@ -97,22 +96,22 @@ const AppointmentSchedule = () => {
     ? ["ApptDate", "Patient Name", "ContactNo"]
     : isTablet
       ? [
-          "BookingBranch",
-          "Booking Date",
-          "ApptDate",
-          "Patient Name",
-          "ContactNo",
-        ]
+        "BookingBranch",
+        "Booking Date",
+        "ApptDate",
+        "Patient Name",
+        "ContactNo",
+      ]
       : [
-          "DaySrNo",
-          "BookingBranch",
-          "Booking Date",
-          "ApptDate",
-          "ApptTime",
-          "AppointmentId",
-          "Patient Name",
-          "ContactNo",
-        ];
+        "DaySrNo",
+        "BookingBranch",
+        "Booking Date",
+        "ApptDate",
+        "ApptTime",
+        "AppointmentId",
+        "Patient Name",
+        "ContactNo",
+      ];
 
   // print the info
   const handlePrint = () => {
@@ -293,6 +292,8 @@ const AppointmentSchedule = () => {
               stickyHeader
               size={isMobile ? "small" : "medium"}
               sx={{
+                overflowX: "auto",
+                overflowY: "auto",
                 minWidth: isMobile ? 300 : 900,
                 "& td, & th": {
                   fontSize: { xs: "0.7rem", sm: "0.8rem", md: "0.875rem" },
