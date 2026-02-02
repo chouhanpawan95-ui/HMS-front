@@ -10,6 +10,7 @@ import {partyApi} from '../features/api/Hooks/partyApi';
 import { locationApi } from "../features/api/locationApi";
 import {scheduleApi} from "../features/api/scheduleApi";
 import { packageApi } from '../features/api/Hooks/packageApi';
+import { usermasterApi } from '../features/api/usermasterApi';
 
 export const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ export const store = configureStore({
     [locationApi.reducerPath]: locationApi.reducer,
     [scheduleApi.reducerPath]:scheduleApi.reducer,
     [packageApi.reducerPath]:packageApi.reducer,
+    [usermasterApi.reducerPath]:usermasterApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -37,6 +39,7 @@ export const store = configureStore({
       locationApi.middleware,
       scheduleApi.middleware,
       packageApi.middleware,
+      usermasterApi.middleware,
     ),
 });
 
