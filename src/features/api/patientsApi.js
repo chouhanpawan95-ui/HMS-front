@@ -4,7 +4,12 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 const baseQuery = fetchBaseQuery({
   baseUrl: process.env.REACT_APP_API_URL,
   credentials: 'include',
-  prepareHeaders: (headers) => {
+  prepareHeaders: (headers, { getState }) => {
+    // Try to get token from Redux state first, then fall back to localStorage
+    const token = getState().auth?.token || localStorage.getItem('token');
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
     headers.set('Content-Type', 'application/json');
     return headers;
   },
@@ -77,15 +82,23 @@ export const patientsApi = createApi({
     limit = 10,
     q = '',
     sort = ''
-     } = {}) => ({
-    url: '/opdvisits',
-    params: {
-      page,
-      limit,
-      ...(q && { q }),
-      ...(sort && { sort })
-    }
-  }),
+     } = {}) => {
+      // Check if token is available
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('Token not found. Please login first.');
+      }
+      console.log('OPD Visit API - Token found:', token.substring(0, 20) + '...');
+      return {
+        url: '/opdvisits',
+        params: {
+          page,
+          limit,
+          ...(q && { q }),
+          ...(sort && { sort })
+        }
+      };
+    },
   // Provide tags for the list so we can invalidate and refetch after mutations
   providesTags: (result) =>
     result?.data
