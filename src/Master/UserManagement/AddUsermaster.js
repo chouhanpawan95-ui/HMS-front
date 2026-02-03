@@ -17,7 +17,7 @@ import {
   Button
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useCreateUserMasterMutation } from "../../features/api/usermasterApi";
+import { useCreateUserMasterMutation, useGetUserMasterNextIdQuery,useLazyGetUserMasterNextIdQuery } from "../../features/api/usermasterApi";
 import { useForm, Controller } from "react-hook-form";
 
 const userTypes = [
@@ -38,6 +38,9 @@ const userTypes = [
 export default function UserMasterForm() {
   const [selectedTypes, setSelectedTypes] = useState([]);
   const [userTypesSelected, setUserTypesSelected] = useState([]);
+  // const { data: usermasternextid } = useGetUserMasterNextIdQuery();
+  const [getNextUserId] = useLazyGetUserMasterNextIdQuery();
+  // console.log("usermasternextid: ", usermasternextid);
   const navigate = useNavigate();
   // const handleSelect = (event) => {
   //   const value = event.target.value;
@@ -66,32 +69,39 @@ export default function UserMasterForm() {
 
   const submit = async (data) => {
     try {
+      const nextUserId = await getNextUserId().unwrap();
+      console.log("next id:",nextUserId);
+      if(!nextUserId){
+        throw new Error('Next user id not generated')
+      }
+      if(typeof nextUserId !== 'string'){
+        throw new Error('Invalid PK_UserId receiced')
+      }
       await createUserMaster({
+        PK_UserId: nextUserId,
         LoginName: data.LoginName,
         UserName: data.UserName,
         ShortName: data.ShortName,
         Password: data.Password,
-        // FK_UserTypeId: userTypesSelected,
         Fk_EmployeeId: data.Fk_EmployeeId,
-        // FK_AuthTypeId: authTypesSelected,
         FK_UserTypeId: Array.isArray(data.FK_UserTypeId)
           ? data.FK_UserTypeId.join(",")
           : data.FK_UserTypeId,
         FK_AuthTypeId: Array.isArray(data.FK_AuthTypeId)
           ? data.FK_AuthTypeId.join(",")
           : data.FK_AuthTypeId,
-        PK_UserId: "",
         FK_SubSpecialtyId: data.FK_SubSpecialtyId,
         FK_DefaultBranchId: data.FK_DefaultBranchId,
-        IsEditableBranch: false,
-        IsPatientTransfer: false,
-        IsActive: false,
+        IsEditableBranch: !!data.IsEditableBranch,
+        IsPatientTransfer: !!data.IsPatientTransfer,
+        IsActive: !!data.IsActive,
       }).unwrap();
       alert('Successfuly saved !!')
 
     } catch (err) {
       console.error(err);
       alert('Failed to save usermaster!!');
+      
     }
   }
 
@@ -136,7 +146,7 @@ export default function UserMasterForm() {
                     : e.target.value.split(",")
                 )
               }
-              renderValue={(selected) => 
+              renderValue={(selected) =>
                 Array.isArray(selected) && selected.length > 0
                   ? selected.join(", ")
                   : ""
@@ -173,7 +183,7 @@ export default function UserMasterForm() {
                     : e.target.value.split(",")
                 )
               }
-              renderValue={(selected) => 
+              renderValue={(selected) =>
                 Array.isArray(selected) && selected.length > 0
                   ? selected.join(", ")
                   : ""
@@ -195,8 +205,8 @@ export default function UserMasterForm() {
         <FormLabel>Default Branch</FormLabel>
         <RadioGroup row name="defaultBranch">
           <FormControlLabel value="edit" control={<Checkbox {...register('IsEditableBranch')} />} label="Is Editable Branch" />
-          <FormControlLabel value="active" control={<Checkbox {...register('isActive')} />} label="Is Active" />
-          <FormControlLabel value="transfer" control={<Checkbox {...register('isPatientTransfer')} />} label="Is Patient Transfer" />
+          <FormControlLabel value="active" control={<Checkbox {...register('IsActive')} />} label="Is Active" />
+          <FormControlLabel value="transfer" control={<Checkbox {...register('IsPatientTransfer')} />} label="Is Patient Transfer" />
         </RadioGroup>
       </FormControl>
 
@@ -216,6 +226,7 @@ export default function UserMasterForm() {
 
       <Button
         variant="contained"
+        disabled={ isLoading}
         sx={{
           mt: 2,
           backgroundColor: "#1976d2",
