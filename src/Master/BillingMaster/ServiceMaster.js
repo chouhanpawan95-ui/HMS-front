@@ -84,36 +84,40 @@ const ServiceMaster = () => {
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-    <Box
-      sx={{
-        p: { xs: 2, sm: 3, md: 4 },
-        backgroundColor: "#f4f6f8",
-        minHeight: "100vh",
-      }}
-    >
-      <Paper
-        elevation={3}
+      <Box
         sx={{
-          maxWidth: { xs: "62%" },
-          mb: 1000,
-          mx: "auto",
-          borderRadius: 3,
-          mt: { xs: 6, sm: 8 },
-          overflow: "hidden",
-          background: "White",
           p: { xs: 2, sm: 3, md: 4 },
+          backgroundColor: "#f4f6f8",
+          minHeight: "100vh",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start'
         }}
       >
-        <Box>
-          <Typography variant="h5" fontWeight={600} className={style.header}>
-            Service Master
-          </Typography>
-        </Box>
+        <Paper
+          elevation={4}
+          sx={{
+            maxWidth: { xs: "95%", sm: "90%", md: 960 },
+            width: '100%',
+            mb: 4,
+            // mx: "auto",
+            borderRadius: 3,
+            mt: { xs: 2, sm: 4, md: 6 },
+            overflow: "hidden",
+            background: "White",
+            p: { xs: 2, sm: 3, md: 4 },
+          }}
+        >
+          <Box>
+            <Typography variant="h5" fontWeight={600} mb={3} className={style.header}>
+              Service Master
+            </Typography>
+          </Box>
 
-        <Box p={{ xs: 2, sm: 3, md: 4 }}>
-          <form onSubmit={handleSubmit(onSubmitService)}>
-            <Grid container spacing={3}>
-              {/* <Grid
+          <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
+            <form onSubmit={handleSubmit(onSubmitService)}>
+              <Grid container spacing={2}>
+                {/* <Grid
                 item
                 xs={12}
                 sm={6}
@@ -137,66 +141,74 @@ const ServiceMaster = () => {
                   ))}
                 </TextField>
               </Grid> */}
-              <Grid sx={{ width: { xs: "100%", md: "40%" } }}>
+                <Grid item xs={12} md={6} sx={{ width: "49%" }}>
                   <TextField
-                  fullWidth
-                  value={selectedCategory}
-                  size="small"
-                  label='Category'
-                />
+                    fullWidth
+                    value={selectedCategory}
+                    size="small"
+                    label='Category'
+                    variant="outlined"
+                  />
+                </Grid>
 
+                <Grid item xs={12} md={6} sx={{ width: "49%" }}>
+                  <TextField
+                    label="Service Name"
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    {...register("ServiceName")}
+                  />
+                </Grid>
               </Grid>
+              <Grid container spacing={2} mt={2}>
 
-              <Grid item xs={12} sm={6}  sx={{ height: "50%", width: "40%" }}       >
-                <TextField
-                  label="Service Name"
-                  fullWidth
-                  size="small"
-                  {...register("ServiceName")}
-                />
+                <Grid item xs={12} sm={6} md={6} sx={{ width: "99%" }}>
+                  <TextField
+                    label="Description"
+                    {...register("ServiceDescription")}
+                    fullWidth
+                    rows={3}
+                    multiline
+                    variant="outlined"
+                  />
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6}  sx={{ width: "83%" }}>
-                <TextField
-                  label="Description"
-                  {...register("ServiceDescription")}
-                  fullWidth
-                  sx={{ width: "100%" }}
-                  rows={4}
-                  multiline
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}  sx={{ height: "53%", width: "43%" }}>
-                <TextField
-                  label="Service Code"
-                  // type="number"
-                  fullWidth
-                  size="small"
-                  {...register("ServiceCode")}
-                />
-              </Grid>
-              <Grid item xs={12} sm={6}  sx={{ height: "53%", width: "33%" }}>
-                <Controller
-                  name="ServiceTime"
-                  control={control}
-                  defaultValue={null}
-                  render={({field}) => (
-                    <TimePicker
-                      {...field}
-                      label='Service Time'
-                      value={field.value ?? null}
-                      onChange={(val) => field.onChange(val)}
-                      slotProps={{
-                        textField:{
-                          fullWidth:true,
-                          size:'small',
-                          error : !!errors.ServiceTime,
-                          helperText: errors.ServiceTime?.message
-                        }
-                      }}
-                    />
-                  )}
-                />
-                {/* <TextField
+              <Grid container spacing={2} mt={2}>
+
+                <Grid item xs={12} md={6} sx={{ width: "49%" }}>
+                  <TextField
+                    label="Service Code"
+                    fullWidth
+                    size="small"
+                    variant="outlined"
+                    {...register("ServiceCode")}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={6} sx={{ width: "49%" }}>
+                  <Controller
+                    name="ServiceTime"
+                    control={control}
+                    defaultValue={null}
+                    render={({ field }) => (
+                      <TimePicker
+                        {...field}
+                        label='Service Time'
+                        value={field.value ?? null}
+                        onChange={(val) => field.onChange(val)}
+                        slotProps={{
+                          textField: {
+                            fullWidth: true,
+                            size: 'small',
+                            error: !!errors.ServiceTime,
+                            helperText: errors.ServiceTime?.message
+                          }
+                        }}
+                      />
+                    )}
+                  />
+                  {/* <TextField
                   label="Service Time"
                   type="time"
                   InputLabelProps={{ shrink: true }}
@@ -204,17 +216,20 @@ const ServiceMaster = () => {
                   size="small"
                   {...register("ServiceTime")}
                 /> */}
+                </Grid>
               </Grid>
-              <Grid item xs={12} sm={6} sx={{width:'30%'}}>
-                <Button type="Submit" variant="contained" sx={{alignItems:'center'}}>
-                  Submit
-                </Button>
+
+              <Grid container spacing={2} mt={2}>
+                <Grid item xs={12} display='flex' justifyContent={{ xs: "center", md: "flex-end" }}>
+                  <Button type="Submit" variant="contained">
+                    Submit
+                  </Button>
+                </Grid>
               </Grid>
-            </Grid>
-          </form>
-        </Box>
-      </Paper>
-    </Box>
+            </form>
+          </Box>
+        </Paper>
+      </Box>
     </LocalizationProvider>
   );
 };
