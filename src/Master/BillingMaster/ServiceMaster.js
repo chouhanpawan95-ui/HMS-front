@@ -109,7 +109,7 @@ const ServiceMaster = () => {
           }}
         >
           <Box>
-            <Typography variant="h5" fontWeight={600} mb={3} className={style.header}>
+            <Typography variant="h5" fontWeight={600} className={style.header}>
               Service Master
             </Typography>
           </Box>
@@ -117,30 +117,6 @@ const ServiceMaster = () => {
           <Box sx={{ p: { xs: 2, sm: 3, md: 4 } }}>
             <form onSubmit={handleSubmit(onSubmitService)}>
               <Grid container spacing={2}>
-                {/* <Grid
-                item
-                xs={12}
-                sm={6}
-                md={4}
-                sx={{ height: "50%", width: "40%" }}
-              >
-                <TextField
-                  select
-                  SelectProps={{ native: true }}
-                  onChange={(e) => setSelectedCategory(e.target.value)}
-                  fullWidth
-                  value={selectedCategory}
-                  size="small"
-                  required
-                >
-                  <option value="">Select Category</option>
-                  {serviceCategory.map((sc) => (
-                    <option key={sc.categoryId} value={sc.categoryId}>
-                      {sc.CategoryName}
-                    </option>
-                  ))}
-                </TextField>
-              </Grid> */}
                 <Grid item xs={12} md={6} sx={{ width: "49%" }}>
                   <TextField
                     fullWidth
@@ -208,14 +184,6 @@ const ServiceMaster = () => {
                       />
                     )}
                   />
-                  {/* <TextField
-                  label="Service Time"
-                  type="time"
-                  InputLabelProps={{ shrink: true }}
-                  fullWidth
-                  size="small"
-                  {...register("ServiceTime")}
-                /> */}
                 </Grid>
               </Grid>
 
