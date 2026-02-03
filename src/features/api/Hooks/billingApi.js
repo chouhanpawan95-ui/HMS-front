@@ -25,86 +25,168 @@ export const billingApi = createApi({
     endpoints: (builder) => ({
 
         createBill: builder.mutation({
-            query: (patient) => ({
-                url: '/billmasters',
-                method: 'POST',
-                body: patient,
-            }),
+            query: (patient) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: '/billmasters',
+                    method: 'POST',
+                    body: patient,
+                };
+            },
         }),
         createBilldetails: builder.mutation({
-            query: (patient) => ({
-                url: '/billdetails',
-                method: 'POST',
-                body: patient,
-            }),
+            query: (patient) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: '/billdetails',
+                    method: 'POST',
+                    body: patient,
+                };
+            },
         }),
         createReceiptMaster: builder.mutation({
-            query: (payload) => ({
-                url: '/receiptmasters',
-                method: 'POST',
-                body: payload,
-            }),
+            query: (payload) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: '/receiptmasters',
+                    method: 'POST',
+                    body: payload,
+                };
+            },
         }),
         createReceiptAdjustmentDetail: builder.mutation({
-            query: (payload) => ({
-                url: '/receiptadjustmentdetail',
-                method: 'POST',
-                body: payload,
-            }),
+            query: (payload) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: '/receiptadjustmentdetail',
+                    method: 'POST',
+                    body: payload,
+                };
+            },
         }),
         getBillDetail: builder.query({
-            query: () => ({
-                url: '/billdetails',
-                method: 'GET',
-            }),
+            query: () => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: '/billdetails',
+                    method: 'GET',
+                };
+            },
         }),
         getBillMaster: builder.query({
-            query: () => ({
-                url: '/billmasters',
-                method: 'GET',
-            }),
+            query: () => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: '/billmasters',
+                    method: 'GET',
+                };
+            },
         }),
         // Fetch bills for a specific registration id (regid)
         getBillMasterByRegId: builder.query({
-            query: (regid) => ({
-                url: `/billmasters/regid/${encodeURIComponent(regid)}`,
-                method: 'GET',
-            }),
+            query: (regid) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: `/billmasters/regid/${encodeURIComponent(regid)}`,
+                    method: 'GET',
+                };
+            },
             transformResponse: (res) => res.data || res || [],
         }),
         // Fetch a single bill master by id (useful to load full bill details)
         getBillMasterById: builder.query({
-            query: (id) => ({
-                url: `/billmasters/${id}`,
-                method: 'GET',
-            }),
+            query: (id) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: `/billmasters/${id}`,
+                    method: 'GET',
+                };
+            },
             transformResponse: (res) => res.data || res || {},
         }),
         getBillDetailById: builder.query({
-            query: (id) => ({
-                url: `/billdetails/${id}`,
-                method: 'GET',
-            }),
+            query: (id) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: `/billdetails/${id}`,
+                    method: 'GET',
+                };
+            },
             transformResponse: (res) => res.data || res || {},
         }),
         getBillDetailByBillId: builder.query({
-            query: (billid) => ({
-                url: `/billdetails/bill/${billid}`,
-                method: 'GET',
-            }),
+            query: (billid) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: `/billdetails/bill/${billid}`,
+                    method: 'GET',
+                };
+            },
             transformResponse: (res) => res.data || res || {},
         }),
         // Fetch receipt adjustment details referencing a particular adjusted bill (fkAdjustedBillId)
         getReceiptAdjustmentsByAdjustedBillId: builder.query({
-            query: (billid) => ({
-                url: `/receiptadjustmentdetail?fkAdjustedBillId=${encodeURIComponent(billid)}`,
-                method: 'GET',
-            }),
+            query: (billid) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
+                return {
+                    url: `/receiptadjustmentdetail?fkAdjustedBillId=${encodeURIComponent(billid)}`,
+                    method: 'GET',
+                };
+            },
             transformResponse: (res) => res.data || res || [],
         }),
         getBillId: builder.query({
             // args is an object with optional query params
             query: (args = {}) => {
+                // Check if token is available
+                const token = localStorage.getItem('token');
+                if (!token) {
+                  throw new Error('Token not found. Please login first.');
+                }
                 const { patientId } = args;
                 const params = {};
                 if (patientId !== undefined) params.patientId = patientId;

@@ -27,55 +27,111 @@ export const packageApi = createApi({
    
     // pacakge Master
      getPackageMaster:builder.query({
-      query:() => 'packagemaster',
+      query:() => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return 'packagemaster';
+      },
       providesTags:['/packagemaster'],
       transformResponse:(res) => res.data || [],
     }),
     createPackageMaster:builder.mutation({
-      query: (packagemaster) => ({
-        url: '/packagemaster',
-        method:'POST',
-        body:packagemaster
-      }), invalidatesTags: ['PackageMaster'],
+      query: (packagemaster) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/packagemaster',
+          method:'POST',
+          body:packagemaster
+        };
+      }, invalidatesTags: ['PackageMaster'],
     }),
     updatePackageMaster:builder.mutation({
-      query:({id,payload}) => ({
-        url:`/packagemaster/${id}`,
-        method: 'PUT',
-        body:payload         
-      }), invalidatesTags:['PackageMaster'],
+      query:({id,payload}) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url:`/packagemaster/${id}`,
+          method: 'PUT',
+          body:payload         
+        };
+      }, invalidatesTags:['PackageMaster'],
     }),
     deletePackageMaster:builder.mutation({
-      query:(id) => ({
-        url : `/packagedetail/${id}`,
-        method:'DELETE',
-      }),invalidatesTags:['PackageDetail'],
+      query:(id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url : `/packagedetail/${id}`,
+          method:'DELETE',
+        };
+      },invalidatesTags:['PackageDetail'],
     }),
     // package detail
     getPackageDetail:builder.query({
-      query: () => 'packagedetail',
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return 'packagedetail';
+      },
       providesTags:['/packagedetail'],
       transformResponse:(res) => res.data || []
     }),
     createPackageDetail:builder.mutation({
-      query: (packagedetail) => ({
-        url: '/packagedetail',
-        method:'POST',
-        body:packagedetail
-      }), invalidatesTags:['PackageDetail'],
+      query: (packagedetail) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/packagedetail',
+          method:'POST',
+          body:packagedetail
+        };
+      }, invalidatesTags:['PackageDetail'],
     }),
     updatePackageDetail:builder.mutation({
-      query:({id,payload}) => ({
-        url : `packagedetail/${id}`,
-        method: 'PUT',
-        body:payload
-      }),invalidatesTags:['PackageDetail'],
+      query:({id,payload}) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url : `packagedetail/${id}`,
+          method: 'PUT',
+          body:payload
+        };
+      },invalidatesTags:['PackageDetail'],
     }),
     deletePackageDetail:builder.mutation({
-        query: ({id}) => ({
-        url:`/packagedetail/${id}`,
-        method:'DELETE',
-      })
+        query: ({id}) => {
+          // Check if token is available
+          const token = localStorage.getItem('token');
+          if (!token) {
+            throw new Error('Token not found. Please login first.');
+          }
+          return {
+            url:`/packagedetail/${id}`,
+            method:'DELETE',
+          };
+        }
     }) 
   }),
 });

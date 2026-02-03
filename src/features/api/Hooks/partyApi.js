@@ -27,35 +27,70 @@ export const partyApi = createApi({
    
     // Party Master
     getPartyMaster: builder.query({
-      query: () => "partymaster",
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return "partymaster";
+      },
       providesTags: ['PartyMaster'],
       transformResponse: (res) => res.data || [],
     }),
     createPartyMaster: builder.mutation({
-      query: (partymaster) => ({
-        url: "/partymaster",
-        method: "POST",
-        body: partymaster
-      }), invalidatesTags: ["PartyMaster"],
+      query: (partymaster) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "/partymaster",
+          method: "POST",
+          body: partymaster
+        };
+      }, invalidatesTags: ["PartyMaster"],
     }),
     updatePartyMaster: builder.mutation({
-      query: (id, payload) => ({
-        url: `/partymaster/${id}`,
-        method: "PUT",
-        body: payload
-      }), invalidatesTags: ["PartyMaster"]
+      query: (id, payload) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `/partymaster/${id}`,
+          method: "PUT",
+          body: payload
+        };
+      }, invalidatesTags: ["PartyMaster"]
     }),
     deletePartyMaster: builder.mutation({
-      query: (id) => ({
-        url: `/partymaster${id}`,
-        method: 'DELETE',
-      }), invalidatesTags: ["PartyMaster"]
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `/partymaster${id}`,
+          method: 'DELETE',
+        };
+      }, invalidatesTags: ["PartyMaster"]
     }),   
     getPartyName: builder.query({
-      query: () => ({
-        url: '/partymaster',
-        method: 'GET',
-      }),
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/partymaster',
+          method: 'GET',
+        };
+      },
     }),  
   }),
 });
