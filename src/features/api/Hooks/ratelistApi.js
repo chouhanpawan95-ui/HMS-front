@@ -26,71 +26,134 @@ export const rateListApi = createApi({
   endpoints: (builder) => ({
     // Rate list details
    getRateListDetail: builder.query({
-  query: () => "/ratelistdetail",
+  query: () => {
+    // Check if token is available
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('Token not found. Please login first.');
+    }
+    return "/ratelistdetail";
+  },
   providesTags: ["RateListDetail"],
   transformResponse: (res) =>
     Array.isArray(res) ? res : res?.data ?? [],
 }),
 
     getRatelistDetails: builder.query({
-      query: () => ({
-        url: '/ratelistdetail',
-        method: 'GET',
-      }),
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/ratelistdetail',
+          method: 'GET',
+        };
+      },
     }),
     createRateListDetail: builder.mutation({
-      query: (ratelistdetail) => ({
-        url: "/ratelistdetail",
-        method: "POST",
-        body: ratelistdetail,
-      }),
+      query: (ratelistdetail) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "/ratelistdetail",
+          method: "POST",
+          body: ratelistdetail,
+        };
+      },
       invalidatesTags: ["RateListDetail"],
     }),
     updateRateListDetail: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `ratelistdetail/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
+      query: ({ id, payload }) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `ratelistdetail/${id}`,
+          method: "PUT",
+          body: payload,
+        };
+      },
       invalidatesTags: ["RateListDetail"],
     }),
     deleteRateListDetail: builder.mutation({
-      query: (id) => ({
-        url: `ratelistdetail/${id}`,
-        method: "DELETE",
-      }),
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `ratelistdetail/${id}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["RateListDetail"],
     }), 
     // Rate list master
     getRateList: builder.query({
-      query: () => ({
-        url: '/ratelistmaster',
-        method: 'GET',
-      }),
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/ratelistmaster',
+          method: 'GET',
+        };
+      },
       providesTags: ["RateList"],
       transformResponse: (res) => (Array.isArray(res) ? res : res?.data ?? []),
     }),
     createRateList: builder.mutation({
-      query: (rateList) => ({
-        url: "/ratelistmaster",
-        method: "POST",
-        body: rateList,
-      }),
+      query: (rateList) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "/ratelistmaster",
+          method: "POST",
+          body: rateList,
+        };
+      },
       invalidatesTags: ["RateList"],
     }),
     updateRateList: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `ratelistmaster/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
+      query: ({ id, payload }) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `ratelistmaster/${id}`,
+          method: "PUT",
+          body: payload,
+        };
+      },
       invalidatesTags: ["RateList"],
     }),
     deleteRateList: builder.mutation({
-      query: (id) => ({
-        url: `ratelistmaster/${id}`,
-        method: "DELETE",
-      }),
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `ratelistmaster/${id}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["RateList", "RateListDetail"],
     }), 
   }),

@@ -27,6 +27,11 @@ export const patientsApi = createApi({
     getPatients: builder.query({
       // args is an object with optional query params
       query: (args = {}) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
         const { page, limit, q, sort } = args;
         const params = {};
         if (page !== undefined) params.page = page;
@@ -42,24 +47,43 @@ export const patientsApi = createApi({
     }),
     // Mutation to create a new patient
     createPatient: builder.mutation({
-      query: (patient) => ({
-        url: '/patients',
-        method: 'POST',
-        body: patient,
-      }),
+      query: (patient) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/patients',
+          method: 'POST',
+          body: patient,
+        };
+      },
     }),
       // Mutation to create a new Bill
     createBill: builder.mutation({
-      query: (patient) => ({
-        url: '/billmasters',
-        method: 'POST',
-        body: patient,
-      }),
+      query: (patient) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/billmasters',
+          method: 'POST',
+          body: patient,
+        };
+      },
     }),
         // To get patient id wise bill
      getPatientId: builder.query({
       // args is an object with optional query params
       query: (args = {}) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
         const { patientId } = args;
         const params = {};
         if (patientId !== undefined) params.patientId = patientId;
@@ -70,11 +94,18 @@ export const patientsApi = createApi({
       }
     }),
       createService: builder.mutation({
-      query: (patient) => ({
-        url: '/service',
-        method: 'POST',
-        body: patient,
-      }),
+      query: (patient) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/service',
+          method: 'POST',
+          body: patient,
+        };
+      },
     }),
     getopdVisit: builder.query({
     query: ({
@@ -88,7 +119,6 @@ export const patientsApi = createApi({
       if (!token) {
         throw new Error('Token not found. Please login first.');
       }
-      console.log('OPD Visit API - Token found:', token.substring(0, 20) + '...');
       return {
         url: '/opdvisits',
         params: {
@@ -111,11 +141,18 @@ export const patientsApi = createApi({
 
     // Mutation to create OPD visit
     createOpdVisit: builder.mutation({
-      query: (payload) => ({
-        url: '/opdvisits',
-        method: 'POST',
-        body: payload,
-      }),
+      query: (payload) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/opdvisits',
+          method: 'POST',
+          body: payload,
+        };
+      },
       // Invalidate the list so getopdVisit refetches and Dashboard shows fresh data
       invalidatesTags: [{ type: 'OpdVisits', id: 'LIST' }],
     }),

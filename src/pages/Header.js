@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from 'react-redux';
 import {
   AppBar,
   Toolbar,
@@ -9,7 +11,9 @@ import {
   Avatar,
   Badge,
   Tooltip,
-  Drawer
+  Drawer,
+  Menu,
+  MenuItem
 } from "@mui/material";
 import {
   Search as SearchIcon,
@@ -17,16 +21,36 @@ import {
   NotificationsNone as NotificationsIcon,
   Settings as SettingsIcon,
   Fullscreen as FullscreenIcon,
+  Logout as LogoutIcon
 } from "@mui/icons-material";
 
 export default function Header() {
   const [anchorElProfile, setAnchorElProfile] = useState(null);
   const [anchorElMessages, setAnchorElMessages] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
-
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleProfileMenuClose = () => {
+    setAnchorElProfile(null);
+  };
+
+  const handleLogout = () => {
+    // Clear local storage and update redux auth state
+    localStorage.clear();
+    try {
+      // dispatch logout to clear auth token from redux
+      const { logout } = require('../features/auth/authSlice');
+      dispatch(logout());
+    } catch (e) {
+      // fallback if import fails at runtime
+    }
+    handleProfileMenuClose();
+    navigate('/');
   };
 
   // Sidebar Drawer for Mobile
@@ -120,6 +144,28 @@ export default function Header() {
                 />
               </IconButton>
             </Tooltip>
+
+            {/* Profile Dropdown Menu */}
+            <Menu
+              anchorEl={anchorElProfile}
+              open={Boolean(anchorElProfile)}
+              onClose={handleProfileMenuClose}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "right",
+              }}
+              transformOrigin={{
+                vertical: "top",
+                horizontal: "right",
+              }}
+            >
+              <MenuItem disabled>My Profile</MenuItem>
+              <MenuItem disabled>Settings</MenuItem>
+              <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
+                <LogoutIcon sx={{ mr: 1, fontSize: 20 }} />
+                Logout
+              </MenuItem>
+            </Menu>
           </Box>
         </Toolbar>
       </AppBar>

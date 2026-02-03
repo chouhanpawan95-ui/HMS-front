@@ -9,121 +9,233 @@ export const locationApi = createApi({
   endpoints: (builder) => ({
     // Country
     getCountry: builder.query({
-      query: () => "country",
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return "country";
+      },
       providesTags: ["Country"],
       transformResponse: (res) => res.data || [],
     }),
     createCountry: builder.mutation({
-      query: (country) => ({
-        url: "country",
-        method: "POST",
-        body: country,
-      }),
+      query: (country) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "country",
+          method: "POST",
+          body: country,
+        };
+      },
       invalidatesTags: ["Country"],
     }),
     updateCountry: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `country/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
+      query: ({ id, payload }) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `country/${id}`,
+          method: "PUT",
+          body: payload,
+        };
+      },
       invalidatesTags: ["Country"],
     }),
     deleteCountry: builder.mutation({
-      query: (id) => ({
-        url: `country/${id}`,
-        method: "DELETE",
-      }),
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `country/${id}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["Country"],
     }),
 
     // State
     getStates: builder.query({
-      query: (countryId) => `state?countryId=${countryId}`,
+      query: (countryId) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return `state?countryId=${countryId}`;
+      },
       providesTags: ["State"],
       transformResponse: (res) => res.data || [],
     }),
     createState: builder.mutation({
-      query: (state) => ({
-        url: "state",
-        method: "POST",
-        body: state,
-      }),
+      query: (state) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "state",
+          method: "POST",
+          body: state,
+        };
+      },
       invalidatesTags: ["State"],
     }),
     updateState: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `state/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
+      query: ({ id, payload }) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `state/${id}`,
+          method: "PUT",
+          body: payload,
+        };
+      },
       invalidatesTags: ["State"],
     }),
     deleteState: builder.mutation({
-      query: (id) => ({
-        url: `state/${id}`,
-        method: "DELETE",
-      }),
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `state/${id}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["State"],
     }),
 
     // District
     getDistricts: builder.query({
-      query: (stateId) => `district?stateId=${stateId}`,
+      query: (stateId) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return `district?stateId=${stateId}`;
+      },
       providesTags: ["District"],
       transformResponse: (res) => res.data || [],
     }),
     createDistrict: builder.mutation({
-      query: (district) => ({
-        url: "district",
-        method: "POST",
-        body: district,
-      }),
+      query: (district) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "district",
+          method: "POST",
+          body: district,
+        };
+      },
       invalidatesTags: ["District"],
     }),
     updateDistrict: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `district/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
+      query: ({ id, payload }) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `district/${id}`,
+          method: "PUT",
+          body: payload,
+        };
+      },
       invalidatesTags: ["District"],
     }),
     deleteDistrict: builder.mutation({
-      query: (id) => ({
-        url: `district/${id}`,
-        method: "DELETE",
-      }),
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `district/${id}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["District"],
     }),
 
     // City
     getCities: builder.query({
-      query: (districtId) => `city?districtId=${districtId}`,
+      query: (districtId) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return `city?districtId=${districtId}`;
+      },
       providesTags: ["City"],
       transformResponse: (res) => res || [],
     }),
     createCity: builder.mutation({
-      query: (city) => ({
-        url: "city",
-        method: "POST",
-        body: city,
-      }),
+      query: (city) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: "city",
+          method: "POST",
+          body: city,
+        };
+      },
       invalidatesTags: ["City"],
     }),
     updateCity: builder.mutation({
-      query: ({ id, payload }) => ({
-        url: `city/${id}`,
-        method: "PUT",
-        body: payload,
-      }),
+      query: ({ id, payload }) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `city/${id}`,
+          method: "PUT",
+          body: payload,
+        };
+      },
       invalidatesTags: ["City"],
     }),
     deleteCity: builder.mutation({
-      query: (id) => ({
-        url: `city/${id}`,
-        method: "DELETE",
-      }),
+      query: (id) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: `city/${id}`,
+          method: "DELETE",
+        };
+      },
       invalidatesTags: ["City"],
     }),
   }),

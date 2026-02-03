@@ -17,25 +17,30 @@ export const registrationApi = createApi({
   }),
   endpoints: (builder) => ({
     getRegistrations: builder.query({
-      query: () => 'registrations',
+      query: () => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return 'registrations';
+      },
     }),
     createProject: builder.mutation({
-      query: (formData) => ({
-        url: 'registrations',
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header, browser will set it with boundary for FormData
-        formData: true,
-      }),
-    }),
-    createEngineerVisit: builder.mutation({
-      query: (formData) => ({
-        url: 'engineer-visits',
-        method: 'POST',
-        body: formData,
-        // Don't set Content-Type header for FormData
-        formData: true,
-      }),
+      query: (formData) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: 'registrations',
+          method: 'POST',
+          body: formData,
+          // Don't set Content-Type header, browser will set it with boundary for FormData
+          formData: true,
+        };
+      },
     }),
   }),
 });
@@ -43,5 +48,4 @@ export const registrationApi = createApi({
 export const { 
   useGetRegistrationsQuery, 
   useCreateProjectMutation,
-  useCreateEngineerVisitMutation 
 } = registrationApi;
