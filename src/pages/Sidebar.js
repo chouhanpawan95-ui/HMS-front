@@ -367,59 +367,6 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           </Collapse>
 
         </List>
-
-
-        {/* Appointment */}
-        {/* <div className="menu-item">
-        <ListItemIcon className="menu-icon">
-          <EventAvailable className="mt-icon-1" sx={{ color: "#fff" }} />
-        </ListItemIcon>
-        <ListItemButton className="menu-text" onClick={() => handleToggle("charts")}>
-          <ListItemText primary="Appointment" />
-          {openMenu.charts ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-      </div> */}
-
-        {/* <Collapse in={openMenu.charts} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
-            <ListItemIcon sx={{ minWidth: 30 }}>
-              <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText
-              primary="ChartJs"
-              primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-            />
-          </ListItemButton>
-        </List>
-      </Collapse> */}
-
-        {/* Report */}
-        {/* <div className="menu-item">
-        <ListItemIcon className="menu-icon">
-          <Report className="mt-icon-1" sx={{ color: "#fff" }} />
-        </ListItemIcon>
-        <ListItemButton className="menu-text" onClick={() => handleToggle("tables")}>
-          <ListItemText primary="Report" />
-          {openMenu.tables ? <ExpandLess /> : <ExpandMore />}
-        </ListItemButton>
-      </div> */}
-
-
-        {/* <Collapse in={openMenu.tables} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItemButton sx={{ pl: 6 }} onClick={handleMenuClick}>
-            <ListItemIcon sx={{ minWidth: 30 }}>
-              <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemText
-              primary="Basic Table"
-              primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-            />
-          </ListItemButton>
-        </List>
-      </Collapse> */}
-
       </Box >
     </Box >
   );

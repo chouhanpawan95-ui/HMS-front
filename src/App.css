@@ -41,10 +41,7 @@
 .css-1du1ywb {
   flex-grow: 1;
 }
-.css-1du1ywb  {
-  
-  margin-left: clamp(0px, 10vw, 43px); /* default for large screens */
-}
+
 
 @media (max-width: 899px) {
   .css-1du1ywb  {
@@ -61,11 +58,27 @@
 
 .sidebar {
   width: 60px;
+  height: 90vh;
   background-color: #578ee5;
   transition: width 0.25s ease;
   overflow: hidden;
   white-space: nowrap;
   padding: 8px 0;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 48px;
+    padding: 4px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .sidebar {
+    width: 36px;
+    padding: 2px 0;
+    overflow-y: auto;
+  }
 }
 
 .sidebar:hover {
@@ -82,7 +95,7 @@
 .menu-text {
   margin-left: 12px;
   opacity: 0;
-  transition: opacity 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s ease;
   transform: translateX(-8px);
 
 }
@@ -224,6 +237,16 @@
     max-height: none;
   }
 }
+.table-wrapper {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px; /* Ensures scroll on small screens */
+}
+
 
 
 /* ----------- PAGINATION ----------- */
@@ -276,10 +299,7 @@
 }
 
 /* small helper to ensure main content doesn't overflow beside sidebar */
-.main-content {
-  width: 100%;
-  box-sizing: border-box;
-}
+
 
 /* .css-1q5genk-MuiList-root {
     list-style: none;
