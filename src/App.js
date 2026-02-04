@@ -29,6 +29,7 @@ import BillReceipt from "./pages/BillReceipt";
 import BlockAppointment from "./Master/ScheduleMaster/BlockAppointment";
 import AppointmentSchedule from "./Master/ScheduleMaster/AppointmentSchedule";
 import DoctorSchedule from "./Master/ScheduleMaster/DoctorSchedule";
+import IPDRegistration from "./pages/IPDRegistration";
 import Login from "./pages/Login";
 function App() {
   return (
@@ -63,6 +64,7 @@ function App() {
           <Route path="DoctorSchedule" element={<DoctorSchedule/>}/>
           <Route path="Billinginformation" element={<BillingInformation doctorList={DoctorList} billTypeList={BillType} categoryList={CategoryList} />} />
           <Route path="BillReceipt" element={<BillReceipt />} />
+          <Route path="IPDRegistration/:patientId" element={<IPDRegistration />} />
         </Route>
       </Routes>
     </BrowserRouter>
