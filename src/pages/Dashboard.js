@@ -20,13 +20,15 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  Checkbox,
 } from "@mui/material";
 
 import Loader from "../component/Loader";
 import { useGetPatientsQuery,useGetopdVisitQuery } from "../features/api/patientsApi";
 import { useGetBillMasterQuery, useLazyGetBillMasterByRegIdQuery } from '../features/api/Hooks/billingApi';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 export default function Dashboard() {
+  const navigate = useNavigate();
 
   // Pagination / search state
   const [page, setPage] = useState(1);
@@ -47,6 +49,7 @@ export default function Dashboard() {
   const [openBillsDialog, setOpenBillsDialog] = useState(false);
   const [selectedPatientForBills, setSelectedPatientForBills] = useState(null);
   const [billsFilterText, setBillsFilterText] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState(null);
 
   // Date filter: default to today in YYYY-MM-DD format to show today's visits by default
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
@@ -205,6 +208,15 @@ console.log("getopdvisit", getOpd);
           <Button size="small" variant="outlined" sx={{ ml: 1 }}>
             Bill Recipt
           </Button>
+           <Button 
+            size="small" 
+            variant="outlined" 
+            sx={{ ml: 1 }}
+            disabled={!selectedPatientId}
+            onClick={() => selectedPatientId && navigate(`/layout/IPDRegistration/${selectedPatientId}`)}
+          >
+           IPD Registration
+          </Button>
         </Box>
       </Box>
       
@@ -224,6 +236,9 @@ console.log("getopdvisit", getOpd);
           <Table stickyHeader sx={{ minWidth: 1100, '& .MuiTableCell-head': { whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
             <TableHead>
               <TableRow>
+                <TableCell sx={{ fontWeight: 'bold',backgroundColor: "#578EE5", color: '#fff', textAlign: 'center', width: 50 }}>
+                  {/* Checkbox column */}
+                </TableCell>
                 <TableCell sx={{ fontWeight: 'bold',backgroundColor: "#578EE5", color: '#fff', textAlign: 'center' }}>
                   <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} sx={{ flexWrap: 'nowrap' }}>
                     <span>Seq</span>
@@ -334,6 +349,18 @@ console.log("getopdvisit", getOpd);
 
                   return (
                     <TableRow key={row.pkVisitId || row._id || i}>
+                      <TableCell sx={{ whiteSpace: "nowrap", textAlign: 'center' }}>
+                        <Checkbox
+                          checked={selectedPatientId === row.fkRegId}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedPatientId(row.fkRegId);
+                            } else {
+                              setSelectedPatientId(null);
+                            }
+                          }}
+                        />
+                      </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
                           <div style={{ fontSize: 12, color: '#666' }}>#{i + 1}</div>
                       </TableCell>
@@ -376,7 +403,7 @@ console.log("getopdvisit", getOpd);
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={9} align="center" sx={{ py: 2 }}>
+                  <TableCell colSpan={10} align="center" sx={{ py: 2 }}>
                     No records found.
                   </TableCell>
                 </TableRow>
