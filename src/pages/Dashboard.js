@@ -145,6 +145,18 @@ console.log("getopdvisit", getOpd);
     }
   }, [billsByReg, lastRequestedRegId]);
 
+  // Resolve selected patient object from `selectedPatientId` using loaded `patients`
+  const resolveSelectedPatient = () => {
+    if (!selectedPatientId) return null;
+    const found = (patients || []).find((p) =>
+      String(p.patientId) === String(selectedPatientId) ||
+      String(p.id) === String(selectedPatientId) ||
+      String(p.PK_RegId) === String(selectedPatientId) ||
+      String(p.oldNo) === String(selectedPatientId)
+    );
+    return found || { patientId: selectedPatientId, PK_RegId: selectedPatientId };
+  };
+
   // Show loader if patients or OPD are loading
   if (isLoading || getOpdLoading) return <Loader />;
 
@@ -202,12 +214,37 @@ console.log("getopdvisit", getOpd);
           <Button size="small" variant="text" onClick={() => setSelectedDate("")} sx={{ ml: 1 }}>
             Clear Date
           </Button>
-          <Button size="small" variant="outlined" sx={{ ml: 1 }}>
-            Bill Information 
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ ml: 1 }}
+            onClick={() => {
+              const patient = resolveSelectedPatient();
+              if (!patient) {
+                alert('Please select a patient first');
+                return;
+              }
+              navigate('/layout/Billinginformation', { state: { patient } });
+            }}
+          >
+            Bill
           </Button>
-          <Button size="small" variant="outlined" sx={{ ml: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            sx={{ ml: 1 }}
+            onClick={() => {
+              const patient = resolveSelectedPatient();
+              if (!patient) {
+                alert('Please select a patient first');
+                return;
+              }
+              navigate('/layout/BillReceipt', { state: { selectedPatient: patient } });
+            }}
+          >
             Bill Recipt
           </Button>
+          
            <Button 
             size="small" 
             variant="outlined" 
@@ -501,7 +538,7 @@ console.log("getopdvisit", getOpd);
                               <TableCell>
                                 <Button
                                   component={Link}
-                                  to="/Billinginformation"
+                                  to="/layout/Billinginformation"
                                   state={{ bill: b, patient: selectedPatientForBills }}
                                   size="small"
                                   variant="text"
