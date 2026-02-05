@@ -1158,7 +1158,7 @@ const BillingInformation = ({
         background: "#fff",
         color: "#000",
         p: 2,
-        mt: 8,
+        mt: 4,
         minHeight: "100vh",
         ml: { xs: 0, md: 5 },
       }}
@@ -1173,7 +1173,7 @@ const BillingInformation = ({
           ) : (
             <>
               <Typography variant="h6" sx={{ mb: 1 }}>
-                Search For FirstName
+               Old Patients List
               </Typography>
 
               <SearchBar
@@ -1185,7 +1185,7 @@ const BillingInformation = ({
           )}
 
           {/* Patient Table */}
-          <TableContainer component={Paper} sx={{ mt: 5 }}>
+          <TableContainer component={Paper} sx={{ mt: 2 }}>
             <Table size="small">
               <TableHead>
                 <TableRow sx={{ backgroundColor: "#578EE5" }}>

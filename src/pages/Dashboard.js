@@ -161,7 +161,7 @@ console.log("getopdvisit", getOpd);
   if (isLoading || getOpdLoading) return <Loader />;
 
   return (
-    <Box className="dashboard-wrapper" sx={{ p: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2, sm: 4, md: 6 } }}>
+    <Box className="dashboard-wrapper" sx={{ p: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2, sm: 4, md: 3 } }}>
       {/* Error */}
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -224,10 +224,10 @@ console.log("getopdvisit", getOpd);
                 alert('Please select a patient first');
                 return;
               }
-              navigate('/layout/Billinginformation', { state: { patient } });
+              navigate('/Billinginformation', { state: { patient } });
             }}
           >
-            Bill
+          Create Bill
           </Button>
           <Button
             size="small"
@@ -239,10 +239,10 @@ console.log("getopdvisit", getOpd);
                 alert('Please select a patient first');
                 return;
               }
-              navigate('/layout/BillReceipt', { state: { selectedPatient: patient } });
+              navigate('/BillReceipt', { state: { selectedPatient: patient } });
             }}
           >
-            Bill Recipt
+            Bill Reciept
           </Button>
           
            <Button 
@@ -250,7 +250,7 @@ console.log("getopdvisit", getOpd);
             variant="outlined" 
             sx={{ ml: 1 }}
             disabled={!selectedPatientId}
-            onClick={() => selectedPatientId && navigate(`/layout/IPDRegistration/${selectedPatientId}`)}
+            onClick={() => selectedPatientId && navigate(`/IPDRegistration/${selectedPatientId}`)}
           >
            IPD Registration
           </Button>
@@ -270,7 +270,7 @@ console.log("getopdvisit", getOpd);
           }}
         >
           {/* minWidth ensures ALL columns show on mobile via horizontal scroll */}
-          <Table stickyHeader sx={{ minWidth: 1100, '& .MuiTableCell-head': { whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
+          <Table stickyHeader sx={{ minWidth: 1200, '& .MuiTableCell-head': { whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 'bold',backgroundColor: "#578EE5", color: '#fff', textAlign: 'center', width: 50 }}>
@@ -538,7 +538,7 @@ console.log("getopdvisit", getOpd);
                               <TableCell>
                                 <Button
                                   component={Link}
-                                  to="/layout/Billinginformation"
+                                  to="/Billinginformation"
                                   state={{ bill: b, patient: selectedPatientForBills }}
                                   size="small"
                                   variant="text"

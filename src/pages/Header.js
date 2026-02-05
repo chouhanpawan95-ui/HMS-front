@@ -90,24 +90,6 @@ export default function Header() {
             </Typography>
           </Box>
 
-          {/* SEARCH FIELD */}
-          <Box
-            sx={{
-              display: { xs: "none", md: "flex" },
-              alignItems: "center",
-              backgroundColor: "#f5f5f5",
-              borderRadius: 2,
-              px: 1.5,
-              width: "40%",
-              maxWidth: 400,
-            }}
-          >
-            <SearchIcon color="action" />
-            <InputBase
-              placeholder="Search projects..."
-              sx={{ ml: 1, flex: 1 }}
-            />
-          </Box>
 
           {/* RIGHT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
@@ -158,9 +140,7 @@ export default function Header() {
                 vertical: "top",
                 horizontal: "right",
               }}
-            >
-              <MenuItem disabled>My Profile</MenuItem>
-              <MenuItem disabled>Settings</MenuItem>
+            >            
               <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
                 <LogoutIcon sx={{ mr: 1, fontSize: 20 }} />
                 Logout

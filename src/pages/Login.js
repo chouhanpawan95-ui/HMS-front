@@ -49,7 +49,7 @@ function Login() {
 
       if (data?.token) {
         localStorage.setItem('token', data.token);
-        navigate('/layout');
+        navigate('/');
       } else {
         throw new Error('No token received from server');
       }
