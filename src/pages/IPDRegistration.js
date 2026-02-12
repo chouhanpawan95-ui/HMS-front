@@ -23,7 +23,7 @@ const IPDRegistration = () => {
     bookingType: "direct",
     ageSex: "",
     patientName: "",
-    isDischarge: false,
+    IsDischarge: false,
     mlc: false,
     admissionId: "",
     admissionDate: "",
