@@ -1,10 +1,11 @@
-.loader{
-  display: flex;
-  justify-content: center;
-  inset: 0px;
-  align-items: center;
-  height: 90vh;
-  margin: 0px auto;
+.loader {
+  border: none;        /* remove default border */
+  outline: none;
+  width: 200px;        /* ya jo size chahiye */
+  height: 200px;
+  display: block;
+  margin: 0 auto;      /* center align */
+  overflow: hidden;
 }
 
 .loader iframe {

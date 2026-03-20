@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react"
-const BASE_URL = process.env.REACT_APP_API_URL || "https://hms-api-ho1n.onrender.com/api";
+const BASE_URL = process.env.REACT_APP_API_URL || "https://hms-api-x81r.onrender.com/api";
 
 export const usermasterApi = createApi({
   reducerPath: 'usermasterApi',
@@ -26,6 +26,10 @@ export const usermasterApi = createApi({
         method: 'PUT',
         body: payload,
       }), invalidatesTags: ['UserMasters']
+    }),
+    getUserMaster: builder.query({
+      query: () => "/usermasters",
+      transformResponse: (response) => response.data,
     }),
     deleteUserMaster: builder.mutation({
       query: ({ id }) => ({

@@ -22,39 +22,33 @@ import {
   DialogActions,
   Checkbox,
 } from "@mui/material";
-
 import Loader from "../component/Loader";
-import { useGetPatientsQuery,useGetopdVisitQuery } from "../features/api/patientsApi";
+import { useGetPatientsQuery, useGetopdVisitQuery } from "../features/api/patientsApi";
 import { useGetBillMasterQuery, useLazyGetBillMasterByRegIdQuery } from '../features/api/Hooks/billingApi';
 import { Link, useNavigate } from 'react-router-dom';
 export default function Dashboard() {
   const navigate = useNavigate();
-
   // Pagination / search state
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(10);
+  const [limit, setLimit] = useState(5);
   const [searchQuery, setSearchQuery] = useState("");
   const [filteredPatients, setFilteredPatients] = useState([]);
-
   // OPD visits state (we will show these rows instead of patients)
   const [opdList, setOpdList] = useState([]);
   const [filteredOpd, setFilteredOpd] = useState([]);
   const { data: billdetails } = useGetBillMasterQuery();
   const [fetchBillsByRegId, { data: billsByReg, isLoading: billsByRegLoading, isError: billsByRegError }] = useLazyGetBillMasterByRegIdQuery();
   const [lastRequestedRegId, setLastRequestedRegId] = useState(null);
-
   // Query OPD visits with pagination and optional search
   const { data: getOpd, isLoading: getOpdLoading } = useGetopdVisitQuery({ page, limit, q: searchQuery });
-  console.log("billdetails",billdetails);
+  console.log("billdetails", billdetails);
   const [openBillsDialog, setOpenBillsDialog] = useState(false);
   const [selectedPatientForBills, setSelectedPatientForBills] = useState(null);
   const [billsFilterText, setBillsFilterText] = useState("");
   const [selectedPatientId, setSelectedPatientId] = useState(null);
-
   // Date filter: default to today in YYYY-MM-DD format to show today's visits by default
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0,10));
-
-  console.log("filteredPatients",filteredPatients);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
+  console.log("filteredPatients", filteredPatients);
   // API call
   const {
     data: patientsResp,
@@ -62,23 +56,21 @@ export default function Dashboard() {
     isLoading,
     isError,
   } = useGetPatientsQuery({ page, limit, q: searchQuery });
-
   // Extract array from API response (memoized to avoid changing identity every render)
   const patients = useMemo(() => {
     return Array.isArray(patientsResp)
       ? patientsResp
       : patientsResp?.data && Array.isArray(patientsResp.data)
-      ? patientsResp.data
-      : [];
+        ? patientsResp.data
+        : [];
   }, [patientsResp]);
-
   // Now handle OPD updates and apply filters
   useEffect(() => {
     const rows = Array.isArray(getOpd?.data)
       ? getOpd.data
       : Array.isArray(getOpd)
-      ? getOpd
-      : [];
+        ? getOpd
+        : [];
     setOpdList(rows);
     // Apply current filters when new OPD data arrives
     // (date filter defaults to today via selectedDate state)
@@ -89,12 +81,11 @@ export default function Dashboard() {
         if (!raw) return false; // no date on record
         const parsed = new Date(raw);
         if (!isNaN(parsed)) {
-          return parsed.toISOString().slice(0,10) === selectedDate;
+          return parsed.toISOString().slice(0, 10) === selectedDate;
         }
         // fallback: string-based compare
-        return String(raw).slice(0,10) === selectedDate;
+        return String(raw).slice(0, 10) === selectedDate;
       };
-
       const textMatches = (row) => {
         if (!searchQuery) return true;
         const lower = searchQuery.toLowerCase();
@@ -104,30 +95,22 @@ export default function Dashboard() {
         const name = pname ? `${pname.firstName || ""} ${pname.lastName || ""}`.toLowerCase() : (String(row.patientName || "").toLowerCase());
         return fk.includes(lower) || vid.includes(lower) || name.includes(lower);
       };
-
       const filtered = rows.filter(r => dateMatches(r) && textMatches(r));
       setFilteredOpd(filtered);
     };
-
     applyFilters();
   }, [getOpd, selectedDate, searchQuery, patients]);
-  console.log("seepatient",patientsResp);
-console.log("getopdvisit", getOpd);
-
   // Prefer total count from OPD response; fall back to patients response
   const opdTotal = getOpd?.total || getOpd?.totalCount || getOpd?.meta?.total || null;
   const serverTotal = opdTotal ?? (
     patientsResp?.total || patientsResp?.totalCount || patientsResp?.meta?.total || null
   );
-
   // If date or text filters are active we operate in client-filtered mode
   const isFiltered = Boolean(selectedDate || (searchQuery && searchQuery.trim() !== ""));
   const displayTotal = isFiltered ? filteredOpd.length : (serverTotal ?? filteredOpd.length);
   const displayTotalPages = displayTotal ? Math.ceil(displayTotal / limit) : null;
-
   // When filtered, use client-side pagination (slice the filtered array); otherwise rely on server-side pages
   const hasMore = displayTotalPages ? page < displayTotalPages : (opdList.length === limit && !isFiltered);
-
   // Sync filtered patients when API data changes
   useEffect(() => {
     if (patientsResp) {
@@ -137,14 +120,12 @@ console.log("getopdvisit", getOpd);
     setPage(1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patientsResp, selectedDate, searchQuery]);
-
   // Log when regid fetch returns data for debugging
   useEffect(() => {
     if (Array.isArray(billsByReg)) {
       console.log('billsByReg changed:', billsByReg, 'lastRequestedRegId:', lastRequestedRegId);
     }
   }, [billsByReg, lastRequestedRegId]);
-
   // Resolve selected patient object from `selectedPatientId` using loaded `patients`
   const resolveSelectedPatient = () => {
     if (!selectedPatientId) return null;
@@ -156,12 +137,10 @@ console.log("getopdvisit", getOpd);
     );
     return found || { patientId: selectedPatientId, PK_RegId: selectedPatientId };
   };
-
   // Show loader if patients or OPD are loading
   if (isLoading || getOpdLoading) return <Loader />;
-
   return (
-    <Box className="dashboard-wrapper" sx={{ p: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2, sm: 4, md: 3 } }}>
+    <Box className="dashboard-wrapper" sx={{ p: { xs: 1.5, sm: 2, md: 3 }, mt: { xs: 2, sm: 2, md: 3 } }}>
       {/* Error */}
       {isError && (
         <Alert severity="error" sx={{ mb: 2 }}>
@@ -169,100 +148,90 @@ console.log("getopdvisit", getOpd);
           {error?.data?.message || error?.error || JSON.stringify(error)}
         </Alert>
       )}
-
-       {/* Search Bar (now filters OPD visits) */}
+      {/* TABLE SECTION */}
+      {/* Compact date picker above the table (aligned over 'Seq') */}
       <Box
-        className="search-section"
-        display="flex"
-        flexWrap="wrap"
-        justifyContent="space-between"
-        alignItems="center"
-        gap={2}
-        mb={1}
+        sx={{
+          mb: 2,
+          display: "flex",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 2,
+        }}
       >
-        <Box display="flex" gap={2} alignItems="center">
-
-
-          {/* Search box (text) */}
+        {/* LEFT SIDE (Search + Date) */}
+        <Box display="flex" flexWrap="wrap" gap={2} alignItems="center">
           <TextField
             size="small"
             placeholder="Search visits (visit id, reg id, name)"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            sx={{ width: 360 }}
+            sx={{ width: 250 }}
           />
-        </Box>
-
-
-      </Box>
-
-      {/* TABLE SECTION */}
-      {/* Compact date picker above the table (aligned over 'Seq') */}
-      <Box sx={{ mb: 1, display: 'flex', justifyContent: 'flex-start' }}>
-        <Box display="flex" alignItems="center" gap={1}>
           <TextField
             type="date"
             size="small"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            InputLabelProps={{ shrink: true }}
-            sx={{ width: 160 }}
+            sx={{ width: 150 }}
           />
-          <Button size="small" variant="outlined" onClick={() => setSelectedDate(new Date().toISOString().slice(0,10))} sx={{ ml: 1 }}>
+          <Button
+            size="small"
+            variant="outlined"
+            onClick={() => setSelectedDate(new Date().toISOString().slice(0, 10))}
+          >
             Today
           </Button>
-          <Button size="small" variant="text" onClick={() => setSelectedDate("")} sx={{ ml: 1 }}>
-            Clear Date
+
+          <Button size="small" onClick={() => setSelectedDate("")}>
+            Clear
+          </Button>
+        </Box>
+        {/* RIGHT SIDE (Actions) */}
+        <Box display="flex" flexWrap="wrap" gap={1}>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => {
+              const patient = resolveSelectedPatient();
+              if (!patient) return alert("Select patient first");
+              navigate("/layout/Billinginformation", { state: { patient } });
+            }}
+          >
+            Create Bill
           </Button>
           <Button
             size="small"
             variant="outlined"
-            sx={{ ml: 1 }}
             onClick={() => {
               const patient = resolveSelectedPatient();
-              if (!patient) {
-                alert('Please select a patient first');
-                return;
-              }
-              navigate('/Billinginformation', { state: { patient } });
+              if (!patient) return alert("Select patient first");
+              navigate("/layout/BillReceipt", { state: { selectedPatient: patient } });
             }}
           >
-          Create Bill
+            Receipt
           </Button>
           <Button
             size="small"
             variant="outlined"
-            sx={{ ml: 1 }}
-            onClick={() => {
-              const patient = resolveSelectedPatient();
-              if (!patient) {
-                alert('Please select a patient first');
-                return;
-              }
-              navigate('/BillReceipt', { state: { selectedPatient: patient } });
-            }}
-          >
-            Bill Reciept
-          </Button>
-          
-           <Button 
-            size="small" 
-            variant="outlined" 
-            sx={{ ml: 1 }}
             disabled={!selectedPatientId}
-            onClick={() => selectedPatientId && navigate(`/IPDRegistration/${selectedPatientId}`)}
+            onClick={() =>
+              selectedPatientId &&
+              navigate(`/layout/IPDRegistration/${selectedPatientId}`)
+            }
           >
-           IPD Registration
+            IPD
           </Button>
         </Box>
       </Box>
-      
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <TableContainer
           className="table-container"
           component={Paper}
           sx={{
-            maxHeight: 450,
+            maxHeight: 500,
+            borderRadius: 2,
             overflowX: "auto",
             overflowY: "auto",
             boxShadow: 1,
@@ -270,13 +239,27 @@ console.log("getopdvisit", getOpd);
           }}
         >
           {/* minWidth ensures ALL columns show on mobile via horizontal scroll */}
-          <Table stickyHeader sx={{ minWidth: 1200, '& .MuiTableCell-head': { whiteSpace: 'nowrap', textAlign: 'center', py: 1 } }}>
-            <TableHead>
+          <Table
+            stickyHeader
+            sx={{
+              height: "100%",
+              minWidth: 1200,
+              "& .MuiTableCell-head": {
+                backgroundColor: "#578EE5",
+                color: "#fff",
+                fontWeight: 600,
+                textAlign: "center",
+              },
+              "& .MuiTableRow-root:hover": {
+                backgroundColor: "#f5f5f5",
+              },
+            }}
+          >            <TableHead>
               <TableRow>
-                <TableCell sx={{ fontWeight: 'bold',backgroundColor: "#578EE5", color: '#fff', textAlign: 'center', width: 50 }}>
+                <TableCell sx={{ fontWeight: 'bold', backgroundColor: "#578EE5", color: '#fff', textAlign: 'center', width: 50 }}>
                   {/* Checkbox column */}
                 </TableCell>
-                <TableCell sx={{ fontWeight: 'bold',backgroundColor: "#578EE5", color: '#fff', textAlign: 'center' }}>
+                <TableCell sx={{ fontWeight: 'bold', backgroundColor: "#578EE5", color: '#fff', textAlign: 'center' }}>
                   <Box display="flex" alignItems="center" justifyContent="center" gap={0.5} sx={{ flexWrap: 'nowrap' }}>
                     <span>Seq</span>
                   </Box>
@@ -289,7 +272,7 @@ console.log("getopdvisit", getOpd);
                     whiteSpace: "nowrap",
                   }}
                 >
-                  Reg ID
+                  RegID
                 </TableCell>
                 <TableCell
                   sx={{
@@ -363,7 +346,6 @@ console.log("getopdvisit", getOpd);
                 </TableCell>
               </TableRow>
             </TableHead>
-
             <TableBody>
               {filteredOpd.length > 0 ? (
                 // When filters are active, show a page-slice of the filtered results, otherwise the server has provided a page
@@ -399,19 +381,24 @@ console.log("getopdvisit", getOpd);
                         />
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>
-                          <div style={{ fontSize: 12, color: '#666' }}>#{i + 1}</div>
+                        <div style={{ fontSize: 12, color: "#666" }}>
+                          #{(page - 1) * limit + i + 1}
+                        </div>
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{row.fkRegId || ""}</TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <Avatar className="avatar-responsive" sx={{ width: 32, height: 32 }}>
+                          <Avatar sx={{ width: 32, height: 32, bgcolor: "#1976d2" }}>
                             {(name || "").charAt(0).toUpperCase()}
                           </Avatar>
                           <Box sx={{ minWidth: 0 }}>{name}</Box>
                         </Box>
                       </TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{visitDateTime}{row.visitTime ? `, ${row.visitTime}` : ""}</TableCell>
-                      <TableCell sx={{ whiteSpace: "nowrap" }}>{patient?.dateOfBirth || ""}</TableCell>
+                      <TableCell sx={{ whiteSpace: "nowrap" }}>
+                        {patient?.dateOfBirth?.split("T")[0] || ""}
+                      </TableCell>
+
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{patient?.sex || ""}</TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap" }}>{patient?.permanentAddress?.mobileNo || ""}</TableCell>
                       <TableCell sx={{ whiteSpace: "nowrap", maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis" }}>
@@ -433,7 +420,7 @@ console.log("getopdvisit", getOpd);
                           }}
                         >
                           View Bills
-                        </Button> 
+                        </Button>
                       </TableCell>
                     </TableRow>
                   );
@@ -448,7 +435,6 @@ console.log("getopdvisit", getOpd);
             </TableBody>
           </Table>
         </TableContainer>
-
         {/* Bills Dialog */}
         <Dialog open={openBillsDialog} onClose={() => setOpenBillsDialog(false)} fullWidth maxWidth="md">
           <DialogTitle>Patient Bills</DialogTitle>
@@ -458,12 +444,12 @@ console.log("getopdvisit", getOpd);
                 const allBills = Array.isArray(billsByReg?.data)
                   ? billsByReg.data
                   : Array.isArray(billsByReg)
-                  ? billsByReg
-                  : Array.isArray(billdetails?.data)
-                  ? billdetails.data
-                  : Array.isArray(billdetails)
-                  ? billdetails
-                  : [];
+                    ? billsByReg
+                    : Array.isArray(billdetails?.data)
+                      ? billdetails.data
+                      : Array.isArray(billdetails)
+                        ? billdetails
+                        : [];
                 if (!selectedPatientForBills) return <Typography>No patient selected.</Typography>;
                 console.log("fetchedBills (billsByReg):", billsByReg, "fallback billdetails:", billdetails?.data);
                 // determine candidate registration ids (try multiple possibilities)
@@ -480,7 +466,7 @@ console.log("getopdvisit", getOpd);
                 addCandidate(selectedPatientForBills.patientId);
                 addCandidate(selectedPatientForBills.oldNo);
                 addCandidate(selectedPatientForBills.oldRegId || selectedPatientForBills.OLDRegID);
-               
+
                 // normalize bills array
                 const allBillsArr = allBills || [];
 
@@ -512,9 +498,7 @@ console.log("getopdvisit", getOpd);
                     return db - da;
                   });
                 }
-
                 if (!filtered.length) return <Typography>No bills found for this patient.</Typography>;
-
                 return (
                   <>
                     <Box sx={{ display: 'flex', gap: 1, mb: 1, alignItems: 'center' }}>
@@ -538,7 +522,7 @@ console.log("getopdvisit", getOpd);
                               <TableCell>
                                 <Button
                                   component={Link}
-                                  to="/Billinginformation"
+                                  to="/layout/Billinginformation"
                                   state={{ bill: b, patient: selectedPatientForBills }}
                                   size="small"
                                   variant="text"
@@ -565,14 +549,10 @@ console.log("getopdvisit", getOpd);
             <Button onClick={() => setOpenBillsDialog(false)}>Close</Button>
           </DialogActions>
         </Dialog>
-
         {/* Pagination + Total */}
         <Box
           sx={{
             mt: 2,
-            pt: 2,
-            borderTop: 1,
-            borderColor: "divider",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
@@ -580,13 +560,10 @@ console.log("getopdvisit", getOpd);
             gap: 2,
           }}
         >
-          <Typography variant="body2" color="text.secondary">
-            Total Records: {displayTotal}
+          <Typography variant="body2">
+            Total: <strong>{displayTotal}</strong>
           </Typography>
-
-          {/* Pagination Controls */}
           <Box display="flex" alignItems="center" gap={2}>
-            {/* Limit selector */}
             <TextField
               select
               size="small"
@@ -595,39 +572,32 @@ console.log("getopdvisit", getOpd);
                 setLimit(Number(e.target.value));
                 setPage(1);
               }}
-              sx={{ width: 90 }}
+              sx={{ width: 80 }}
             >
               <MenuItem value={5}>5</MenuItem>
               <MenuItem value={10}>10</MenuItem>
               <MenuItem value={20}>20</MenuItem>
               <MenuItem value={50}>50</MenuItem>
             </TextField>
-
-            {/* Page controls */}
-            <Box display="flex" alignItems="center" gap={1}>
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={page === 1}
-                onClick={() => setPage((p) => Math.max(1, p - 1))}
-              >
-                Prev
-              </Button>
-
-              <Typography variant="body2">
-                Page {page}
-                {displayTotalPages ? ` / ${displayTotalPages}` : ""}
-              </Typography>
-
-              <Button
-                size="small"
-                variant="outlined"
-                disabled={!hasMore}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </Button>
-            </Box>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+            >
+              Prev
+            </Button>
+            <Typography>
+              {page} / {displayTotalPages || 1}
+            </Typography>
+            <Button
+              size="small"
+              variant="outlined"
+              disabled={!hasMore}
+              onClick={() => setPage((p) => p + 1)}
+            >
+              Next
+            </Button>
           </Box>
         </Box>
       </Box>

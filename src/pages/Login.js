@@ -1,4 +1,4 @@
- import React, { useState } from 'react';
+ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Box, TextField, Button, Typography, Paper, Grid, CircularProgress } from "@mui/material";
 import { Alert } from '@mui/material';
@@ -8,6 +8,22 @@ function Login() {
   const [form, setForm] = useState({ email: '', password: '' });
   const [errorMessage, setErrorMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // Prevent browser back button from returning to protected routes after logout
+  useEffect(() => {
+    const preventBackNavigation = () => {
+      window.history.pushState(null, '', window.location.pathname);
+    };
+
+    // Add a history entry and block back navigation while on the login page
+    window.history.pushState(null, '', window.location.pathname);
+    window.addEventListener('popstate', preventBackNavigation);
+
+    return () => {
+      window.removeEventListener('popstate', preventBackNavigation);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +44,7 @@ function Login() {
 
     try {
       setIsLoading(true);
-      const API_URL = process.env.REACT_APP_API_URL || 'https://hms-api-ho1n.onrender.com/api';
+      const API_URL = process.env.REACT_APP_API_URL || 'https://hms-api-x81r.onrender.com/api';
       
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -49,10 +65,14 @@ function Login() {
 
       if (data?.token) {
         localStorage.setItem('token', data.token);
-        navigate('/Dashboard');
+        navigate('/layout/Dashboard');
       } else {
         throw new Error('No token received from server');
       }
+    setShowSuccess(true);
+    setTimeout(() => {
+      navigate("/layout/Dashboard");
+    },4000);
     } catch (err) {
       console.error('Login error:', err);
       setErrorMessage(err.message || 'An error occurred during login');
@@ -60,7 +80,64 @@ function Login() {
       setIsLoading(false);
     }
   };
+if (showSuccess) {
+  return (
+    <Box
+      sx={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f9fafc",
+      }}
+    >
+      <Paper
+        elevation={6}
+        sx={{
+          p: 6,
+          borderRadius: 4,
+          textAlign: "center",
+          backgroundColor: "#ffffff",
+          width: 350,
+        }}
+      >
+        <Box
+          sx={{
+            width: 120,
+            height: 120,
+            borderRadius: "50%",
+            border: "8px solid #5C8FD6",   // ✅ Blue circle
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 20px auto",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: 60,
+              color: "#5C8FD6",   // ✅ Blue tick
+              fontWeight: "bold",
+            }}
+          >
+            ✓
+          </Typography>
+        </Box>
 
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: "bold", color: "#1F2A44", mb: 1 }}
+        >
+          Thank you!
+        </Typography>
+
+        <Typography variant="body1" sx={{ color: "#555" }}>
+          Login Successfully.
+        </Typography>
+      </Paper>
+    </Box>
+  );
+}
   return (
       <Grid
       container

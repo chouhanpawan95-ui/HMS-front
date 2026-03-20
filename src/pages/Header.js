@@ -6,10 +6,8 @@ import {
   Toolbar,
   IconButton,
   Typography,
-  InputBase,
   Box,
   Avatar,
-  Badge,
   Tooltip,
   Drawer,
   Menu,
@@ -23,25 +21,25 @@ import {
   Fullscreen as FullscreenIcon,
   Logout as LogoutIcon
 } from "@mui/icons-material";
-
+import { useGetUserMasterQuery } from "../features/api/usermasterApi";
 export default function Header() {
   const [anchorElProfile, setAnchorElProfile] = useState(null);
-  const [anchorElMessages, setAnchorElMessages] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { data: users, isLoading, error } = useGetUserMasterQuery();
+  const loginName = users?.[0]?.LoginName || "U";
+  const firstLetter = loginName.charAt(0).toUpperCase();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
-
   const handleProfileMenuClose = () => {
     setAnchorElProfile(null);
   };
-
   const handleLogout = () => {
     // Clear local storage and update redux auth state
     localStorage.clear();
+    sessionStorage.clear();
     try {
       // dispatch logout to clear auth token from redux
       const { logout } = require('../features/auth/authSlice');
@@ -50,15 +48,16 @@ export default function Header() {
       // fallback if import fails at runtime
     }
     handleProfileMenuClose();
-    navigate('/');
-  };
 
+    // Make sure the dashboard is not in the browser history after logout
+    // so the back button doesn't return to a protected route.
+    navigate('/', { replace: true });
+  };
   // Sidebar Drawer for Mobile
   const drawer = (
     <Box sx={{ width: 240 }} role="presentation" onClick={handleDrawerToggle}>
-     </Box>
+    </Box>
   );
-
   return (
     <>
       <AppBar
@@ -67,16 +66,13 @@ export default function Header() {
         elevation={1}
         sx={{
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: "#578ee5", color: "#fff"
+          backgroundColor: "#578ee5", color: "#fff",
+          height: "65px",
         }}
       >
         <Toolbar sx={{ display: "flex", justifyContent: "space-between", mt: 1 }}>
           {/* LEFT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
-           {/* MENU ICON FOR MOBILE */}
-           {/* <IconButton color="inherit" edge='start' sx={{display:{xs:'flex', lg:'none'}}}>
-            <MenuIcon/>
-           </IconButton> */}
 
             <Typography
               variant="h6"
@@ -89,41 +85,22 @@ export default function Header() {
               BUILDICON
             </Typography>
           </Box>
-
-
           {/* RIGHT SECTION */}
           <Box display="flex" alignItems="center" gap={1}>
-            {/* <IconButton
-              color="inherit"
-            >
-              <Badge color="warning" variant="dot">
-                <MailIcon />
-              </Badge>
-            </IconButton>
-
-            <IconButton
-              color="inherit"
-            >
-              <Badge color="error" variant="dot">
-                <NotificationsIcon />
-              </Badge>
-            </IconButton>
-
-            <IconButton color="inherit" sx={{ display: { xs: "none", sm: "flex" } }}>
-              <FullscreenIcon />
-            </IconButton>
-
-            <IconButton color="inherit">
-              <SettingsIcon />
-            </IconButton> */}
 
             <Tooltip title="Profile">
               <IconButton onClick={(e) => setAnchorElProfile(e.currentTarget)}>
                 <Avatar
-                  src="/dist/assets/images/faces/face1.jpg"
-                  alt="Profile"
-                  sx={{ width: 32, height: 32 }}
-                />
+                  sx={{
+                    width: 32,
+                    height: 32,
+                    bgcolor: "#fff",
+                    color: "#578ee5",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {firstLetter}
+                </Avatar>
               </IconButton>
             </Tooltip>
 
@@ -140,7 +117,7 @@ export default function Header() {
                 vertical: "top",
                 horizontal: "right",
               }}
-            >            
+            >
               <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
                 <LogoutIcon sx={{ mr: 1, fontSize: 20 }} />
                 Logout
@@ -150,7 +127,7 @@ export default function Header() {
         </Toolbar>
       </AppBar>
 
-       <Drawer
+      <Drawer
         anchor="left"
         open={mobileOpen}
         onClose={handleDrawerToggle}
@@ -166,7 +143,7 @@ export default function Header() {
       >
         {drawer}
       </Drawer>
-     
+
     </>
   );
 }

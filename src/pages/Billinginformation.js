@@ -50,23 +50,6 @@ import Loader from "../component/Loader.js";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useNavigate } from "react-router-dom";
 import { useGetOPDAppointmentQuery} from '../features/api/scheduleApi.js';
-
-// Helper function to convert ISO date to datetime-local format (YYYY-MM-DDTHH:mm)
-const formatDateForDatetimeLocal = (isoDate) => {
-  if (!isoDate) return "";
-  const date = new Date(isoDate);
-  if (isNaN(date.getTime())) return ""; // Invalid date
-  return date.toISOString().slice(0, 16);
-};
-
-// Helper function to convert ISO date to date format (YYYY-MM-DD)
-const formatDateForInput = (isoDate) => {
-  if (!isoDate) return "";
-  const date = new Date(isoDate);
-  if (isNaN(date.getTime())) return ""; // Invalid date
-  return date.toISOString().split("T")[0];
-};
-
 const BranchName = [
   { id: 1, BranchName: "Indore" },
   { id: 2, BranchName: "Bhopal" },
@@ -100,6 +83,7 @@ const BillingInformation = ({
     useCreateReceiptAdjustmentDetailMutation();
   const [submittingWithReceipt, setSubmittingWithReceipt] = useState(false);
   const routerLocation = useLocation();
+  const [showSuccess, setShowSuccess] = useState(false);
   const { bill, patient } = routerLocation.state || {};
   const [pkbillId, setpkbillId] = useState(bill?.billId);
   const [firstName, setFirstName] = useState("");
@@ -182,7 +166,7 @@ const BillingInformation = ({
   const [rate, setRate] = useState("");
   const [billDate, setBillDate] = useState("");
   const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [filteredPatients, setFilteredPatients] = useState([]);
   // Invoice/Bill No (controlled field)
   const [billNo, setBillNo] = useState("");
@@ -193,7 +177,7 @@ const BillingInformation = ({
   const [partyName, setPartyName] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
   const [billingRemarks, setBillingRemarks] = useState("");
-  //
+  
   const [openAppointmentPopup, setOpenAppointmentPopup] = useState(false);
   const [todayAppointments, setTodayAppointments] = useState([]);
   const formatDateForInput = (isoDate) => {
@@ -207,6 +191,9 @@ const BillingInformation = ({
     const d = new Date();
     return d.toISOString().split("T")[0];
   };
+  useEffect(() => {
+  setPage(1);
+}, [filteredPatients]);
   const handleWithAppointmentClick = () => {
     try {
       const today = getTodayDate();
@@ -587,6 +574,10 @@ const BillingInformation = ({
       try {
         try {
           await billDeailSubmit(billMasterResp?.billId);
+           setShowSuccess(true);
+        setTimeout(() => {
+      navigate("/layout/Dashboard");
+    }, 2500);
         } catch (err) {
           // Non-fatal: bill details failed but bill master was created — continue to receipt step
           console.error("Failed to create bill details (non-fatal):", err);
@@ -603,6 +594,7 @@ const BillingInformation = ({
       console.error("Error creating bill:", err);
     }
   };
+  
   const billDeailSubmit = async (billId) => {
     if (!billId) return;
 
@@ -728,11 +720,11 @@ const BillingInformation = ({
         }
       } else {
         if (!isConsultation) {
-          alert(
-            '✅ Bill created successfully. OPD creation skipped because Bill Type is not "Consultation".'
-          );
+          // alert(
+          //   '✅ Bill created successfully. OPD creation skipped because Bill Type is not "Consultation".'
+          // );
         } else {
-          alert("✅ Bill created successfully!");
+          //alert("✅ Bill created successfully!");
         }
       }
 
@@ -1152,13 +1144,71 @@ const BillingInformation = ({
     BillRefID: "",
     Diagnosis: "",
   });
+  if (showSuccess) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#f9fafc",
+        }}
+      >
+        <Paper
+          elevation={6}
+          sx={{
+            p: 6,
+            borderRadius: 4,
+            textAlign: "center",
+            backgroundColor: "#ffffff",
+            width: 350,
+          }}
+        >
+          <Box
+            sx={{
+              width: 120,
+              height: 120,
+              borderRadius: "50%",
+              border: "8px solid #5C8FD6",   // ✅ Blue circle
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px auto",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 60,
+                color: "#5C8FD6",   // ✅ Blue tick
+                fontWeight: "bold",
+              }}
+            >
+              ✓
+            </Typography>
+          </Box>
+  
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: "bold", color: "#1F2A44", mb: 1 }}
+          >
+            Thank you!
+          </Typography>
+  
+          <Typography variant="body1" sx={{ color: "#555" }}>
+           Bill created successfully.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
   return (
     <Box
       sx={{
         background: "#fff",
         color: "#000",
         p: 2,
-        mt: 4,
+        mt: 2,
         minHeight: "100vh",
         ml: { xs: 0, md: 5 },
       }}
@@ -1167,9 +1217,8 @@ const BillingInformation = ({
       {!selectedPatient ? (
         <>
           {isLoading ? (
-            <Box sx={{ display: "flex", justifyContent: "center" }}>
-              <Loader />
-            </Box>
+           <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>         
+        </Box>
           ) : (
             <>
               <Typography variant="h6" sx={{ mb: 1 }}>
@@ -1218,7 +1267,9 @@ const BillingInformation = ({
                 {isLoading ? (
                   <TableRow>
                     <TableCell colSpan={9} align="center">
-                      <Loader />
+                 
+                        <Loader />
+                    
                     </TableCell>
                   </TableRow>
                 ) : paginatedPatients.length > 0 ? (
@@ -2333,46 +2384,7 @@ const BillingInformation = ({
                 </TableBody>
 
               </Table>
-            </TableContainer>
-            // todayAppointments.map((appt) => (
-            //   <Box
-            //     key={appt.appointmentId}
-            //     sx={{
-            //       p: 1,
-            //       borderBottom: "1px solid #ddd",
-            //       cursor: "pointer",
-            //     }}
-            //     onClick={() => handleAppointmentSelect(appt)}
-            //   >
-            //     <Box>
-            //       <TableContainer
-            //         sx={{ mt: 2, width: "100%", overflowX: "auto" }}
-            //       >
-            //         <Table stickyHeader size="small" sx={{ minWidth: 900 }}>
-            //           <TableHead>
-            //             <TableRow>
-            //               {[
-            //                 "RegId",
-            //                 "Doctor Name",
-            //                 "Patient Name",
-            //                 "Age",
-            //                 "Sex",
-            //                 "Number",
-            //               ].map((h) => (
-            //                 <TableCell
-            //                   key={h}
-            //                   sx={{ backgroundColor: "#578EE5", color: "#fff" }}
-            //                 >
-            //                   {h}
-            //                 </TableCell>
-            //               ))}
-            //             </TableRow>
-            //           </TableHead>
-            //         </Table>
-            //       </TableContainer>
-            //     </Box>
-            //   </Box>
-            // ))
+            </TableContainer>          
           )}
         </DialogContent>
       </Dialog>

@@ -18,7 +18,7 @@ import { useCreatePatientMutation } from "../features/api/patientsApi";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useGetPatientIdQuery } from "../features/api/patientsApi";
 import { useLocation } from "react-router-dom";
-
+import { useParams, useNavigate } from "react-router-dom";
 // Helper function to convert ISO date to YYYY-MM-DD format
 const formatDateForInput = (isoDate) => {
   if (!isoDate) return "";
@@ -83,6 +83,8 @@ const defaultPatient = {
 };
 
 export default function PatientRegistrationForm() {
+   const navigate = useNavigate();
+  const [showSuccess, setShowSuccess] = useState(false);
   const [patient, setPatient] = useState(defaultPatient);
   const [errors, setErrors] = useState({});
   const location = useLocation();
@@ -282,6 +284,10 @@ export default function PatientRegistrationForm() {
       await createPatient(patient).unwrap();
       setPatient(defaultPatient);
       setErrors({});
+       setShowSuccess(true);
+      setTimeout(() => {
+      navigate("/layout/Billinginformation");
+    }, 2500);
     } catch (err) {
       console.error("Failed to create patient:", err);
     }
@@ -295,7 +301,64 @@ export default function PatientRegistrationForm() {
   const isFutureDOB = patient.dateOfBirth
     ? new Date(patient.dateOfBirth) > new Date()
     : false;
+if (showSuccess) {
+  return (
+    <Box
+      sx={{
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#f9fafc",
+      }}
+    >
+      <Paper
+        elevation={6}
+        sx={{
+          p: 6,
+          borderRadius: 4,
+          textAlign: "center",
+          backgroundColor: "#ffffff",
+          width: 350,
+        }}
+      >
+        <Box
+          sx={{
+            width: 120,
+            height: 120,
+            borderRadius: "50%",
+            border: "8px solid #5C8FD6",   // ✅ Blue circle
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            margin: "0 auto 20px auto",
+          }}
+        >
+          <Typography
+            sx={{
+              fontSize: 60,
+              color: "#5C8FD6",   // ✅ Blue tick
+              fontWeight: "bold",
+            }}
+          >
+            ✓
+          </Typography>
+        </Box>
 
+        <Typography
+          variant="h5"
+          sx={{ fontWeight: "bold", color: "#1F2A44", mb: 1 }}
+        >
+          Thank you!
+        </Typography>
+
+        <Typography variant="body1" sx={{ color: "#555" }}>
+         Patient registered successfully.
+        </Typography>
+      </Paper>
+    </Box>
+  );
+}
   return (
     <Box
       sx={{
@@ -312,7 +375,7 @@ export default function PatientRegistrationForm() {
           borderRadius: 3,
           p: { xs: 2, sm: 3, md: 4 },
           backgroundColor: "white",
-          mt: { xs: 6, sm: 8 },
+          mt: { xs: 2, sm: 2 },
         }}
       >
         <form onSubmit={handleSubmit} noValidate>
@@ -405,7 +468,7 @@ export default function PatientRegistrationForm() {
                     value={patient.title}
                     onChange={handleChange}
                     size="small"
-                    sx={{ width: 70 }}
+                    sx={{ width: 80 }}
                     error={Boolean(errors.title)}
                     helperText={errors.title}
                   >
@@ -444,7 +507,7 @@ export default function PatientRegistrationForm() {
                     value={patient.sex}
                     onChange={handleChange}
                     size="small"
-                    sx={{ width: 70 }}
+                    sx={{ width: 110 }}
                   >
                     <MenuItem value="M">Male</MenuItem>
                     <MenuItem value="F">Female</MenuItem>
@@ -721,11 +784,11 @@ export default function PatientRegistrationForm() {
           </Box>
         </form>
 
-        {isSuccess && (
+        {/* {isSuccess && (
           <Alert severity="success" sx={{ mt: 2 }}>
             Patient registered successfully!
           </Alert>
-        )}
+        )} */}
 
         {isError && (
           <Alert severity="error" sx={{ mt: 2 }}>
