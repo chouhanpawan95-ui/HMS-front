@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Drawer,
   List,
@@ -10,377 +10,203 @@ import {
   IconButton,
   useMediaQuery,
 } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
-  Home as HomeIcon,
   ExpandLess,
   ExpandMore,
-  AppRegistration,
-  ArrowRight as ArrowRightIcon,
   Menu as MenuIcon,
-  PersonAddAlt
+  ArrowRight as ArrowRightIcon,
 } from "@mui/icons-material";
 import { useTheme } from "@mui/material/styles";
-import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
-import '../App.css';
+import { useGetMenuQuery } from "../features/api/authApi";
+import {
+  Home as HomeIcon,
+  AppRegistration,
+  PersonAddAlt
+} from "@mui/icons-material";
+const Sidebar = () => {
+  const [menuData, setMenuData] = useState([]);
+  const [openMenu, setOpenMenu] = useState({});
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-const Sidebar = ({ drawerWidth = 260 }) => {
+  const { data } = useGetMenuQuery();
   const location = useLocation();
 
-  useEffect(() => {
-    setOpenMenu({
-      ui: false,
-      icons: false,
-      froms: false,
-      charts: false,
-      tables: false,
-    });
-  }, [location]);
-
-  const [openMenu, setOpenMenu] = useState({
-    ui: false,
-    icons: false,
-    forms: false,
-    charts: false,
-    tables: false,
-  });
-  const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const getMenuIcon = (menuName) => {
+    switch (menuName) {
+      case "Dashboard":
+        return <HomeIcon />;
+      case "Registration":
+        return <AppRegistration />;
+      case "Master":
+        return <PersonAddAlt />;
+
+    }
+  };
+  // 🔥 Build Menu Tree
+  const buildMenuTree = (data) => {
+    return [
+      // Dashboard
+      data.find((d) => d.MenuGroup === "1"),
+
+      // Registration
+      {
+        title: "Registration",
+        children: data.filter(
+          (d) => d.MenuGroup === "2" && d.MenuName !== "Registration"
+        ),
+      },
+
+      // Master Section
+      {
+        title: "Master",
+        children: [
+          {
+            title: "User Master",
+            children: data.filter(
+              (d) => d.MenuGroup === "3" && d.MenuName !== "Master"
+            ),
+          },
+          {
+            title: "Location",
+            children: data.filter(
+              (d) => d.MenuGroup === "4" && d.MenuName !== "Location"
+            ),
+          },
+          {
+            title: "Billing",
+            children: data.filter(
+              (d) => d.MenuGroup === "6" && d.MenuName !== "Billing"
+            ),
+          },
+          {
+            title: "Schedule",
+            children: data.filter(
+              (d) => d.MenuGroup === "7" && d.MenuName !== "Schedule"
+            ),
+          },
+        ],
+      },
+    ];
+  };
+
+  // 🔥 Load API Data
+  useEffect(() => {
+    if (data?.data) {
+      const structuredMenu = buildMenuTree(data.data);
+      setMenuData(structuredMenu);
+    }
+  }, [data]);
+
+  // 🔥 Reset open menu on route change
+  useEffect(() => {
+    setOpenMenu({});
+  }, [location]);
 
   const handleToggle = (menu) => {
-    setOpenMenu((prev) => ({ ...prev, [menu]: !prev[menu] }));
+    setOpenMenu((prev) => ({
+      ...prev,
+      [menu]: !prev[menu],
+    }));
   };
 
   const handleMenuClick = () => {
-    if (isMobile) setMobileOpen(false); // Close sidebar on mobile
+    if (isMobile) setMobileOpen(false);
+  };
+
+  // 🔥 Render Menu Recursively
+  const renderMenu = (menus, level = 0) => {
+    return menus.map((menu, index) => {
+      if (!menu) return null;
+
+      return (
+        <React.Fragment key={index}>
+          <ListItemButton
+            sx={{
+              pl: isSidebarOpen ? 2 + level * 2 : 1,
+              justifyContent: isSidebarOpen ? "initial" : "center",
+
+              // ✅ Transparent so sidebar color visible
+              backgroundColor: "transparent",
+              color: "#fff",
+
+              // ✅ Hover effect
+              "&:hover": {
+                backgroundColor: "#3f6fd1", // darker blue
+              },
+            }}
+            component={menu.MenuLink ? Link : "div"}
+            to={menu.MenuLink ? `/layout${menu.MenuLink}` : undefined}
+            onClick={
+              menu.children
+                ? () => handleToggle(menu.title)
+                : handleMenuClick
+            }
+          >
+            {/* ICON */}
+            <ListItemIcon
+              sx={{
+                minWidth: 0,
+                mr: isSidebarOpen ? 2 : "auto",
+                justifyContent: "center",
+                color: "#fff", // white icons
+              }}
+            >
+              {getMenuIcon(menu.title || menu.MenuName)}
+            </ListItemIcon>
+
+            {/* TEXT */}
+            {isSidebarOpen && (
+              <ListItemText
+                primary={menu.title || menu.MenuName}
+                sx={{ color: "#fff" }}
+              />
+            )}
+
+            {/* EXPAND ICON */}
+            {menu.children && isSidebarOpen && (
+              openMenu[menu.title] ? <ExpandLess /> : <ExpandMore />
+            )}
+          </ListItemButton>
+
+          {/* Children */}
+          {menu.children && isSidebarOpen && (
+            <Collapse
+              in={openMenu[menu.title]}
+              timeout="auto"
+              unmountOnExit
+            >
+              <List disablePadding>
+                {renderMenu(menu.children, level + 1)}
+              </List>
+            </Collapse>
+          )}
+        </React.Fragment>
+      );
+    });
   };
 
   const drawerContent = (
-    <Box>
-
-      {/* Menu Section */}
-      <Box sx={{ flexGrow: 1, overflowY: "auto"}} >
-        <List component="nav" sx={{ px: 1, mt: 8 }} className="sidebar">
-
-          {/* Dashboard */}
-          <div className="menu-item">
-            <ListItemIcon className="menu-icon">
-              <HomeIcon className="mt-icon-1" sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemButton className="menu-text" component={Link} to="/layout/Dashboard" onClick={handleMenuClick}>
-              <ListItemText primary="Dashboard" />
-            </ListItemButton>
-          </div>
-
-          {/* Registration */}
-          <div className="menu-item">
-            <ListItemIcon className="menu-icon">
-              <AppRegistration className="mt-icon-1" sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemButton className="menu-text" onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              handleToggle("ui");
-            }}>
-              <ListItemText primary="Registration" />
-              <IconButton
-                edge="end"
-                size="small"
-                sx={{ ml: 1, color: "#fff" }}
-              >
-                {openMenu.ui ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
-            </ListItemButton>
-          </div>
-
-          <Collapse in={openMenu.ui} timeout="auto" unmountOnExit>
-            <List component="div" disablePadding>
-              <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/Registration" onClick={handleMenuClick}>
-                <ListItemIcon sx={{ minWidth: 30 }}>
-                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary="New Patient"
-                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                />
-              </ListItemButton>
-
-              <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/Billinginformation" onClick={handleMenuClick}>
-                <ListItemIcon sx={{ minWidth: 30 }}>
-                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                </ListItemIcon>
-                <ListItemText
-                  primary="Old Patient"
-                  primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                />
-              </ListItemButton>
-            </List>
-          </Collapse>
-
-          {/* User Master */}
-          <div className="menu-item">
-            <ListItemIcon className="menu-icon">
-              <PersonAddAlt className="mt-icon-1" sx={{ color: "#fff" }} />
-            </ListItemIcon>
-            <ListItemButton className="menu-text" onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              handleToggle("um");
-            }}>
-              <ListItemText primary="Master" />
-              <IconButton
-                edge="end"
-                size="small"
-                sx={{ ml: 1, color: "#fff" }}
-              >
-                {openMenu.um ? <ExpandLess /> : <ExpandMore />}
-              </IconButton>
-            </ListItemButton>
-          </div>
-
-          <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
-            <List component='div' disablePadding>
-
-              <ListItemButton sx={{ pl: 6 }} onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                handleToggle('ms');
-              }}>
-                <ListItemIcon sx={{ minWidth: 30 }}>
-                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                </ListItemIcon>
-
-                <ListItemText primary='User Master' sx={{ fontSize: 18, color: "#fff" }} />
-                <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
-                  {openMenu.ms ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
-
-              </ListItemButton>
-
-              <Collapse in={openMenu.ms} timeout='auto' unmountOnExit>
-                <List component="div" disablePadding sx={{ fontSize: 18, color: "#fff" }}>
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/UserMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="User Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                </List>
-              </Collapse>
-            </List>
-          </Collapse>
-
-          {/* location */}
-          <Collapse in={openMenu.um} timeout="auto" unmountOnExit>
-            <List component='div' disablePadding>
-
-              <ListItemButton sx={{ pl: 6 }} onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                handleToggle('loc');
-              }}>
-                <ListItemIcon sx={{ minWidth: 30 }}>
-                  <ArrowRightIcon sx={{ fontSize: 18, color: "#fff" }} />
-                </ListItemIcon>
-
-                <ListItemText primary='Location' sx={{ fontSize: 18, color: "#fff" }} />
-                <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
-                  {openMenu.loc ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
-              </ListItemButton>
-
-              <Collapse in={openMenu.loc} timeout='auto' unmountOnExit>
-                <List component="div" disablePadding>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/CountryMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Country Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/StateMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="State Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/DistrictMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="District Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/CityMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="City Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-                </List>
-              </Collapse>
-            </List>
-          </Collapse>
-          
-          {/* Billing */}
-          <Collapse in={openMenu.um} timeout='auto' unmountOnExit>
-            <List component='div' disablePadding>
-              <ListItemButton sx={{pl:6}} onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                handleToggle('bm');
-              }}>
-                <ListItemIcon sx={{minWidth:30}}>
-                  <ArrowRightIcon sx={{fontSize:18, color:'#fff'}}/>
-                </ListItemIcon>
-
-                <ListItemText primary='Billing' sx={{ fontSize: 18, color: "#fff" }}/>
-                <IconButton edge='end' size="small" sx={{ ml: 1, color: "#fff" }}>
-                  {openMenu.bm ? <ExpandLess /> : <ExpandMore />}
-                </IconButton>
-              </ListItemButton>
-
-              <Collapse in={openMenu.bm} timeout='auto' unmountOnExit >
-              <List component='div' disablePadding>
-
-                <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/ServiceMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Service Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/ServiceDepartmentMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Service Deptartment Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/ServiceCatMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Service Cat. Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/RateListMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Rate List Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/PartyMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Party Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-                  <ListItemButton sx={{ pl: 6 }} component={Link} to="/layout/PackageMaster" onClick={handleMenuClick}>
-                    <ListItemIcon sx={{ minWidth: 30 }}>
-                    </ListItemIcon>
-                    <ListItemText
-                      primary="Package Master"
-                      primaryTypographyProps={{ fontSize: "0.9rem", color: "#fff" }}
-                    />
-                  </ListItemButton>
-
-              </List>
-              </Collapse>
-            </List>
-          </Collapse>
-
-          <Collapse in={openMenu.um} timeout='auto' unmountOnExit>
-              <List component='div' disablePadding>
-                <ListItemButton sx={{pl:6}} onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  handleToggle('s');
-                }}>
-                  <ListItemIcon sx={{minWidth:30}}>
-                    <ArrowRightIcon sx={{fontSize:18,color:'#fff'}}/>
-                  </ListItemIcon>
-
-                  <ListItemText primary='Schedule' sx={{color:'#fff',fontSize:18}}/>
-                  <IconButton edge='end' size="small" sx={{ml:1,color:'#fff'}}>
-                    {openMenu.s?<ExpandLess/> : <ExpandMore/> }
-                  </IconButton>
-                </ListItemButton>
-
-                <Collapse in={openMenu.s} timeout='auto' unmountOnExit>
-                  <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:5}} component={Link} to='/layout/OPDSchedule' onClick={handleMenuClick}>
-                    <ListItemIcon sx={{minWidth:30}}/>
-                    <ListItemText
-                      primary='OPD Appointment Schedule'
-                      primaryTypographyProps={{fontSize:'0.9rem', color:'#fff' }} 
-                    />
-                    </ListItemButton>
-                  </List>
-                  <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/AppointmentManager' onClick={handleMenuClick}>
-                      <ListItemIcon sx={{minWidth:30}}/>
-                      <ListItemText primary="Appointment Manager" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
-                    </ListItemButton>
-                  </List>
-                  <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/AppointmentSchedule' onClick={handleMenuClick}>
-                      <ListItemIcon sx={{minWidth:30}}/>
-                      <ListItemText primary="Patient Schedule" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
-                    </ListItemButton>
-                  </List>
-                  <List component='div' disablePadding>
-                    <ListItemButton sx={{pl:6}} component={Link} to='/layout/DoctorSchedule' onClick={handleMenuClick}>
-                      <ListItemIcon sx={{minWidth:30}}/>
-                      <ListItemText primary="Doctor Schedule" primaryTypographyProps={{fontSize:"0.9rem", color:'#fff'}}/>
-                    </ListItemButton>
-                  </List>
-                </Collapse>
-
-              </List>
-          </Collapse>
-
-        </List>
-      </Box >
-    </Box >
+    <Box sx={{ mt: 7 }}>
+      <List>{renderMenu(menuData)}</List>
+    </Box>
   );
 
   return (
     <>
-      {/* Mobile Toggle Button */}
+      {/* Mobile Button */}
       {isMobile && (
         <IconButton
-          color="inherit"
-          aria-label="open drawer"
-          edge="start"
           onClick={() => setMobileOpen(!mobileOpen)}
-          sx={{ m: 1, position: "fixed", top: 10, left: 10, zIndex: 1300,display:{xs:'flex', lg:'none'} }}
+          sx={{
+            position: "fixed",
+            top: 10,
+            left: 10,
+            zIndex: 1300,
+          }}
         >
           <MenuIcon />
         </IconButton>
@@ -392,33 +218,23 @@ const Sidebar = ({ drawerWidth = 260 }) => {
           variant="temporary"
           open={mobileOpen}
           onClose={() => setMobileOpen(false)}
-          ModalProps={{ keepMounted: true }}
-          sx={{
-            "& .MuiDrawer-paper": {
-              width: 'auto',
-              backgroundColor: "#fff",
-              boxSizing: "border-box",
-            },
-          }}
-          PaperProps={{ sx: { boxShadow: 'none' } }}
+          sx={{ backgroundColor: "#578EE5" }}
         >
           {drawerContent}
         </Drawer>
       ) : (
         <Drawer
           variant="permanent"
+          onMouseEnter={() => setIsSidebarOpen(true)}
+          onMouseLeave={() => setIsSidebarOpen(false)}
           sx={{
-            flexShrink: 0,
             [`& .MuiDrawer-paper`]: {
-              width: 'auto',
-              boxSizing: "border-box",
-              backgroundColor: "#fff",
-              borderRight: "1px solid #e0e0e0",
-              position: "fixed",
-              height: "100vh",
+              width: isSidebarOpen ? 260 : 70,
+              transition: "0.3s",
+              overflowX: "hidden",
+              backgroundColor: isSidebarOpen ? "#578EE5" : "#578EE5",
             },
           }}
-          PaperProps={{ sx: { boxShadow: 'none', minWidth: 0 } }}
           open
         >
           {drawerContent}

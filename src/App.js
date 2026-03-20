@@ -13,6 +13,7 @@ import BillingInformation from "./pages/Billinginformation";
 import Layout from "./pages/Layout";
 import DistrictMaster from "./Master/Location/DistrictMaster";
 import AddUsermaster from "./Master/UserManagement/AddUsermaster";
+import AddPermission from "./Master/UserManagement/AddPermission";
 import UserMaster from "./Master/UserManagement/UserMaster";
 import UpdateUser from "./Master/UserManagement/UpdateUser";
 import ServiceMaster from "./Master/BillingMaster/ServiceMaster";
@@ -45,6 +46,7 @@ function App() {
           <Route path="StateMaster" element={<StateMaster />} />
           <Route path="DistrictMaster" element={<DistrictMaster />} />
           <Route path="AddUsermaster" element={<AddUsermaster />} />
+          <Route path="AddPermission" element={<AddPermission />} />
           <Route path="UserMaster" element={<UserMaster />} />
           <Route path="UpdateUser/:id" element={<UpdateUser />} />
           <Route path="ServiceMaster" element={<ServiceMaster />} />
@@ -64,7 +66,7 @@ function App() {
           <Route path="DoctorSchedule" element={<DoctorSchedule/>}/>
           <Route path="Billinginformation" element={<BillingInformation doctorList={DoctorList} billTypeList={BillType} categoryList={CategoryList} />} />
           <Route path="BillReceipt" element={<BillReceipt />} />
-          <Route path="IPDRegistration/:patientId" element={<IPDRegistration />} />
+         <Route path="/layout/IPDRegistration/:patientId" element={<IPDRegistration />} />
         </Route>
       </Routes>
     </BrowserRouter>

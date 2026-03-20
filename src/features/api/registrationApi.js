@@ -1,6 +1,6 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-const regBaseUrl = process.env.REACT_APP_API_URL || 'https://hms-api-ho1n.onrender.com/api';
+const regBaseUrl = process.env.REACT_APP_API_URL || 'https://hms-api-x81r.onrender.com/api';
 
 export const registrationApi = createApi({
   reducerPath: 'registrationApi',

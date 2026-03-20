@@ -16,10 +16,16 @@ import {
   DialogContent,
   DialogActions
 } from "@mui/material";
+import Pagination from "@mui/material/Pagination";
 import { useNavigate } from "react-router-dom";
 import AddUsermaster from "./AddUsermaster";
-
+import {useGetUserMasterQuery } from "../../features/api/usermasterApi";
+import Loader from "../../component/Loader";
 export default function ServiceMaster() {
+const { data: users, isLoading, error } = useGetUserMasterQuery();
+const [searchTerm, setSearchTerm] = useState("");
+const [page, setPage] = useState(1);
+const rowsPerPage = 5;
   const [open, setOpen] = useState(false);
   const [services, setServices] = useState([]);
   const navigate = useNavigate();
@@ -28,6 +34,15 @@ export default function ServiceMaster() {
     description: "",
     isActive: true
   });
+  const filteredUsers = users?.filter((user) =>
+  `${user.LoginName} ${user.UserName} ${user.ShortName}`
+    .toLowerCase()
+    .includes(searchTerm.toLowerCase())
+);
+const paginatedUsers = filteredUsers?.slice(
+  (page - 1) * rowsPerPage,
+  page * rowsPerPage
+);
 
   const [editIndex, setEditIndex] = useState(null);
 
@@ -59,8 +74,9 @@ export default function ServiceMaster() {
     setOpen(true);
   };
 
+
   return (
-    <Box sx={{ p: 2, mt: 10 }}>
+    <Box sx={{ p: 2, mt: 4}}>
 
       {/* New Service Button */}
       <Button
@@ -68,51 +84,97 @@ export default function ServiceMaster() {
         sx={{ mb: 2, textTransform: "none" }}
         onClick={() => navigate("/layout/AddUsermaster")}
       >
-        + New Service
+        + Add User
+      </Button>
+<TextField
+  label="Search User"
+  variant="outlined"
+  size="small"
+  sx={{ mb: 2,ml:2 }}
+  value={searchTerm}
+  onChange={(e) => setSearchTerm(e.target.value)}
+/>
+<Button
+        variant="contained"
+        sx={{ mb: 2, textTransform: "none",ml:2 }}
+        onClick={() => navigate("/layout/AddPermission")}
+      >
+        Report Permission
       </Button>
 
       {/* Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead sx={{ backgroundColor: "#f5f5f5" }}>
-            <TableRow>
-              <TableCell><b>Service Name</b></TableCell>
-              <TableCell><b>Service Description</b></TableCell>
-              <TableCell><b>Is Active</b></TableCell>
-              <TableCell><b>Action</b></TableCell>          
-            </TableRow>
-          </TableHead>
+     <TableContainer component={Paper} >
+  <Table>
+    <TableHead>
+      <TableRow sx={{ backgroundColor: "#578EE5",color: "#fff" }}>
+        <TableCell sx={{color: "#fff" }}><b>Login Name</b></TableCell>
+        <TableCell sx={{color: "#fff" }}><b>User Name</b></TableCell>
+        <TableCell sx={{color: "#fff" }}><b>Short Name</b></TableCell>
+        <TableCell sx={{color: "#fff" }}><b>Password</b></TableCell>
+        <TableCell sx={{color: "#fff" }}><b>FK_UsertypeId</b></TableCell>
+        <TableCell sx={{color: "#fff" }}><b>UserType</b></TableCell>
+        <TableCell sx={{color: "#fff" }}><b>FK_EmployeeId</b></TableCell>
+      </TableRow>
+    </TableHead>
 
-          <TableBody>
-            {/* {services.map((s, index) => ( */}
-              <TableRow>
-                <TableCell>Consultation FEES</TableCell>
-                <TableCell>COMFOCAL MICROSCOPY</TableCell>
-                <TableCell>
-                 YES
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="outlined"
-                    size="small"
-                    //onClick={() => handleEdit(index)}
-                  >
-                    Edit
-                  </Button>
-                </TableCell>
-              </TableRow>
-            {/* ))} */}
-            {/* {services.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={4} align="center">
-                  No services added.
-                </TableCell>
-              </TableRow>
-            )} */}
-          </TableBody>
-        </Table>
-      </TableContainer>
+    <TableBody>
 
+  {/* Loading */}
+  {isLoading && (
+    <TableRow>
+      <TableCell colSpan={7} align="center">
+          <Loader />
+      </TableCell>
+    </TableRow>
+  )}
+
+  {/* Error */}
+  {error && (
+    <TableRow>
+      <TableCell colSpan={7} align="center">
+        Error loading users
+      </TableCell>
+    </TableRow>
+  )}
+
+  {/* Data */}
+{paginatedUsers?.map((user) => (
+  <TableRow key={user.PK_UserId}>
+    <TableCell>{user.LoginName}</TableCell>
+    <TableCell>{user.UserName}</TableCell>
+    <TableCell>{user.ShortName}</TableCell>
+    <TableCell>{user.Password?.charAt(0)}</TableCell>
+    <TableCell>{user.FK_UserTypeId}</TableCell>
+    <TableCell>{user.UserType}</TableCell>
+    <TableCell>{user.Fk_EmployeeId}</TableCell>
+  </TableRow>
+))}
+
+
+  {/* No Data */}
+  {!isLoading && !error && filteredUsers?.length === 0 && (
+    <TableRow>
+      <TableCell colSpan={7} align="center">
+        No users found
+      </TableCell>
+    </TableRow>
+  )}
+
+</TableBody>
+
+  </Table>
+</TableContainer>
+
+{filteredUsers?.length > 0 && (
+  <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+    <Pagination
+      count={Math.ceil(filteredUsers.length / rowsPerPage)}
+      page={page}
+      onChange={(e, value) => setPage(value)}
+      color="primary"
+    />
+  </Box>
+)}
       {/* Popup Form */}
       <Dialog open={open} onClose={() => setOpen(false)}>
         <DialogTitle>

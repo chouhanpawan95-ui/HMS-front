@@ -23,8 +23,6 @@ import { useNavigate } from "react-router-dom";
 import { useCreateUserMasterMutation, useGetUserMasterNextIdQuery, useLazyGetUserMasterNextIdQuery } from "../../features/api/usermasterApi";
 import { useForm, Controller } from "react-hook-form";
 import style from "../BillingMaster/RateListMaster.module.css";
-
-
 const userTypes = [
   "Reception",
   "History & Examination",
@@ -39,31 +37,16 @@ const userTypes = [
   "Pharmacy",
   "Stores"
 ];
-
 export default function UserMasterForm() {
   // const { data: usermasternextid } = useGetUserMasterNextIdQuery();
   const [getNextUserId] = useLazyGetUserMasterNextIdQuery();
   // console.log("usermasternextid: ", usermasternextid);
   const navigate = useNavigate();
-  // const handleSelect = (event) => {
-  //   const value = event.target.value;
-
-  //   setSelectedTypes(
-  //     Array.isArray(value)
-  //       ? value
-  //       : typeof value === 'string'
-  //         ? value.split(',')
-  //         : []
-  //   );
-  // };
-
-  const gender = ['Male', 'Female', 'Other']
+  const [showSuccess, setShowSuccess] = useState(false);
   const [createUserMaster, { isLoading }] = useCreateUserMasterMutation();
-
   const handleBack = () => {
-    navigate("/UserMaster");
+    navigate("/layout/UserMaster");
   };
-
   const {
     register,
     handleSubmit,
@@ -80,72 +63,103 @@ export default function UserMasterForm() {
       if (!nextUserId || typeof nextUserId !== "string") {
         throw new Error("Invalid User ID");
       }
-
       const payload = {
         PK_UserId: nextUserId,
-
         LoginName: data.LoginName,
         UserName: data.UserName,
         ShortName: data.ShortName,
         Password: data.Password,
-
+        // ✅ Multi select → string
         FK_UserTypeId: normalizeArray(data.FK_UserTypeId),
-        FK_AuthTypeId: normalizeArray(data.FK_AuthTypeId),
+        // ✅ Single select → direct value (FIXED)
+        FK_AuthTypeId: data.FK_AuthTypeId || "",
+        // ✅ Multi select → string (FIXED)
+        Fk_EmployeeId: normalizeArray(data.Fk_EmployeeId),
         ScheduleWeekDays: normalizeArray(data.ScheduleWeekDays),
-
-        Fk_EmployeeId: data.Fk_EmployeeId,
         FK_SubSpecialtyId: data.FK_SubSpecialtyId,
         FK_DefaultBranchId: data.FK_DefaultBranchId,
         FK_LoginBranchId: data.FK_LoginBranchId,
-        FK_DeptID: data.FK_DeptID,
-        FK_DefaultServiceDeptID: data.FK_DefaultServiceDeptID,
-
         RoomNo: data.RoomNo,
         DefaultRoomNo: data.DefaultRoomNo,
-        DefaultOptomID: data.DefaultOptomID,
-
-        DiagnosisDept: data.DiagnosisDept,
-        DoctorPage: data.DoctorPage,
-
         Discount: Number(data.Discount) || 0,
-
         MobileNo: data.MobileNo,
         Email: data.Email,
         DOB: data.DOB,
-        Gender: data.Gender,
-        NationalID: data.NationalID,
-        RegistrationNo: data.RegistrationNo,
-        ClinicName: data.ClinicName,
-        Specialization: data.Specialization,
-
-        // booleans (force true/false)
+        // ✅ booleans safe
         IsEditableBranch: !!data.IsEditableBranch,
         IsPatientTransfer: !!data.IsPatientTransfer,
         IsActive: !!data.IsActive,
-        IsExternal: !!data.IsExternal,
-        IsCreateUser: !!data.IsCreateUser,
-        IsAllowtoCA: !!data.IsAllowtoCA,
-        IsAllowtoFA: !!data.IsAllowtoFA,
-        IsAneasthetist: !!data.IsAneasthetist,
-        IsOnlineShow: !!data.IsOnlineShow,
-        IsLockLocation: !!data.IsLockLocation,
-        IsUserNameLock: !!data.IsUserNameLock,
-        IsApprovalAuthorized: !!data.IsApprovalAuthorized,
-        DoctorWorkupPatternScreen: !!data.DoctorWorkupPatternScreen,
-        TeleConsultation: !!data.TeleConsultation,
-        NetConsultation: !!data.NetConsultation,
-        PRHelpF3: !!data.PRHelpF3,
       };
 
       await createUserMaster(payload).unwrap();
-      alert("Successfully saved");
+      setShowSuccess(true);
+      setTimeout(() => {
+        navigate("/layout/UserMaster");
+      }, 2500);
     } catch (err) {
       console.error(err);
       alert("Save failed");
     }
   };
 
+  if (showSuccess) {
+    return (
+      <Box
+        sx={{
+          height: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "#f9fafc",
+        }}
+      >
+        <Paper
+          elevation={6}
+          sx={{
+            p: 6,
+            borderRadius: 4,
+            textAlign: "center",
+            backgroundColor: "#ffffff",
+            width: 350,
+          }}
+        >
+          <Box
+            sx={{
+              width: 120,
+              height: 120,
+              borderRadius: "50%",
+              border: "8px solid #5C8FD6",   // ✅ Blue circle
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px auto",
+            }}
+          >
+            <Typography
+              sx={{
+                fontSize: 60,
+                color: "#5C8FD6",   // ✅ Blue tick
+                fontWeight: "bold",
+              }}
+            >
+              ✓
+            </Typography>
+          </Box>
 
+          <Typography
+            variant="h5"
+            sx={{ fontWeight: "bold", color: "#1F2A44", mb: 1 }}
+          >
+            Thank you!
+          </Typography>
+
+          <Typography variant="body1" sx={{ color: "#555" }}>
+            Saved Successfully.
+          </Typography>
+        </Paper>
+      </Box>
+    );
+  }
   return (
     <Box
       sx={{
@@ -163,7 +177,7 @@ export default function UserMasterForm() {
           bgcolor: "#fff",
           borderTop: "6px solid #1976d2",
           overflow: 'hidden',
-          mt: { xs: 6, sm: 8 }
+          mt: { xs: 2, sm: 2 }
         }}
       >
         <Box>
@@ -175,34 +189,29 @@ export default function UserMasterForm() {
         <Box
         >
           <form onSubmit={handleSubmit(submit)}>
-
             <Grid container spacing={2}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Login Name" size="small" {...register('LoginName', { required: true })} error={!!errors?.LoginName} /></Grid>
-
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="User Name" size="small" {...register('UserName', { required: true })} /></Grid>
-
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Short Name" size="small" sx={{ mb: 2 }} {...register('ShortName', { required: true })} />
               </Grid>
             </Grid>
-
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
-                <TextField 
-                fullWidth 
-                label="Password" 
-                size="small" 
-                sx={{ mb: 2 }} 
-                {...register('Password', { 
-                  required: true,
-                  minLength:{value:6,message:"Min 6 Chars"}
-                   })} />
+                <TextField
+                  fullWidth
+                  label="Password"
+                  size="small"
+                  sx={{ mb: 2 }}
+                  {...register('Password', {
+                    required: true,
+                    minLength: { value: 6, message: "Min 6 Chars" }
+                  })} />
               </Grid>
-
               <Grid item xs={12} sm={6} md={4}>{/* Multi-select dropdown */}
-                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                <FormControl fullWidth size="small" sx={{ mb: 2, width: 250 }}>
                   <InputLabel>User Type</InputLabel>
                   <Controller
                     name="FK_UserTypeId"
@@ -212,35 +221,59 @@ export default function UserMasterForm() {
                       <Select
                         {...field}
                         multiple
-                        size="small"
-                        value={field.value || ""}
-                        onChange={(e) =>
-                          field.onChange(
-                            Array.isArray(e.target.value)
-                              ? e.target.value
-                              : e.target.value.split(",")
-                          )
-                        }
-                        renderValue={(selected) =>
-                          Array.isArray(selected) && selected.length > 0
-                            ? selected.join(", ")
-                            : ""
-                        }
+                        label="User Type"
+                        value={field.value || []}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        renderValue={(selected) => selected.join(", ")}
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              maxHeight: 250,   // 🔥 scroll like your image
+                              width: 120,
+                            },
+                          },
+                        }}
                       >
+                        {/* HEADER ROW */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            px: 2,
+                            py: 1,
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #ccc",
+                          }}
+                        >
+                          <Box sx={{ flex: 1 }}>UserType</Box>
+                          <Box sx={{ width: 90, textAlign: "center" }}>IsActive</Box>
+                        </Box>
+
+                        {/* LIST */}
                         {userTypes.map((name) => (
-                          <MenuItem key={name} value={name}>
-                            <Checkbox checked={Array.isArray(field.value) && field.value.indexOf(name) > -1} />
+                          <MenuItem
+                            key={name}
+                            value={name}
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            {/* Left: Name */}
                             <ListItemText primary={name} />
+
+                            {/* Right: Checkbox */}
+                            <Checkbox
+                              checked={field.value.indexOf(name) > -1}
+                            />
                           </MenuItem>
                         ))}
                       </Select>
                     )}
                   />
                 </FormControl></Grid>
-
               <Grid item xs={12} sm={6} md={4}> {/* Default Auth Type */}
-                <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                  <InputLabel>Default auth Type</InputLabel>
+                <FormControl fullWidth size="small" sx={{ mb: 2, width: 200 }}>
+                  <InputLabel>Default Auth Type</InputLabel>
                   <Controller
                     name="FK_AuthTypeId"
                     control={control}
@@ -248,65 +281,144 @@ export default function UserMasterForm() {
                     render={({ field }) => (
                       <Select
                         {...field}
+                        label="Default Auth Type"
                         value={field.value || ""}
-                        label="Default auth Type"
-                        onChange={(e) =>
-                          field.onChange(
-                            Array.isArray(e.target.value)
-                              ? e.target.value
-                              : e.target.value.split(",")
-                          )
-                        }
-                        renderValue={(selected) =>
-                          Array.isArray(selected) && selected.length > 0
-                            ? selected.join(", ")
-                            : ""
-                        }
+                        onChange={(e) => field.onChange(e.target.value)}
                       >
                         <MenuItem value="">
                           <em>None</em>
                         </MenuItem>
+                        {[
+                          "Reception",
+                          "History & Examination",
+                          "Clinical Department",
+                          "Auto Ref",
+                          "Optometrist",
+                          "Doctor",
+                          "Counselor",
+                          "Procedure",
+                          "Admin",
+                          "Nursing",
+                          "Pharmacy",
+                          "Stores"
+                        ].map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
                       </Select>
                     )}
                   />
                 </FormControl></Grid>
             </Grid>
-
-            <Grid container spacing={2} mt={1}>
-              <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Login Branch Id" size="small" sx={{ mb: 2 }} {...register('FK_LoginBranchId')} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField label="Login Status" fullWidth size="small" sx={{ mb: 2 }} {...register('LoginStatus')} /></Grid>
-              <Grid item xs={12} sm={6} md={4}><TextField label='Login IP' fullWidth size="small" {...register('LoginIP')} /></Grid>
-              <Grid item xs={12} sm={6} md={4}>
-                <TextField label='Login DateTime' fullWidth size="small" {...register('LoginDateTime')} type="datetime-local" /></Grid>
-            </Grid>
-
+            {/* <Grid container spacing={2} mt={1}> */}
+            {/* <Grid item xs={12} sm={6} md={4}><TextField fullWidth label="Login Branch Id" size="small" sx={{ mb: 2 }} {...register('FK_LoginBranchId')} /></Grid> */}
+            {/* <Grid item xs={12} sm={6} md={4}><TextField label="Login Status" fullWidth size="small" sx={{ mb: 2 }} {...register('LoginStatus')} /></Grid> */}
+            {/* <Grid item xs={12} sm={6} md={4}><TextField label='Login IP' fullWidth size="small" {...register('LoginIP')} /></Grid> */}
+            {/* <Grid item xs={12} sm={6} md={4}>
+                <TextField fullWidth size="small" {...register('LoginDateTime')} type="datetime-local" /></Grid>
+            </Grid> */}
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
-                <TextField fullWidth label="Employee Name" size="small" sx={{ mb: 2 }} {...register('Fk_EmployeeId')} /></Grid>
+                <FormControl fullWidth size="small" sx={{ mb: 2, width: 250 }}>
+                  <InputLabel>Employee Name</InputLabel>
+
+                  <Controller
+                    name="Fk_EmployeeId"
+                    control={control}
+                    defaultValue={[]}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        multiple
+                        label="Employee Name"
+                        value={field.value || []}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        renderValue={(selected) => selected.join(", ")}
+                        MenuProps={{
+                          PaperProps: {
+                            sx: {
+                              maxHeight: 250,
+                              width: 280,
+                            },
+                          },
+                        }}
+                      >
+                        {/* HEADER */}
+                        <Box
+                          sx={{
+                            display: "flex",
+                            px: 2,
+                            py: 1,
+                            fontWeight: "bold",
+                            borderBottom: "1px solid #ccc",
+                          }}
+                        >
+                          <Box sx={{ flex: 1 }}>Person Name</Box>
+                          <Box sx={{ width: 80, textAlign: "center" }}>Select</Box>
+                        </Box>
+                        {/* OPTIONS */}
+                        {[
+                          "Hospital Case",
+                          "Other Hospital",
+                          "Dr.Sunnel",
+                          "Dr Verma"
+                        ].map((name) => (
+                          <MenuItem
+                            key={name}
+                            value={name}
+                            sx={{
+                              display: "flex",
+                              justifyContent: "space-between",
+                            }}
+                          >
+                            <ListItemText primary={name} />
+                            <Checkbox checked={field.value.indexOf(name) > -1} />
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    )}
+                  />
+                </FormControl></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Sub Speciality" size="small" sx={{ mb: 2 }} {...register('FK_SubSpecialtyId')} /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Default Branch" size="small" sx={{ mb: 2 }} {...register('FK_DefaultBranchId')} /></Grid>
             </Grid>
-
-            <Grid container spacing={2} mt={1}>
+             <Grid item xs={12} sm={6} md={4}>
+              <Grid item xs={12} sm={6} md={4}>
+                <TextField
+                  label="Email"
+                  type='email'
+                  size="small"
+                  fullWidth
+                  {...register('Email', {
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Invalid emai address'
+                    }
+                  })}
+                />
+              </Grid>
+              </Grid>
+            {/* <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Dept Id" size="small" sx={{ mb: 2 }} {...register('FK_DeptID')} /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Default Service Dept Id" size="small" sx={{ mb: 2 }} {...register('FK_DefaultServiceDeptID')} /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField label="Diagnosis Dept" {...register('DiagnosisDept')} fullWidth size="small" /></Grid>
-            </Grid>
+            </Grid> */}
 
-            <Grid container spacing={2} mt={1}>
+            {/* <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label="Room No" size="small" sx={{ mb: 2 }}  {...register('RoomNo')} type="number" /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField fullWidth label='Default Room No' size="small" sx={{ mb: 2 }} {...register('DefaultRoomNo')} type="number" /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField label='Default Optom ID' {...register('DefaultOptomID')} size="small" fullWidth /></Grid>
-            </Grid>
-
+            </Grid> */}
+            {/* 
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField label="Doctor Page" {...register('DoctorPage')} fullWidth size="small" /></Grid>
@@ -314,10 +426,10 @@ export default function UserMasterForm() {
               <Grid item xs={12} sm={6} md={4}>
                 <FormControlLabel value="help" control={<Checkbox {...register('PRHelpF3')} />} label="PRHelp F3" /></Grid>
 
-            </Grid>
+            </Grid> */}
 
-            <Grid container spacing={2} mt={1}>
-              {/* ScheduleWeekDays */}
+            {/* <Grid container spacing={2} mt={1}>
+          
               <FormControl sx={{ mb: 2 }}>
                 <FormLabel component="legend">Schedule Week Days</FormLabel>
                 <FormGroup row>
@@ -330,9 +442,9 @@ export default function UserMasterForm() {
                   ))}
                 </FormGroup>
               </FormControl>
-            </Grid>
+            </Grid> */}
 
-            <Grid container spacing={2} mt={1}>
+            {/* <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField 
                   label="Discount" 
@@ -346,9 +458,9 @@ export default function UserMasterForm() {
                 <FormControlLabel value="teleConsultation" control={<Checkbox {...register('TeleConsultation')} />} label="TeleConsultation" /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <FormControlLabel value="netConsultation" control={<Checkbox {...register('NetConsultation')} />} label="NetConsultation" /></Grid>
-            </Grid>
+            </Grid> */}
 
-            <Grid container spacing={2} mt={1}>
+            {/* <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField
                   label="Mobile"
@@ -377,7 +489,7 @@ export default function UserMasterForm() {
               </Grid>
 
               <Grid item xs={12} sm={6} md={4}>
-                <FormControl fullWidth size="small">
+                <FormControl fullWidth size="small" sx={{ width:100}}>
                   <InputLabel>Gender</InputLabel>
                   <Controller
                     name="Gender"
@@ -400,16 +512,15 @@ export default function UserMasterForm() {
               </Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField placeholder="Adhar, PAN" label="National ID" size="small" fullWidth  {...register('NationalID')} /></Grid>
-            </Grid>
+            </Grid> */}
 
-            <Grid container spacing={2} mt={1}>
+            {/* <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}><TextField label="Registration No" size="small" fullWidth {...register('RegistrationNo')} /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField label="Clinic Name" size="small" fullWidth  {...register('ClinicName')} /></Grid>
               <Grid item xs={12} sm={6} md={4}>
                 <TextField label="Specilization" size="small" fullWidth  {...register('Specialization')} /></Grid>
-            </Grid>
-
+            </Grid> */}
             <Grid container spacing={2} mt={1}>
               {/* Radio buttons */}
               <FormControl sx={{ mb: 2 }}>
@@ -421,7 +532,7 @@ export default function UserMasterForm() {
 
                   <FormControlLabel value="transfer" control={<Checkbox {...register('IsPatientTransfer')} />} label="Is Patient Transfer" />
 
-                  <FormControlLabel value='external' control={<Checkbox {...register('IsExternal')} />} label='Is External' />
+                  {/* <FormControlLabel value='external' control={<Checkbox {...register('IsExternal')} />} label='Is External' />
 
                   <FormControlLabel value='create' control={<Checkbox {...register('IsCreateUser')} />} label='Is CreateUser' />
 
@@ -437,12 +548,11 @@ export default function UserMasterForm() {
 
                   <FormControlLabel value='userNameLock' control={<Checkbox {...register('IsUserNameLock')} />} label='Is UserNameLock' />
 
-                  <FormControlLabel value='authorized' control={<Checkbox {...register('IsApprovalAuthorized')} />} label='Is ApprovalAuthorized' />
+                  <FormControlLabel value='authorized' control={<Checkbox {...register('IsApprovalAuthorized')} />} label='Is ApprovalAuthorized' /> */}
 
                 </RadioGroup>
               </FormControl>
             </Grid>
-
             <Grid container spacing={2} mt={1}>
               <Grid item xs={12} sm={6} md={4}><Button
                 variant="outlined"
@@ -468,10 +578,9 @@ export default function UserMasterForm() {
                     px: 4,
                     ml: 1
                   }}
-                  startIcon={isLoading && <CircularProgress size={18}/>}
+                  startIcon={isLoading && <CircularProgress size={18} />}
                 >Submit
                 </Button></Grid>
-
             </Grid>
           </form>
         </Box>

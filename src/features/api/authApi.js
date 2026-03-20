@@ -1,7 +1,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { setToken } from '../auth/authSlice';
 
-const baseUrl = process.env.REACT_APP_API_URL || 'https://hms-api-ho1n.onrender.com/api';
+const baseUrl = process.env.REACT_APP_API_URL || 'https://hms-api-x81r.onrender.com/api';
 
 const baseQuery = fetchBaseQuery({
   baseUrl,
@@ -33,7 +33,15 @@ export const authApi = createApi({
         return { error: lastError || { status: 'CUSTOM_ERROR', error: 'Registration failed' } };
       },
     }),
-
+   getMenu: builder.query({
+  query: () => ({
+    url: '/menumasters',
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+  })
+}),
     login: builder.mutation({
       query: (credentials) => ({ url: 'auth/login', method: 'POST', body: credentials }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
@@ -52,4 +60,4 @@ export const authApi = createApi({
   }),
 });
 
-export const { useSignupMutation, useLoginMutation } = authApi;
+export const { useSignupMutation, useLoginMutation,useGetMenuQuery } = authApi;

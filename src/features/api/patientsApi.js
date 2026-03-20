@@ -60,6 +60,21 @@ export const patientsApi = createApi({
         };
       },
     }),
+    // Mutation to create IPD registration
+    createIPDRegistration: builder.mutation({
+      query: (patient) => {
+        // Check if token is available
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('Token not found. Please login first.');
+        }
+        return {
+          url: '/ipdregdetails',
+          method: 'POST',
+          body: patient,
+        };
+      },
+    }),
       // Mutation to create a new Bill
     createBill: builder.mutation({
       query: (patient) => {
@@ -161,4 +176,4 @@ export const patientsApi = createApi({
 });
 
 // Export the auto-generated hooks
-export const { useGetPatientsQuery, useGetopdVisitQuery, useGetPatientIdQuery, useCreateServiceMutation, useCreatePatientMutation, useCreateBillMutation, useCreateOpdVisitMutation } = patientsApi;
+export const { useGetPatientsQuery, useGetopdVisitQuery, useGetPatientIdQuery, useCreateServiceMutation,useCreateIPDRegistrationMutation, useCreatePatientMutation, useCreateBillMutation, useCreateOpdVisitMutation } = patientsApi;
